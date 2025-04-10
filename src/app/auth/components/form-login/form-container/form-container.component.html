@@ -1,0 +1,64 @@
+
+
+<!-- Form login-->
+<form [formGroup]="formLogin" (ngSubmit)="onSubmit()">
+
+    <!-- First Field-->
+    <gestion-form-field
+        
+        [control]="usernameControl"
+        [placeholder]="'Usuario'"
+        [label]="'Nombre de Usuario'"
+        [type]="'text'"
+        [icon]="true"
+    >
+        
+    </gestion-form-field>
+    <!-- Finish First Field-->
+
+     <!-- Second Field-->
+    <div class="mt-4">
+        <gestion-form-field
+            
+            [control]="passwordControl"
+            [label]="'Contraseña'"
+            [type]="'password'"
+            [icon]="false"
+        >
+            
+        </gestion-form-field>
+    </div>
+    <!-- Finish Second Field-->
+
+    
+
+    <!-- Checkbox and Underline Message-->
+    <div class="mt-4 flex items-center justify-between">
+
+        <!-- Checkbox-->
+        <gestion-form-checkbox 
+                [rememberUserControl]="rememberUserControl"
+                [label]="'Recordarme'" >
+        </gestion-form-checkbox>
+
+        <!-- Underline de recuperacion -->
+        <a class="text-sm font-medium
+                  text-foreground underline" 
+                  href="/forgot-password">
+            Olvidastes Contraseña?
+        </a>
+
+    </div>
+    <!-- Finish Checkbox and Underline Message-->
+
+    <!-- Button -->
+    <div class="button-group">
+        <gestion-form-button
+            [setEnabled]="formLogin.invalid"
+            [text]="'Iniciar Sesion'">      
+        </gestion-form-button>
+    </div>
+    <!-- Finish Button -->
+    
+    
+</form>

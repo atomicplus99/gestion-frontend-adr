@@ -1,0 +1,28 @@
+<!-- Component  -->
+<div class="bg-black text-white
+            flex min-h-screen flex-col items-center 
+            pt-16 sm:justify-center sm:pt-0">
+
+    <!-- Background del login-->
+    <div class="absolute inset-0 opacity-20">
+        <img class="h-full w-full" [src]="getBackground().image" [alt]="getBackground().alt">
+    </div>
+    <!-- Fin de background login -->
+
+    <!-- Header -->
+    <a href="#">
+      <div class="text-foreground font-semibold text-2xl
+                  tracking-tighter mx-auto flex items-center gap-2">
+          Andres de los Reyes
+      </div>
+    </a>
+    <!-- Fin Header Form -->
+
+  <!-- Formulario Login Component -->
+    <gestion-form-layout 
+        class="relative mt-12 
+               w-full max-w-lg sm:mt-10">
+    </gestion-form-layout>
+    <!-- Fin de formulario login Component -->
+
+</div>

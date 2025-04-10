@@ -1,0 +1,30 @@
+<div>
+    <div>
+        <div class="group relative rounded-lg
+                    border focus-within:border-sky-200
+                    px-3 pb-1.5 pt-2.5 duration-200 
+                    focus-within:ring focus-within:ring-sky-300/30">
+
+            <div class="flex justify-between">
+                <form-label [setLabel]=labelSet()></form-label>
+
+                @if (iconSet()) {
+                    <shared-icon-check class="absolute right-3 translate-y-2 text-green-200"></shared-icon-check>
+                }
+                
+            </div>
+
+            <form-placeholder 
+                    [control]="control"
+                    [placeholder]=placeholderSet()
+                    [type]="typeSet()">
+            </form-placeholder>
+            
+            
+            
+        </div>
+        <small *ngIf="control?.invalid && control?.touched" class="text-red-600">
+            {{ getErrorMessage() }}
+          </small>
+    </div>
+</div>

@@ -1,0 +1,11 @@
+<ul class="space-y-2 pb-2">
+  <ng-container *ngFor="let item of group.items">
+    <!-- Separador visual -->
+    <li *ngIf="item.isSeparator" class="border-t border-gray-200 my-2"></li>
+
+    <!-- Ítem de navegación -->
+    <li *ngIf="!item.isSeparator">
+      <shared-sidebar-item [item]="item"></shared-sidebar-item>
+    </li>
+  </ng-container>
+</ul>

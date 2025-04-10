@@ -1,0 +1,92 @@
+<ng-container [ngSwitch]="name">
+
+    <!-- Dashboard -->
+    <svg *ngSwitchCase="'layout-dashboard'" xmlns="http://www.w3.org/2000/svg"
+         fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+         class="w-6 h-6 text-gray-500 group-hover:text-gray-900">
+      <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 3h7v7H3V3zM14 3h7v4h-7V3zM3 14h4v7H3v-7zM17 14h4v7h-4v-7z" />
+    </svg>
+  
+    <!-- Kanban -->
+    <svg *ngSwitchCase="'kanban'" xmlns="http://www.w3.org/2000/svg"
+         class="w-6 h-6 text-gray-500 group-hover:text-gray-900"
+         fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 4.5h6v15H3v-15zM15 4.5h6v8h-6v-8zM9 4.5h6v11.25H9V4.5z" />
+    </svg>
+  
+    <!-- Inbox -->
+    <svg *ngSwitchCase="'inbox'" xmlns="http://www.w3.org/2000/svg"
+         class="w-6 h-6 text-gray-500 group-hover:text-gray-900"
+         fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round"
+            d="M20 12h-4l-3 4-3-4H4" />
+    </svg>
+  
+    <!-- Users -->
+    <svg *ngSwitchCase="'users'" xmlns="http://www.w3.org/2000/svg"
+         class="w-6 h-6 text-gray-500 group-hover:text-gray-900"
+         fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round"
+            d="M17 20h5v-2a4 4 0 00-4-4h-1M6 20H1v-2a4 4 0 014-4h1M12 11a4 4 0 100-8 4 4 0 000 8z" />
+    </svg>
+  
+    <!-- Shopping Cart -->
+    <svg *ngSwitchCase="'shopping-cart'" xmlns="http://www.w3.org/2000/svg"
+         class="w-6 h-6 text-gray-500 group-hover:text-gray-900"
+         fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.35 2.7a1 1 0 00.9 1.3h12.2M7 13L5.4 5M6 21a1 1 0 100-2 1 1 0 000 2zm12 0a1 1 0 100-2 1 1 0 000 2z" />
+    </svg>
+  
+    <!-- Sign In -->
+    <svg *ngSwitchCase="'log-in'" xmlns="http://www.w3.org/2000/svg"
+         class="w-6 h-6 text-gray-500 group-hover:text-gray-900"
+         fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round"
+            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-9A2.25 2.25 0 002.25 5.25v13.5A2.25 2.25 0 004.5 21h9a2.25 2.25 0 002.25-2.25V15M12 9l3 3m0 0l-3 3m3-3H4.5" />
+    </svg>
+  
+    <!-- Sign Up -->
+    <svg *ngSwitchCase="'user-plus'" xmlns="http://www.w3.org/2000/svg"
+         class="w-6 h-6 text-gray-500 group-hover:text-gray-900"
+         fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round"
+            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-6-2a4 4 0 100-8 4 4 0 000 8zm-6 9a6 6 0 0112 0v1H6v-1z" />
+    </svg>
+  
+    <!-- Upgrade -->
+    <svg *ngSwitchCase="'gem'" xmlns="http://www.w3.org/2000/svg"
+         class="w-6 h-6 text-gray-500 group-hover:text-gray-900"
+         fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round"
+            d="M6 3h12l3 4-9 13-9-13 3-4z" />
+    </svg>
+  
+    <!-- Documentation -->
+    <svg *ngSwitchCase="'book'" xmlns="http://www.w3.org/2000/svg"
+         class="w-6 h-6 text-gray-500 group-hover:text-gray-900"
+         fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4 19.5A2.25 2.25 0 006.25 21H18.5M4 4.5A2.25 2.25 0 016.25 3H18.5v17.25" />
+    </svg>
+  
+    <!-- Components -->
+    <svg *ngSwitchCase="'box'" xmlns="http://www.w3.org/2000/svg"
+         class="w-6 h-6 text-gray-500 group-hover:text-gray-900"
+         fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 9l9-6 9 6v6a9 9 0 11-18 0V9z" />
+    </svg>
+  
+    <!-- Help -->
+    <svg *ngSwitchCase="'help-circle'" xmlns="http://www.w3.org/2000/svg"
+         class="w-6 h-6 text-gray-500 group-hover:text-gray-900"
+         fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round"
+            d="M12 18h.01M12 14.25a2.25 2.25 0 10-2.25-2.25H12a2.25 2.25 0 000-4.5 2.25 2.25 0 000 4.5z" />
+    </svg>
+  
+  </ng-container>
+  

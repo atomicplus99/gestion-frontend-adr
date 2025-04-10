@@ -1,0 +1,45 @@
+<!-- <a [href]="item.link"
+   [attr.target]="item.external ? '_blank' : null"
+   class="text-base text-gray-900 font-normal rounded-lg hover:bg-gray-100 flex items-center p-2 group">
+
+   
+  <shared-icon [name]="item.icon!"></shared-icon>
+  <span class="ml-3 flex-1 whitespace-nowrap">{{ item.label }}</span>
+
+  <span *ngIf="item.badge"
+        class="bg-gray-200 text-gray-800 ml-3 text-sm font-medium inline-flex items-center justify-center px-2 rounded-full">
+    {{ item.badge }}
+  </span>
+</a> -->
+
+<!-- Ítem normal sin subítems -->
+<a *ngIf="!item.children"
+   [href]="item.link"
+   [attr.target]="item.external ? '_blank' : null"
+   class="text-base text-gray-900 font-normal rounded-lg hover:bg-gray-100 flex items-center p-2 group">
+  <shared-icon [name]="item.icon!"></shared-icon>
+  <span class="ml-3 flex-1 whitespace-nowrap">{{ item.label }}</span>
+  <span *ngIf="item.badge" class="bg-gray-200 text-gray-800 ml-3 text-sm font-medium px-2 rounded-full">
+    {{ item.badge }}
+  </span>
+</a>
+
+<!-- Ítem con subítems -->
+<div *ngIf="item.children">
+  <button (click)="toggleChildren()" class="text-base w-full text-left text-gray-900 font-normal rounded-lg hover:bg-gray-100 flex items-center p-2 group">
+    <shared-icon [name]="item.icon!"></shared-icon>
+    <span class="ml-3 flex-1 whitespace-nowrap">{{ item.label }}</span>
+    <svg class="w-4 h-4 ml-auto transition-transform duration-300" [class.rotate-180]="showChildren" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+
+  <ul *ngIf="showChildren" class="ml-8 mt-1 space-y-1">
+    <li *ngFor="let child of item.children">
+      <a [href]="child.link" class="text-sm text-gray-700 hover:text-gray-900 block px-2 py-1 rounded hover:bg-gray-200">
+        {{ child.label }}
+      </a>
+    </li>
+  </ul>
+</div>
+
