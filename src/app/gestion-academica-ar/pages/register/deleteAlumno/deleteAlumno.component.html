@@ -1,0 +1,62 @@
+<div class="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-md space-y-6">
+  <h2 class="text-xl font-semibold text-gray-800">Buscar Alumno por Código</h2>
+  <div class="flex gap-4">
+    <input
+      type="text"
+      [(ngModel)]="codigo"
+      maxlength="10"
+      placeholder="Ingrese código del alumno"
+      class="flex-1 border px-4 py-2 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
+    />
+    <button
+      class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+      (click)="buscarAlumno()"
+    >
+      Buscar
+    </button>
+  </div>
+
+  <div *ngIf="mostrarFormulario()" class="space-y-4 mt-6">
+    <h3 class="text-lg font-medium text-gray-700">
+      Cambiar estado de: <span class="text-blue-600 font-bold">{{ alumnoEncontrado()?.nombre }} {{ alumnoEncontrado()?.apellido }}</span>
+    </h3>
+
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-600">Estado</label>
+      <select
+        id="estado-select"
+        [ngModel]="estadoSeleccionado()"
+        (ngModelChange)="estadoSeleccionado.set($event)"
+        class="w-full border px-3 py-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+      >
+        <option *ngFor="let estado of estados" [value]="estado">{{ estado | titlecase }}</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-600">Observación</label>
+      <textarea
+        [ngModel]="observacion()"
+        (ngModelChange)="observacion.set($event)"
+        rows="4"
+        placeholder="Motivo del cambio de estado"
+        class="w-full border px-3 py-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+      ></textarea>
+    </div>
+
+    <div class="flex justify-end gap-4">
+      <button
+        class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+        (click)="resetFormulario()"
+      >
+        Cancelar
+      </button>
+      <button
+        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+        (click)="guardarCambios()"
+      >
+        Guardar cambios
+      </button>
+    </div>
+  </div>
+</div>

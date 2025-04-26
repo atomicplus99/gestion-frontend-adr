@@ -17,21 +17,23 @@ export class SidebarComponent {
       items: [
         {
           icon: 'layout-dashboard',
-          label: 'Mi Perfil',
+          label: 'Registrar',
           link: '#',
           children: [
-            { label: 'Datos personales', link: '#' },
-            { label: 'Cambiar contraseña', link: '#' },
+            { label: 'Registro Manual', link: '/home/registrar/manual' },
+            { label: 'Desde Excel', link: '/home/registrar/excel' },
+            { label: 'Actualizar Alumno', link: '/home/registrar/actualizar-alumno' },
+            { label: 'Lista de Alumnos', link: '/home/registrar/list-alumno'},
+            { label: 'Eliminar Alumno', link: '/home/registrar/delete-alumno' }
           ],
         },
         {
           icon: 'kanban',
-          label: 'Kanban',
+          label: 'Asistencia',
           badge: 'Pro',
           external: true,
           children: [
-            { label: 'Mis tableros', link: '#' },
-            { label: 'Nuevos proyectos', link: '#' },
+            { label: 'Asistencias Alumnos', link: '/home/asistencia/list-asistencia-alumnos' },
           ],
         },
         { isSeparator: true },

@@ -1,17 +1,27 @@
 import { ApplicationConfig, APP_INITIALIZER, importProvidersFrom } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideToastr } from 'ngx-toastr';
 import { HttpClientModule } from '@angular/common/http';
 import { routes } from './app.routes';
 
 import { AppInitService } from './core/services/app-init.service';
 
+// PrimeNG
+import Aura from '@primeng/themes/aura';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
 export const appConfig: ApplicationConfig = {
   providers: [
-    importProvidersFrom(HttpClientModule),
+    importProvidersFrom(HttpClientModule, BrowserAnimationsModule),
     provideRouter(routes),
-    provideAnimations(),
+    
+    // Animaciones (versión async recomendada para PrimeNG)
+    provideAnimationsAsync(),
+    
+
+
+    // Toastr
     provideToastr({
       positionClass: 'toast-top-right',
       toastClass: 'bg-black text-white p-4 rounded-lg shadow-lg',
@@ -19,6 +29,8 @@ export const appConfig: ApplicationConfig = {
       closeButton: true,
       progressBar: true,
     }),
+
+    // Inicializador de tu app
     {
       provide: APP_INITIALIZER,
       useFactory: (appInitService: AppInitService) => () => appInitService.init(),

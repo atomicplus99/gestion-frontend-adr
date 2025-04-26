@@ -1,0 +1,68 @@
+<div class="px-4 sm:px-6 lg:px-8 py-6">
+  <!-- Card blanca con título y search -->
+  <div class="bg-white shadow rounded-lg p-6 mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+      
+      <!-- Título -->
+      <h1 class="text-2xl font-semibold text-gray-800">
+        Actualizar Alumno
+      </h1>
+
+      <!-- Search con Angular Material Autocomplete -->
+      <mat-form-field
+        appearance="outline"
+        class="w-full md:w-64 mt-4 md:mt-0"
+      >
+        <mat-label>Código de estudiante</mat-label>
+        <input
+          matInput
+          [formControl]="searchControl"
+          [matAutocomplete]="auto"
+          [disabled]="editando" 
+          placeholder="000123456"
+        />
+        
+        <!-- Suffix con SVG de lupa -->
+        <div
+          matSuffix
+          class="flex items-center pr-2 cursor-pointer"
+          (click)="onSelectCode(searchControl.value)"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 text-gray-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"
+            />
+          </svg>
+        </div>
+
+        <!-- Lista de opciones -->
+        <mat-autocomplete
+          #auto="matAutocomplete"
+          (optionSelected)="onSelectCode($event.option.value)"
+        >
+          <mat-option
+            *ngFor="let code of filteredCodes$ | async"
+            [value]="code"
+          >
+            {{ code }}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- Aquí se monta la tabla -->
+  <shared-table-student
+    [codigoSeleccionado]="selectedCode"
+    (editandoAlumno)="onAlumnoEditando($event)"
+  ></shared-table-student>
+</div>

@@ -1,0 +1,183 @@
+<div class="p-6 space-y-6">
+  <h2 class="text-2xl font-semibold">Listado de Alumnos — Estado</h2>
+
+  <!-- ---------------- Buscador ---------------- -->
+  <div class="flex items-center gap-0.5 mb-4 max-w-md">
+    <input
+      class="flex-grow px-3 py-2 border border-gray-300 rounded-l-lg
+             focus:outline-none focus:ring-2 focus:ring-blue-500"
+      placeholder="Buscar..."
+      [(ngModel)]="filterValue"
+      (ngModelChange)="applyFilter()"
+    />
+    <button
+      class="px-4 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700
+             focus:outline-none focus:ring-2 focus:ring-blue-500"
+      (click)="applyFilter()"
+      aria-label="Filtrar"
+    >
+      🔍
+    </button>
+  </div>
+
+  <!-- ---------------- Tabla ---------------- -->
+  <div class="overflow-auto bg-white rounded shadow-lg">
+    <table
+      mat-table
+      [dataSource]="dataSource"
+      matSort
+      class="min-w-full divide-y divide-gray-200"
+    >
+
+      <!-- Código -->
+      <ng-container matColumnDef="codigo">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 py-2">
+          Código
+        </th>
+        <td mat-cell *matCellDef="let a" class="px-4 py-2">
+          {{ a.codigo }}
+        </td>
+      </ng-container>
+
+      <!-- DNI -->
+      <ng-container matColumnDef="dni_alumno">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 py-2">
+          DNI
+        </th>
+        <td mat-cell *matCellDef="let a" class="px-4 py-2">
+          {{ a.dni_alumno }}
+        </td>
+      </ng-container>
+
+      <!-- Nombre -->
+      <ng-container matColumnDef="nombre">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 py-2">
+          Nombre
+        </th>
+        <td mat-cell *matCellDef="let a" class="px-4 py-2">
+          {{ a.nombre }}
+        </td>
+      </ng-container>
+
+      <!-- Apellido -->
+      <ng-container matColumnDef="apellido">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 py-2">
+          Apellido
+        </th>
+        <td mat-cell *matCellDef="let a" class="px-4 py-2">
+          {{ a.apellido }}
+        </td>
+      </ng-container>
+
+      <!-- Nivel -->
+      <ng-container matColumnDef="nivel">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 py-2">
+          Nivel
+        </th>
+        <td mat-cell *matCellDef="let a" class="px-4 py-2">
+          {{ a.nivel }}
+        </td>
+      </ng-container>
+
+      <!-- Grado -->
+      <ng-container matColumnDef="grado">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 py-2">
+          Grado
+        </th>
+        <td mat-cell *matCellDef="let a" class="px-4 py-2">
+          {{ a.grado }}
+        </td>
+      </ng-container>
+
+      <!-- Sección -->
+      <ng-container matColumnDef="seccion">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 py-2">
+          Sección
+        </th>
+        <td mat-cell *matCellDef="let a" class="px-4 py-2">
+          {{ a.seccion }}
+        </td>
+      </ng-container>
+
+      <!-- Turno -->
+      <ng-container matColumnDef="turno">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 py-2">
+          Turno
+        </th>
+        <td mat-cell *matCellDef="let a" class="px-4 py-2">
+          {{ a.turno.turno }}
+        </td>
+      </ng-container>
+
+      <!-- Usuario -->
+      <ng-container matColumnDef="usuario">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 py-2">
+          Usuario
+        </th>
+        <td mat-cell *matCellDef="let a" class="px-4 py-2">
+          {{ a.usuario.nombre_usuario }}
+        </td>
+      </ng-container>
+
+      <!-- Estado -->
+      <ng-container matColumnDef="estado">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 py-2">
+          Estado
+        </th>
+        <td mat-cell *matCellDef="let a" class="px-4 py-2">
+          {{ a.estado_actual.estado }}
+        </td>
+      </ng-container>
+
+      <!-- Fecha de actualización -->
+      <ng-container matColumnDef="fecha_actualizacion">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-4 py-2">
+          Actualizado
+        </th>
+        <td mat-cell *matCellDef="let a" class="px-4 py-2">
+          {{ a.estado_actual.fecha_actualizacion | date:'short' }}
+        </td>
+      </ng-container>
+
+      <!-- Expand / Dialog -->
+      <ng-container matColumnDef="expand">
+        <th mat-header-cell *matHeaderCellDef class="px-4 py-2"></th>
+        <td
+          mat-cell
+          *matCellDef="let a"
+          class="px-4 py-2 text-center cursor-pointer"
+          (click)="openDetalle(a)"
+        >
+          <svg
+            class="w-5 h-5 text-gray-600 hover:text-blue-600 transition-colors"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 19l-7-7 7-7" />
+          </svg>
+        </td>
+      </ng-container>
+
+      <!-- Cabecera y filas -->
+      <tr
+        mat-header-row
+        *matHeaderRowDef="displayedColumns"
+        class="bg-gray-100 text-gray-700 sticky"
+      ></tr>
+      <tr
+        mat-row
+        *matRowDef="let row; columns: displayedColumns"
+        class="hover:bg-gray-50"
+      ></tr>
+    </table>
+
+    <mat-paginator
+      [pageSizeOptions]="[5, 10, 20]"
+      showFirstLastButtons
+      class="mt-4"
+    ></mat-paginator>
+  </div>
+</div>

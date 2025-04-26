@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
+import { FormBuilder } from '@angular/forms';
 import Swal from 'sweetalert2';
 
 @Injectable({ providedIn: 'root' })
 export class AlertsService {
-  constructor() {}
+
 
   info(message: string, title: string = 'Información') {
     Swal.fire({

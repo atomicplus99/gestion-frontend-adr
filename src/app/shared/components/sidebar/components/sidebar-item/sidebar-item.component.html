@@ -13,9 +13,11 @@
 </a> -->
 
 <!-- Ítem normal sin subítems -->
+<!-- Ítem sin hijos -->
 <a *ngIf="!item.children"
-   [href]="item.link"
-   [attr.target]="item.external ? '_blank' : null"
+   [routerLink]="item.link"
+   routerLinkActive="bg-gray-200 font-semibold"
+   [routerLinkActiveOptions]="{ exact: true }"
    class="text-base text-gray-900 font-normal rounded-lg hover:bg-gray-100 flex items-center p-2 group">
   <shared-icon [name]="item.icon!"></shared-icon>
   <span class="ml-3 flex-1 whitespace-nowrap">{{ item.label }}</span>
@@ -36,10 +38,11 @@
 
   <ul *ngIf="showChildren" class="ml-8 mt-1 space-y-1">
     <li *ngFor="let child of item.children">
-      <a [href]="child.link" class="text-sm text-gray-700 hover:text-gray-900 block px-2 py-1 rounded hover:bg-gray-200">
+      <a [routerLink]="child.link"
+         routerLinkActive="text-purple-700 font-medium bg-gray-100"
+         class="text-sm text-gray-700 hover:text-gray-900 block px-2 py-1 rounded hover:bg-gray-200">
         {{ child.label }}
       </a>
     </li>
   </ul>
 </div>
-
