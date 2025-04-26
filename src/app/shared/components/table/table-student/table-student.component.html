@@ -1,0 +1,160 @@
+<!-- Spinner de carga -->
+<div *ngIf="loading" class="flex justify-center p-8">
+    <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+</div>
+
+<!-- Tabla de resultados -->
+<div *ngIf="!loading && dataSource.data.length" class="overflow-auto">
+    <table mat-table [dataSource]="dataSource" matSort class="min-w-full mb-6">
+        <!-- Columnas -->
+        <ng-container matColumnDef="codigo">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Código</th>
+            <td mat-cell *matCellDef="let s">{{ s.codigo }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="dni_alumno">
+            <th mat-header-cell *matHeaderCellDef>DNI</th>
+            <td mat-cell *matCellDef="let s">{{ s.dni_alumno }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="nombre">
+            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+            <td mat-cell *matCellDef="let s">{{ s.nombre }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="apellido">
+            <th mat-header-cell *matHeaderCellDef>Apellido</th>
+            <td mat-cell *matCellDef="let s">{{ s.apellido }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="fecha_nacimiento">
+            <th mat-header-cell *matHeaderCellDef>Fecha Nac.</th>
+            <td mat-cell *matCellDef="let s">{{ s.fecha_nacimiento | date:'shortDate' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="direccion">
+            <th mat-header-cell *matHeaderCellDef>Dirección</th>
+            <td mat-cell *matCellDef="let s">{{ s.direccion }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="nivel">
+            <th mat-header-cell *matHeaderCellDef>Nivel</th>
+            <td mat-cell *matCellDef="let s">{{ s.nivel }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="grado">
+            <th mat-header-cell *matHeaderCellDef>Grado</th>
+            <td mat-cell *matCellDef="let s">{{ s.grado }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="seccion">
+            <th mat-header-cell *matHeaderCellDef>Sección</th>
+            <td mat-cell *matCellDef="let s">{{ s.seccion }}</td>
+        </ng-container>
+
+        <!-- Acciones -->
+        <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let s">
+                <button mat-icon-button (click)="editarAlumno(s)" class="text-blue-600 hover:text-blue-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15.232 5.232l3.536 3.536M9 13l6-6 3 3-6 6H9v-3z" />
+                    </svg>
+                </button>
+            </td>
+        </ng-container>
+
+        <!-- Filas -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+</div>
+
+<!-- Formulario de edición -->
+<div *ngIf="alumnoEditando" class="bg-white shadow-md rounded-lg border border-gray-200 mt-8 w-full px-4 sm:px-6 lg:px-8 py-6">
+  <h3 class="text-xl font-semibold text-blue-600 flex items-center mb-6">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+    </svg>
+    Editar Alumno
+  </h3>
+
+  <form class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>Código</mat-label>
+      <input
+        matInput
+        [(ngModel)]="alumnoEditando.codigo"
+        name="codigo"
+        maxlength="10"
+        pattern="^[0-9]{10}$"
+        required
+      />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>Nombre</mat-label>
+      <input matInput [(ngModel)]="alumnoEditando.nombre" name="nombre" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>Apellido</mat-label>
+      <input matInput [(ngModel)]="alumnoEditando.apellido" name="apellido" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>DNI</mat-label>
+      <input matInput [(ngModel)]="alumnoEditando.dni_alumno" name="dni_alumno" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>Fecha de nacimiento</mat-label>
+      <input matInput type="date" [(ngModel)]="alumnoEditando.fecha_nacimiento" name="fecha_nacimiento" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>Dirección</mat-label>
+      <input matInput [(ngModel)]="alumnoEditando.direccion" name="direccion" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>Nivel</mat-label>
+      <mat-select [(ngModel)]="alumnoEditando.nivel" name="nivel">
+        <mat-option value="Inicial">Inicial</mat-option>
+        <mat-option value="Primaria">Primaria</mat-option>
+        <mat-option value="Secundaria">Secundaria</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="w-full">
+      <mat-label>Grado</mat-label>
+      <input matInput type="number" [(ngModel)]="alumnoEditando.grado" name="grado" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="w-full md:col-span-2">
+      <mat-label>Sección</mat-label>
+      <mat-select [(ngModel)]="alumnoEditando.seccion" name="seccion">
+        <mat-option *ngFor="let s of secciones" [value]="s">{{ s }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div class="md:col-start-2 flex justify-end space-x-4 mt-4">
+      <button mat-flat-button color="primary" class="custom-button" (click)="guardarEdicion()" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        Guardar
+      </button>
+
+      <button mat-stroked-button color="warn" class="custom-button cancelar" (click)="cancelarEdicion()" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Cancelar
+      </button>
+    </div>
+  </form>
+</div>

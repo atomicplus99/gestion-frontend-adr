@@ -1,0 +1,35 @@
+.custom-button {
+    font-size: 14px;
+    padding: 10px 24px;
+    border-radius: 12px;
+    min-width: 130px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    line-height: 1;
+  }
+  
+  .custom-button svg {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  
+  .custom-button.cancelar {
+    border: 2px solid #f44336;
+    color: #f44336;
+    background-color: #fff;
+  }
+  
+  .custom-button.cancelar:hover {
+    background-color: #fef1f0;
+    border-color: #d32f2f;
+    color: #d32f2f;
+  }
