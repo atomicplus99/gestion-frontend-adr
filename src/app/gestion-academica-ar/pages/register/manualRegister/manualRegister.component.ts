@@ -11,6 +11,16 @@ import { AlumnoService } from '../../../services/alumno.service';
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './manualRegister.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [`
+    /* Animación para elementos que aparecen */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+  `]
 })
 export class ManualRegisterComponent {
   alumnoForm: FormGroup;
@@ -18,6 +28,7 @@ export class ManualRegisterComponent {
   grados: string[] = [];
   secciones = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
   qrGenerado = '';
+  isSubmitting = false;
 
   constructor(
     private fb: FormBuilder,
@@ -26,7 +37,7 @@ export class ManualRegisterComponent {
   ) {
     this.alumnoForm = this.fb.group({
       nombre: ['', [Validators.required, Validators.maxLength(100)]],
-      codigo: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
+      codigo: ['', [Validators.required, Validators.pattern(/^\d{14}$/)]],
       apellido: ['', [Validators.required, Validators.maxLength(100)]],
       fechaNacimiento: ['', [Validators.required, this.validarEdad()]],
       dni: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
@@ -67,14 +78,29 @@ export class ManualRegisterComponent {
 
   generarQrUUID() {
     this.qrGenerado = uuidv4();
+    // Feedback visual para el usuario
+    setTimeout(() => {
+      document.getElementById('qr-success')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
   }
 
   onSubmit() {
     if (this.alumnoForm.invalid || !this.qrGenerado) {
       this.alumnoForm.markAllAsTouched();
       this.alerts.error('Completa todos los campos correctamente y genera el código QR.');
+      
+      // Desplazamiento al primer error
+      setTimeout(() => {
+        const firstError = document.querySelector('.text-red-500');
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      
       return;
     }
+    
+    this.isSubmitting = true;
   
     const formValue = this.alumnoForm.value;
   
@@ -85,9 +111,8 @@ export class ManualRegisterComponent {
       fecha_nacimiento: formValue.fechaNacimiento,
       direccion: formValue.direccion,
       codigo_qr: this.qrGenerado,
-      codigo: formValue.codigo, // ✅ asegúrate de incluirlo
+      codigo: formValue.codigo,
       turno_id: formValue.turno,
-    
       nivel: formValue.nivel,
       grado: parseInt(formValue.grado),
       seccion: formValue.seccion,
@@ -96,14 +121,15 @@ export class ManualRegisterComponent {
     this.alumnoService.registrarAlumno(payload).subscribe({
       next: () => {
         this.alerts.success('Alumno registrado correctamente');
-        this.alumnoForm.reset();
-        this.qrGenerado = '';
+        this.resetForm();
+        this.isSubmitting = false;
       },
       error: (err) => {
         console.error('Error detallado:', err);
         const msg = err?.error?.message || 'Error inesperado al registrar el alumno';
         const details = Array.isArray(msg) ? msg.join(', ') : msg;
         this.alerts.error(details);
+        this.isSubmitting = false;
       }
     });
   }
@@ -139,5 +165,34 @@ export class ManualRegisterComponent {
 
       return null;
     };
+  }
+  
+  resetForm() {
+    this.alumnoForm.reset();
+    this.qrGenerado = '';
+  }
+  
+  // Nuevo método para la barra de progreso
+  getFormProgressPercent(): number {
+    if (!this.alumnoForm) return 0;
+    
+    const controles = Object.keys(this.alumnoForm.controls);
+    const completados = controles.filter(c => 
+      this.alumnoForm.get(c)?.valid && this.alumnoForm.get(c)?.value
+    );
+    
+    return Math.round((completados.length / controles.length) * 100);
+  }
+  
+  // Formatea el texto de progreso
+  getFormProgress(): string {
+    const percent = this.getFormProgressPercent();
+    if (percent === 100 && !this.qrGenerado) {
+      return '<span class="text-yellow-500">Falta generar QR</span>';
+    } else if (percent === 100 && this.qrGenerado) {
+      return '<span class="text-green-500">¡Listo para enviar!</span>';
+    } else {
+      return `${percent}% completado`;
+    }
   }
 }

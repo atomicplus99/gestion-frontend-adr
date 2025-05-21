@@ -1,62 +1,410 @@
-<div class="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-xl shadow-md space-y-6">
-  <h2 class="text-xl font-semibold text-gray-800">Buscar Alumno por Código</h2>
-  <div class="flex gap-4">
-    <input
-      type="text"
-      [(ngModel)]="codigo"
-      maxlength="10"
-      placeholder="Ingrese código del alumno"
-      class="flex-1 border px-4 py-2 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
-    />
-    <button
-      class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-      (click)="buscarAlumno()"
-    >
-      Buscar
-    </button>
+<!-- HTML Template File (deleteAlumno.component.html) -->
+<div class="component-container max-w-2xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg border border-gray-200 relative">
+  <!-- Component Header with Animation -->
+  <div class="flex items-center mb-6 component-header">
+    <div class="icon-container bg-blue-100 p-2 rounded-full mr-3">
+      <i class="material-icons text-blue-600">school</i>
+    </div>
+    <div>
+      <h2 class="text-2xl font-bold text-gray-800">Gestión de Estado de Alumno</h2>
+      <p class="text-sm text-gray-500">Actualice el estado y registre observaciones</p>
+    </div>
   </div>
 
-  <div *ngIf="mostrarFormulario()" class="space-y-4 mt-6">
-    <h3 class="text-lg font-medium text-gray-700">
-      Cambiar estado de: <span class="text-blue-600 font-bold">{{ alumnoEncontrado()?.nombre }} {{ alumnoEncontrado()?.apellido }}</span>
-    </h3>
-
-    <div>
-      <label class="block mb-1 text-sm font-medium text-gray-600">Estado</label>
-      <select
-        id="estado-select"
-        [ngModel]="estadoSeleccionado()"
-        (ngModelChange)="estadoSeleccionado.set($event)"
-        class="w-full border px-3 py-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+  <!-- Search Form with Keyboard Shortcut -->
+  <div class="mb-6 search-form-container">
+    <label for="codigo-input" class="block text-sm font-medium text-gray-700 mb-1">
+      Código del Alumno <span class="text-xs text-gray-500">(14 dígitos)</span>
+    </label>
+    <div class="flex gap-3">
+      <div class="relative flex-grow">
+        <input
+          id="codigo-input"
+          type="text"
+          [(ngModel)]="codigo"
+          (keyup.enter)="buscarAlumno()"
+          (input)="onCodigoChange($event)"
+          maxlength="14"
+          placeholder="Ingrese código de 14 dígitos"
+          class="w-full border border-gray-300 px-4 py-3 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          [class.border-red-500]="codigoInvalido()"
+          [class.input-with-icon]="true"
+          autocomplete="off"
+        />
+        <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+          <i *ngIf="codigo && !codigoInvalido()" class="material-icons text-green-500 text-sm">check_circle</i>
+          <i *ngIf="codigoInvalido()" class="material-icons text-red-500 text-sm">error</i>
+        </div>
+        <span *ngIf="codigoInvalido()" class="text-xs text-red-500 mt-1 block">
+          El código debe tener 14 dígitos
+        </span>
+        <div class="flex justify-between mt-1">
+          <span class="text-xs text-gray-500">Presione Enter para buscar</span>
+          <span class="text-xs text-gray-500">{{codigo.length}}/10</span>
+        </div>
+      </div>
+      <button
+        class="search-button bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+        (click)="buscarAlumno()"
+        [disabled]="!codigo || codigo.length !== 14"
+        [class.opacity-50]="!codigo || codigo.length !== 14"
+        [attr.title]="'Buscar alumno' + (!codigo || codigo.length !== 14 ? ' (Ingrese un código válido primero)' : '')"
       >
-        <option *ngFor="let estado of estados" [value]="estado">{{ estado | titlecase }}</option>
-      </select>
+        <i class="material-icons mr-1">search</i>
+        Buscar
+      </button>
+    </div>
+    
+    <!-- Recently Searched List -->
+    <div *ngIf="!mostrarFormulario() && !cargando() && !errorMensaje() && historialBusquedas.length > 0" class="mt-4">
+      <div class="flex items-center mb-2">
+        <i class="material-icons text-gray-500 text-sm mr-1">history</i>
+        <span class="text-sm text-gray-600">Búsquedas recientes</span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button 
+          *ngFor="let item of historialBusquedas" 
+          (click)="seleccionarCodigoBusqueda(item.codigo)"
+          class="flex items-center px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-xs text-gray-700 transition-colors"
+        >
+          <span>{{item.nombre}} ({{item.codigo}})</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State with Animation -->
+  <div *ngIf="cargando()" class="my-8">
+    <div class="flex flex-col items-center justify-center py-6">
+      <div class="loading-animation">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+        <div class="animate-ping absolute inset-0 bg-blue-400 rounded-full opacity-20 h-12 w-12"></div>
+      </div>
+      <p class="text-gray-600 mt-3">{{loadingMessage}}</p>
+    </div>
+  </div>
+
+  <!-- Student Form -->
+  <div *ngIf="mostrarFormulario() && !cargando()" class="mt-6 space-y-6 student-form animate__animated animate__fadeIn">
+    <!-- Student Info Card -->
+    <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500 card-hover">
+      <div class="flex items-center">
+        <div class="p-2 bg-white rounded-full mr-2">
+          <i class="material-icons text-blue-600">person</i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800">
+          Datos del Alumno
+        </h3>
+      </div>
+      
+      <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-2 hover:bg-blue-100 rounded transition-colors">
+          <p class="text-sm text-gray-600">Nombre Completo:</p>
+          <p class="font-medium text-gray-900">{{ alumnoEncontrado()?.nombre }} {{ alumnoEncontrado()?.apellido }}</p>
+        </div>
+        <div class="p-2 hover:bg-blue-100 rounded transition-colors">
+          <p class="text-sm text-gray-600">Código:</p>
+          <p class="font-medium text-gray-900">{{ alumnoEncontrado()?.codigo }}</p>
+        </div>
+        <div class="p-2 hover:bg-blue-100 rounded transition-colors">
+          <p class="text-sm text-gray-600">Estado Actual:</p>
+          <div class="mt-1">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
+              [class.bg-green-100]="alumnoEncontrado()?.estado === 'activo'" 
+              [class.text-green-800]="alumnoEncontrado()?.estado === 'activo'"
+              [class.bg-red-100]="alumnoEncontrado()?.estado === 'inactivo'" 
+              [class.text-red-800]="alumnoEncontrado()?.estado === 'inactivo'">
+              <span class="w-2 h-2 mr-1 rounded-full"
+                [class.bg-green-500]="alumnoEncontrado()?.estado === 'activo'"
+                [class.bg-red-500]="alumnoEncontrado()?.estado === 'inactivo'"></span>
+              {{ alumnoEncontrado()?.estado | titlecase }}
+            </span>
+          </div>
+        </div>
+        <div *ngIf="alumnoEncontrado()?.ultimaActualizacion" class="p-2 hover:bg-blue-100 rounded transition-colors">
+          <p class="text-sm text-gray-600">Última Actualización:</p>
+          <p class="font-medium text-gray-900">{{ alumnoEncontrado()?.ultimaActualizacion | date:'dd/MM/yyyy HH:mm' }}</p>
+        </div>
+      </div>
     </div>
 
-    <div>
-      <label class="block mb-1 text-sm font-medium text-gray-600">Observación</label>
-      <textarea
-        [ngModel]="observacion()"
-        (ngModelChange)="observacion.set($event)"
-        rows="4"
-        placeholder="Motivo del cambio de estado"
-        class="w-full border px-3 py-2 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-      ></textarea>
+    <!-- Status Change Form -->
+    <div class="border-t border-gray-200 pt-6">
+      <h3 class="text-lg font-medium text-gray-800 mb-4 flex items-center">
+        <i class="material-icons text-gray-600 mr-2">edit</i>
+        Cambiar Estado
+      </h3>
+      
+      <div class="space-y-4">
+        <!-- Estado Select with Radio Option -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <label class="block text-sm font-medium text-gray-700 mb-3">Nuevo Estado</label>
+          <div class="flex space-x-4">
+            <label class="flex items-center cursor-pointer" [class.opacity-75]="alumnoEncontrado()?.estado === 'activo'">
+              <input 
+                type="radio" 
+                [value]="'activo'" 
+                [ngModel]="estadoSeleccionado()" 
+                (ngModelChange)="estadoSeleccionado.set($event)"
+                class="mr-2"
+                [attr.disabled]="alumnoEncontrado()?.estado === 'activo' ? true : null"
+              >
+              <span class="inline-flex items-center">
+                <span class="w-3 h-3 mr-1 rounded-full bg-green-500"></span>
+                <span>Activo</span>
+              </span>
+            </label>
+            <label class="flex items-center cursor-pointer" [class.opacity-75]="alumnoEncontrado()?.estado === 'inactivo'">
+              <input 
+                type="radio" 
+                [value]="'inactivo'" 
+                [ngModel]="estadoSeleccionado()" 
+                (ngModelChange)="estadoSeleccionado.set($event)"
+                class="mr-2"
+                [attr.disabled]="alumnoEncontrado()?.estado === 'inactivo' ? true : null"
+              >
+              <span class="inline-flex items-center">
+                <span class="w-3 h-3 mr-1 rounded-full bg-red-500"></span>
+                <span>Inactivo</span>
+              </span>
+            </label>
+          </div>
+          <p *ngIf="alumnoEncontrado()?.estado === estadoSeleccionado()" class="text-orange-500 text-xs mt-2">
+            <i class="material-icons text-xs align-middle mr-1">info</i>
+            El alumno ya se encuentra en estado {{ estadoSeleccionado() }}
+          </p>
+        </div>
+        
+        <!-- Observación Textarea -->
+        <div class="transition-all duration-300" [class.observation-required]="estadoSeleccionado() === 'inactivo'">
+          <label for="observacion-textarea" class="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+            <i class="material-icons text-gray-500 mr-1 text-sm">notes</i>
+            Observación
+            <span *ngIf="estadoSeleccionado() === 'inactivo'" class="text-red-500 ml-1">*</span>
+          </label>
+          <div class="relative">
+            <textarea
+              id="observacion-textarea"
+              [ngModel]="observacion()"
+              (ngModelChange)="observacion.set($event)"
+              rows="4"
+              placeholder="Detalle el motivo del cambio de estado"
+              class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              [class.border-red-500]="estadoSeleccionado() === 'inactivo' && observacionInvalida()"
+            ></textarea>
+            <div class="absolute bottom-2 right-2 text-xs text-gray-400">
+              {{observacion().length}} caracteres
+            </div>
+          </div>
+          <div *ngIf="estadoSeleccionado() === 'inactivo' && observacionInvalida()" class="text-xs text-red-500 mt-1 flex items-center">
+            <i class="material-icons text-xs mr-1">warning</i>
+            La observación es obligatoria al inactivar un alumno
+          </div>
+          <!-- Quick Template Buttons -->
+          <div *ngIf="estadoSeleccionado() === 'inactivo'" class="mt-2">
+            <span class="text-xs text-gray-500 mr-2">Plantillas rápidas:</span>
+            <div class="flex flex-wrap gap-2 mt-1">
+              <button 
+                *ngFor="let plantilla of plantillasObservacion" 
+                (click)="aplicarPlantilla(plantilla)"
+                class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-700"
+              >
+                {{plantilla.nombre}}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Actions Buttons -->
+      <div class="flex justify-between items-center gap-3 mt-6">
+        <button
+          class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors flex items-center"
+          (click)="resetFormulario()"
+        >
+          <i class="material-icons mr-1 text-sm">close</i>
+          Cancelar
+        </button>
+        
+        <div class="flex gap-2">
+          <button *ngIf="alumnoEncontrado()?.estado !== estadoSeleccionado() || observacion().trim().length > 0"
+            class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors flex items-center"
+            (click)="confirmarGuardar(false)"
+          >
+            <i class="material-icons mr-1 text-sm">preview</i>
+            Previsualizar
+          </button>
+          
+          <button
+            class="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
+            (click)="confirmarGuardar(true)"
+            [disabled]="(estadoSeleccionado() === 'inactivo' && observacionInvalida()) || alumnoEncontrado()?.estado === estadoSeleccionado() && !observacion().trim()"
+            [class.opacity-50]="(estadoSeleccionado() === 'inactivo' && observacionInvalida()) || alumnoEncontrado()?.estado === estadoSeleccionado() && !observacion().trim()"
+          >
+            <i class="material-icons mr-1 text-sm">save</i>
+            Guardar cambios
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <div class="flex justify-end gap-4">
-      <button
-        class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
-        (click)="resetFormulario()"
-      >
-        Cancelar
-      </button>
-      <button
-        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-        (click)="guardarCambios()"
-      >
-        Guardar cambios
-      </button>
+  <!-- Error State -->
+  <div *ngIf="errorMensaje() && !cargando()" class="mt-6 p-4 bg-red-50 rounded-lg border-l-4 border-red-500 animate__animated animate__headShake">
+    <div class="flex items-start">
+      <i class="material-icons text-red-500 mr-2">error_outline</i>
+      <div>
+        <p class="font-medium text-red-800">{{ errorMensaje() }}</p>
+        <p class="text-sm text-red-600 mt-1">Verifique el código e intente nuevamente</p>
+        
+        <button 
+          (click)="resetFormulario()" 
+          class="mt-2 text-blue-600 hover:text-blue-800 text-sm flex items-center"
+        >
+          <i class="material-icons text-sm mr-1">refresh</i>
+          Reiniciar formulario
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Empty State for Initial Load -->
+  <div *ngIf="!mostrarFormulario() && !cargando() && !errorMensaje() && !codigo" class="my-8 text-center p-6 border border-dashed border-gray-300 rounded-lg">
+    <i class="material-icons text-gray-400" style="font-size: 48px;">search</i>
+    <p class="mt-2 text-gray-600">Ingrese un código de alumno para comenzar</p>
+    <p class="mt-1 text-sm text-gray-500">El código debe tener 14 dígitos</p>
+  </div>
+  
+  <!-- Help Tooltip -->
+  <div class="absolute top-2 right-2">
+    <button 
+      class="text-gray-400 hover:text-gray-600 transition-colors"
+      (click)="toggleHelp()"
+    >
+      <i class="material-icons">help_outline</i>
+    </button>
+  </div>
+  
+  <!-- Help Dialog -->
+  <div *ngIf="mostrarAyuda" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate__animated animate__fadeIn">
+    <div class="bg-white rounded-lg max-w-lg w-full p-6 m-4 shadow-xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold">Ayuda de Gestión de Alumnos</h3>
+        <button (click)="toggleHelp()" class="text-gray-500 hover:text-gray-700">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      <div class="prose max-w-none">
+        <h4 class="text-md font-medium text-gray-700">Cómo usar este formulario:</h4>
+        <ol class="mt-2 space-y-2 text-sm text-gray-600 list-decimal list-inside">
+          <li>Ingrese el código de 10 dígitos del alumno</li>
+          <li>Presione "Buscar" o la tecla Enter</li>
+          <li>Seleccione el nuevo estado del alumno</li>
+          <li>Si cambia a "Inactivo", debe agregar una observación</li>
+          <li>Presione "Guardar cambios" para confirmar</li>
+        </ol>
+        
+        <h4 class="text-md font-medium text-gray-700 mt-4">Teclas de acceso rápido:</h4>
+        <ul class="mt-2 grid grid-cols-2 gap-2 text-sm text-gray-600">
+          <li><kbd class="px-2 py-1 bg-gray-100 rounded">Enter</kbd> Buscar alumno</li>
+          <li><kbd class="px-2 py-1 bg-gray-100 rounded">Esc</kbd> Cancelar/Reiniciar</li>
+          <li><kbd class="px-2 py-1 bg-gray-100 rounded">Alt+S</kbd> Guardar cambios</li>
+          <li><kbd class="px-2 py-1 bg-gray-100 rounded">Alt+H</kbd> Mostrar/ocultar ayuda</li>
+        </ul>
+      </div>
+      <div class="mt-6 text-right">
+        <button 
+          (click)="toggleHelp()" 
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+        >
+          Entendido
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Confirmation Modal -->
+  <div *ngIf="mostrarConfirmacion" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate__animated animate__fadeIn">
+    <div class="bg-white rounded-lg max-w-lg w-full p-6 m-4 shadow-xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold">Confirmar cambios</h3>
+        <button (click)="mostrarConfirmacion = false" class="text-gray-500 hover:text-gray-700">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      
+      <div class="p-4 bg-gray-50 rounded-lg mb-4">
+        <div class="mb-3">
+          <span class="text-sm text-gray-500">Alumno:</span>
+          <p class="font-medium">{{ alumnoEncontrado()?.nombre }} {{ alumnoEncontrado()?.apellido }}</p>
+        </div>
+        
+        <div class="flex gap-4 mb-3">
+          <div>
+            <span class="text-sm text-gray-500">Estado Actual:</span>
+            <div class="mt-1">
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                [class.bg-green-100]="alumnoEncontrado()?.estado === 'activo'" 
+                [class.text-green-800]="alumnoEncontrado()?.estado === 'activo'"
+                [class.bg-red-100]="alumnoEncontrado()?.estado === 'inactivo'" 
+                [class.text-red-800]="alumnoEncontrado()?.estado === 'inactivo'">
+                {{ alumnoEncontrado()?.estado | titlecase }}
+              </span>
+            </div>
+          </div>
+          
+          <div>
+            <span class="text-sm text-gray-500">Nuevo Estado:</span>
+            <div class="mt-1">
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                [class.bg-green-100]="estadoSeleccionado() === 'activo'" 
+                [class.text-green-800]="estadoSeleccionado() === 'activo'"
+                [class.bg-red-100]="estadoSeleccionado() === 'inactivo'" 
+                [class.text-red-800]="estadoSeleccionado() === 'inactivo'">
+                {{ estadoSeleccionado() | titlecase }}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div *ngIf="observacion().trim()">
+          <span class="text-sm text-gray-500">Observación:</span>
+          <p class="mt-1 text-sm italic border-l-2 border-gray-300 pl-2">{{ observacion() }}</p>
+        </div>
+      </div>
+      
+      <p *ngIf="!confirmacionFinal" class="text-sm text-gray-600 mb-4">
+        ¿Está seguro de que desea cambiar el estado del alumno?
+      </p>
+      
+      <div *ngIf="!confirmacionFinal" class="flex justify-end gap-3">
+        <button 
+          (click)="mostrarConfirmacion = false" 
+          class="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-100 transition-colors"
+        >
+          Cancelar
+        </button>
+        <button 
+          *ngIf="!esPreview"
+          (click)="guardarCambios()" 
+          class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+        >
+          Confirmar
+        </button>
+        <button 
+          *ngIf="esPreview"
+          (click)="mostrarConfirmacion = false" 
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+        >
+          Volver al formulario
+        </button>
+      </div>
+      
+      <!-- Loading State in Modal -->
+      <div *ngIf="confirmacionFinal && cargando()" class="text-center py-4">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-600 mb-2"></div>
+        <p class="text-gray-600">Procesando cambios...</p>
+      </div>
     </div>
   </div>
 </div>

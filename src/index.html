@@ -1,6 +1,60 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <style>
+    body {
+      margin: 0;
+    }
+    
+    #app-loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(30, 30, 30, 0.95); 
+      z-index: 9999;
+      backdrop-filter: blur(3px);
+    }
+  
+    #app-loading .loader {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    
+    #app-loading .dot {
+      width: 12px;
+      height: 12px;
+      background-color: #e0e0e0;
+      border-radius: 50%;
+      opacity: 0.3;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    #app-loading .dot:nth-child(2) {
+      animation-delay: 0.3s;
+    }
+    
+    #app-loading .dot:nth-child(3) {
+      animation-delay: 0.6s;
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 0.3;
+        transform: scale(0.8);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.2);
+      }
+    }
+  </style>
   <meta charset="utf-8">
   <title>GestionAcademicoAndresdr</title>
   <base href="/">
@@ -9,6 +63,13 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 </head>
 <body>
+  <div id="app-loading">
+    <div class="loader">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
   <app-root></app-root>
 </body>
 </html>

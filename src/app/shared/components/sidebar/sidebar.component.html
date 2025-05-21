@@ -4,7 +4,6 @@
     <div class="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
       <div class="flex-1 px-3 bg-white divide-y space-y-1">
 
-        
         <!-- ✅ Perfil resumido arriba -->
         <shared-profile></shared-profile>
         
@@ -15,7 +14,12 @@
 
         <!-- 📁 Grupos -->
         <ng-container *ngFor="let group of sidebarGroups">
-          <shared-sidebar-group *ngFor="let group of sidebarGroups" [group]="group"></shared-sidebar-group>
+          <!-- Recorres los items de cada grupo -->
+          <ng-container *ngFor="let item of group.items">
+            <ng-container *ngIf="canActivate(item)">
+              <shared-sidebar-group [group]="{ items: [item] }"></shared-sidebar-group>
+            </ng-container>
+          </ng-container>
         </ng-container>
 
       </div>

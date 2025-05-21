@@ -2,7 +2,7 @@ import { ApplicationConfig, APP_INITIALIZER, importProvidersFrom } from '@angula
 import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideToastr } from 'ngx-toastr';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
 
 import { AppInitService } from './core/services/app-init.service';
@@ -10,11 +10,15 @@ import { AppInitService } from './core/services/app-init.service';
 // PrimeNG
 import Aura from '@primeng/themes/aura';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { loadingInterceptor } from './shared/loader/interceptors/loader.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     importProvidersFrom(HttpClientModule, BrowserAnimationsModule),
     provideRouter(routes),
+    provideHttpClient(
+      withInterceptors([loadingInterceptor])
+    ),
     
     // Animaciones (versión async recomendada para PrimeNG)
     provideAnimationsAsync(),

@@ -1,0 +1,359 @@
+/* Filter panel - versión compacta */
+.filter-panel {
+  background-color: white;
+  border-radius: 0;
+  padding: 0.5rem;
+  margin-bottom: 0.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.filter-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+.toggle-filters {
+  font-size: 0.7rem;
+  text-decoration: none;
+  padding: 0;
+}
+
+.filter-form {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 0.5rem;
+}
+
+.filter-form.expanded {
+  grid-template-rows: auto auto;
+}
+
+@media (min-width: 768px) {
+  .filter-form {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .filter-form {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.form-group {
+  margin-bottom: 0.25rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.75rem;
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #374151;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  transition: border-color 0.2s;
+}
+
+.form-control:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25);
+}
+
+.search-group {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+}
+
+.search-input-container {
+  display: flex;
+  position: relative;
+}
+
+.clear-btn {
+  position: absolute;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+}
+
+.clear-btn:hover {
+  color: #4b5563;
+}
+
+.search-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  padding: 0 0.5rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-top-right-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.7rem;
+}
+
+.search-btn:hover {
+  background-color: #2563eb;
+}
+
+/* Quick filters section */
+.quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+/* Advanced filters section */
+.advanced-filters {
+  display: none;
+  grid-column: 1 / -1;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 0.5rem;
+}
+
+.advanced-filters.show {
+  display: block;
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+/* Input with icon styles */
+.input-with-icon {
+  position: relative;
+}
+
+.input-with-icon i {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-size: 0.7rem;
+}
+
+.input-with-icon input {
+  padding-right: 1.5rem;
+}
+
+/* Custom select styling */
+.custom-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236b7280'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.25rem center;
+  background-size: 1rem;
+  padding-right: 1.75rem;
+}
+
+/* Estado filter buttons */
+.estado-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+}
+
+.estado-filter .btn {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.estado-filter .btn.active {
+  color: white;
+}
+
+.estado-filter .btn-outline-primary {
+  border: 1px solid #3b82f6;
+  color: #3b82f6;
+  background-color: transparent;
+}
+
+.estado-filter .btn-outline-primary.active {
+  background-color: #3b82f6;
+}
+
+.estado-filter .btn-outline-success {
+  border: 1px solid #10b981;
+  color: #10b981;
+  background-color: transparent;
+}
+
+.estado-filter .btn-outline-success.active {
+  background-color: #10b981;
+}
+
+.estado-filter .btn-outline-warning {
+  border: 1px solid #f59e0b;
+  color: #f59e0b;
+  background-color: transparent;
+}
+
+.estado-filter .btn-outline-warning.active {
+  background-color: #f59e0b;
+}
+
+.estado-filter .btn-outline-danger {
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  background-color: transparent;
+}
+
+.estado-filter .btn-outline-danger.active {
+  background-color: #ef4444;
+}
+
+/* Active filters */
+.active-filters-container {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.filters-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.clear-filters-btn {
+  margin-left: 0.25rem;
+  font-size: 0.65rem;
+  padding: 0.15rem 0.3rem;
+}
+
+/* Botones */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+  font-size: 0.75rem;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.btn-warning {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background-color: #d97706;
+}
+
+.btn-outline-secondary {
+  border: 1px solid #8b5cf6;
+  color: #8b5cf6;
+  background-color: transparent;
+}
+
+.btn-outline-secondary:hover {
+  background-color: rgba(139, 92, 246, 0.1);
+}
+
+.btn-sm {
+  padding: 0.15rem 0.3rem;
+  font-size: 0.65rem;
+}
+
+.btn-link {
+  background: none;
+  color: #3b82f6;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.btn-link:hover {
+  color: #2563eb;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 767px) {
+  .filter-form {
+    grid-template-columns: 1fr;
+  }
+  
+  .quick-filters {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .search-group {
+    width: 100%;
+  }
+  
+  .estado-filter {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  
+  .estado-filter .btn {
+    flex: 1;
+    min-width: 70px;
+  }
+}

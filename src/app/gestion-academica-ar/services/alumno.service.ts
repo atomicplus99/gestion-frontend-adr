@@ -1,20 +1,41 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { Alumno, PersonalAlumno } from '../pages/register/interfaces/alumno.interface';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class AlumnoService {
-  private readonly apiUrl = 'http://localhost:3000'; 
-
+  private readonly apiUrl = 'http://localhost:3000';
+  
   constructor(private http: HttpClient) {}
 
   obtenerTurnos(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/turno`);
   }
 
+  // Método modificado para evitar que la respuesta actualice el UserStore
   registrarAlumno(data: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/alumnos/registrar`, data); 
+    return this.http.post(`${this.apiUrl}/alumnos/registrar`, data)
+      .pipe(
+        // Transformamos la respuesta para eliminar cualquier campo que pueda
+        // ser interpretado como información del usuario autenticado
+        map(response => {
+          // Si la respuesta es un objeto y contiene un campo 'user',
+          // creamos una nueva respuesta sin ese campo
+          if (response && typeof response === 'object') {
+            // Destructuramos para extraer 'user' y 'token' y quedarnos con el resto
+            const { user, token, ...safeResponse } = response as any;
+            
+            // Devolvemos solo la parte segura de la respuesta
+            return safeResponse;
+          }
+          
+          // Si no hay un objeto o no hay user/token, devolvemos la respuesta original
+          return response;
+        })
+      );
   }
 
   obtenerTodos(): Observable<Alumno[]> {
@@ -27,13 +48,7 @@ export class AlumnoService {
 
   getByCodigo(codigo: string): Observable<Alumno> {
     return this.http
-      .get<Alumno>(`${this.apiUrl}/alumnos/codigo/${codigo}`)
-      .pipe(
-        tap({
-          next: a => console.log('[AlumnoService] OK', a),
-          error: e => console.error('[AlumnoService] ERR', e)
-        })
-      );
+      .get<Alumno>(`${this.apiUrl}/alumnos/codigo/${codigo}`);
   }
 
   actualizarAlumno(alumno: Alumno): Observable<Alumno> {
@@ -42,6 +57,4 @@ export class AlumnoService {
       alumno
     );
   }
-
-  
 }

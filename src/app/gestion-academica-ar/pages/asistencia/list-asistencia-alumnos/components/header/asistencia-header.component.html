@@ -1,0 +1,21 @@
+<div class="header-section">
+  <div class="title-container">
+    <h1><i class="fas fa-user-check"></i> Gestión de Asistencias</h1>
+    <p class="subtitle">Administre y controle la asistencia de los alumnos</p>
+  </div>
+  
+  <div class="action-buttons">
+    <button class="btn btn-primary" (click)="onRefreshData()" title="Actualizar datos">
+      <i class="fas fa-sync-alt"></i>
+      Actualizar
+    </button>
+    <button class="btn btn-secondary" (click)="onExportToCSV()" title="Exportar datos visibles">
+      <i class="fas fa-file-download"></i>
+      Exportar CSV
+    </button>
+    <button class="btn btn-success" (click)="onMarkAllPresent()" title="Marcar todos como presentes">
+      <i class="fas fa-check-double"></i>
+      Marcar Todos Presentes
+    </button>
+  </div>
+</div>

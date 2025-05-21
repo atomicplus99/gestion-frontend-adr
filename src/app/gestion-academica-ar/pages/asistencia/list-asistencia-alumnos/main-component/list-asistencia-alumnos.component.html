@@ -1,0 +1,98 @@
+<!-- list-asistencia-alumnos.component.html -->
+<div class="asistencia-container">
+  <!-- Header component -->
+  <app-asistencia-header 
+    [recordCount]="filteredData.length"
+    (refreshData)="refreshData()"
+    (exportToCSV)="exportToCSV()"
+    (markAllPresent)="markAllPresent()">
+  </app-asistencia-header>
+
+  <!-- Filtros component -->
+  <app-asistencia-filters
+    [turnos]="turnos"
+    [niveles]="niveles"
+    [grados]="grados"
+    [secciones]="secciones"
+    [activeFilters]="activeFilters"
+    [isFiltersPanelExpanded]="isFiltersPanelExpanded"
+    (filtersChange)="onFiltersChange($event)"
+    (filterRemove)="removeFilter($event)"
+    (clearFilters)="clearFilters()"
+    (toggleFilters)="toggleFiltersVisibility()"
+    (estadoFilterChange)="setEstadoFilter($event)">
+  </app-asistencia-filters>
+
+  <!-- Loading indicator -->
+  <app-loading-indicator *ngIf="isLoading" message="Cargando datos..."></app-loading-indicator>
+
+  <!-- Contenedor de tabla -->
+  <div class="table-container" *ngIf="!isLoading">
+    <div class="table-header">
+      <div class="view-options">
+        <button class="btn" [ngClass]="{'active': currentView === 'table'}" (click)="setView('table')">
+          <i class="fas fa-table"></i> Tabla
+        </button>
+        <button class="btn" [ngClass]="{'active': currentView === 'cards'}" (click)="setView('cards')">
+          <i class="fas fa-th-large"></i> Tarjetas
+        </button>
+      </div>
+      
+      <div class="results-count">
+        <span class="badge">{{ filteredData.length }} resultados</span>
+      </div>
+    </div>
+    
+    <!-- Table View -->
+    <app-asistencia-table 
+      *ngIf="currentView === 'table'"
+      [dataSource]="dataSource"
+      [sortColumn]="sortColumn"
+      [sortDirection]="sortDirection"
+      (sort)="sortData($event)"
+      (markAttendance)="onAttendanceStatusChange($event)"
+      (markExit)="onMarkExit($event)"
+      (addObservation)="onAddObservation($event)">
+    </app-asistencia-table>
+    
+    <!-- Cards View -->
+    <app-asistencia-card
+      *ngIf="currentView === 'cards'"
+      [dataSource]="dataSource"
+      (markAttendance)="onAttendanceStatusChange($event)"
+      (markExit)="onMarkExit($event)"
+      (addObservation)="onAddObservation($event)">
+    </app-asistencia-card>
+    
+    <!-- Empty state -->
+    <app-asistencia-empty-state 
+      *ngIf="dataSource.length === 0 && !isLoading"
+      (refreshData)="refreshData()">
+    </app-asistencia-empty-state>
+    
+    <!-- Pagination -->
+    <app-asistencia-pagination
+      [currentPage]="currentPage"
+      [pageSize]="pageSize"
+      [totalItems]="filteredData.length"
+      (pageChange)="goToPage($event)"
+      (goToFirst)="goToPage(1)"
+      (goToLast)="goToPage(totalPages)"
+      (goToPrevious)="goToPage(currentPage - 1)"
+      (goToNext)="goToPage(currentPage + 1)">
+    </app-asistencia-pagination>
+  </div>
+  
+  <!-- Notificaciones -->
+  <div class="notification" [ngClass]="notificationType" *ngIf="showNotification">
+    <div class="notification-content">
+      <div class="notification-icon">
+        <i class="fas" [ngClass]="{'fa-check-circle': notificationType === 'success', 'fa-exclamation-circle': notificationType === 'error'}"></i>
+      </div>
+      <div class="notification-body">
+        <h4 class="notification-title">{{ notificationType === 'success' ? 'Operación exitosa' : 'Error' }}</h4>
+        <p class="notification-message">{{ notificationMessage }}</p>
+      </div>
+    </div>
+  </div>
+</div>

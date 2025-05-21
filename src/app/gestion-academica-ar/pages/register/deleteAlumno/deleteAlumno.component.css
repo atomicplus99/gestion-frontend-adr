@@ -1,0 +1,463 @@
+/* deleteAlumno.component.css */
+
+/* --- Base Styles and Container --- */
+.component-container {
+  max-width: 90%; /* Allow it to take more width */
+  margin: 40px auto; /* Increased top margin for better spacing */
+  padding: 30px; /* Increased padding */
+  background-color: #f9fafb; /* Lighter background */
+  border: 1px solid #e5e7eb;
+  border-radius: 12px; /* More rounded corners */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05); /* Softer shadow */
+  transition: all 0.3s ease;
+  position: relative; /* For absolute positioned elements inside */
+}
+
+.component-container:hover {
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08); /* More pronounced hover effect */
+}
+
+/* --- Header --- */
+.component-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px; /* Increased spacing */
+}
+
+.component-header .icon-container {
+  background-color: #e0f2fe; /* Lighter blue */
+  padding: 10px; /* Increased padding */
+  border-radius: 12px; /* More rounded */
+  margin-right: 15px;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.component-header .icon-container i {
+  font-size: 1.5rem; /* Larger icon */
+  color: #3b82f6;
+}
+
+.component-header:hover .icon-container {
+  transform: scale(1.1) rotate(8deg); /* More noticeable hover */
+  background-color: #d1e7ff;
+}
+
+.component-header h2 {
+  font-size: 2.5rem; /* Larger title */
+  font-weight: 700;
+  color: #2d3748; /* Darker text */
+  margin-bottom: 5px;
+}
+
+.component-header p {
+  font-size: 1rem;
+  color: #718096;
+}
+
+/* --- Search Form --- */
+.search-form-container {
+  margin-bottom: 30px;
+}
+
+.search-form-container label {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #4a5568;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.search-form-container .flex {
+  gap: 10px;
+}
+
+.search-form-container input {
+  padding: 12px 15px;
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease-in-out;
+}
+
+.search-form-container input:focus {
+  outline: none;
+  border-color: #63b3ed;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+  transform: translateY(-1px);
+}
+
+.search-form-container .absolute i {
+  font-size: 1.1rem;
+}
+
+.search-form-container .text-xs {
+  font-size: 0.8rem;
+}
+
+.search-form-container .search-button {
+  background-color: #3b82f6;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.search-form-container .search-button:not(:disabled):hover {
+  background-color: #2c69d4;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-form-container .search-button:not(:disabled):active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Recently Searched --- */
+.mt-4 .flex.items-center {
+  margin-bottom: 10px;
+}
+
+.mt-4 .flex.items-center i {
+  font-size: 1rem;
+  margin-right: 5px;
+}
+
+.mt-4 .flex.items-center span {
+  font-size: 0.9rem;
+}
+
+.flex.flex-wrap.gap-2 button {
+  padding: 6px 12px;
+  border-radius: 20px; /* Pill shape */
+  background-color: #f3f4f6;
+  color: #4a5568;
+  font-size: 0.85rem;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.flex.flex-wrap.gap-2 button:hover {
+  background-color: #e2e8f0;
+  transform: scale(1.05);
+}
+
+/* --- Loading State --- */
+.my-8 .flex.flex-col {
+  padding: 40px 0;
+  border-radius: 12px;
+  background-color: #f7fafc;
+}
+
+.loading-animation {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 15px;
+}
+
+.loading-animation .animate-spin {
+  border-width: 4px;
+  height: 60px;
+  width: 60px;
+}
+
+.loading-animation .animate-ping {
+  height: 60px;
+  width: 60px;
+  opacity: 30%;
+}
+
+.my-8 p {
+  font-size: 1.1rem;
+  color: #6b7280;
+}
+
+/* --- Student Form --- */
+.student-form {
+  padding: 25px;
+  border: 1px solid #edf2f7;
+  border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
+}
+
+.student-form .card-hover {
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  background-color: #f7fafc;
+  border-left-width: 6px;
+  border-left-color: #63b3ed;
+  transition: all 0.3s ease;
+}
+
+.student-form .card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+}
+
+.student-form h3 {
+  font-size: 1.4rem;
+  color: #2d3748;
+  margin-bottom: 15px;
+}
+
+.student-form .grid {
+  gap: 8px;
+}
+
+.student-form .p-2 {
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.student-form .text-sm {
+  font-size: 0.9rem;
+}
+
+.student-form .font-medium {
+  font-weight: 600;
+}
+
+.student-form .inline-flex {
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+
+/* --- Status Change Form --- */
+.border-t {
+  border-top-width: 2px;
+  border-top-color: #e2e8f0;
+  padding-top: 25px;
+  margin-top: 25px;
+}
+
+.space-y-4 > div {
+  margin-bottom: 16px;
+}
+
+.bg-gray-50 {
+  background-color: #f7f7f7;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.flex.space-x-4 label {
+  font-size: 1rem;
+}
+
+/* --- Observación Textarea --- */
+.relative textarea {
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.absolute.bottom-2.right-2 {
+  font-size: 0.75rem;
+}
+
+.mt-2 .flex.flex-wrap {
+  gap: 8px;
+}
+
+.mt-2 button.text-xs {
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+
+/* --- Actions Buttons --- */
+.flex.justify-between.items-center {
+  margin-top: 30px;
+}
+
+.flex.justify-between.items-center button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.flex.gap-2 button {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+/* --- Error State --- */
+.bg-red-50 {
+  background-color: #fef2f2;
+  border-left-width: 6px;
+  border-left-color: #ef4444;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.flex.items-start i {
+  font-size: 1.2rem;
+  margin-right: 10px;
+}
+
+.font-medium.text-red-800 {
+  font-size: 1.1rem;
+}
+
+.text-sm.text-red-600 {
+  font-size: 0.9rem;
+}
+
+.text-blue-600.hover\:text-blue-800 {
+  font-weight: 500;
+}
+
+/* --- Empty State --- */
+.text-center.p-6 {
+  padding: 40px;
+  border-style: dashed;
+  border-width: 2px;
+  border-radius: 12px;
+  background-color: #f8fafc;
+}
+
+.text-center i {
+  font-size: 3rem;
+  color: #9ca3af;
+}
+
+.text-center p {
+  font-size: 1.1rem;
+}
+
+/* --- Help Tooltip Button --- */
+.absolute.top-2.right-2 button {
+  padding: 8px;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.absolute.top-2.right-2 i {
+  font-size: 1.2rem;
+  color: #718096;
+}
+
+/* --- Help Dialog --- */
+.fixed.inset-0.bg-black {
+  background-color: rgba(0, 0, 0, 0.6); /* Slightly darker overlay */
+}
+
+.bg-white.rounded-lg.max-w-lg {
+  border-radius: 16px; /* More rounded modal */
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15); /* More prominent modal shadow */
+}
+
+.bg-white.rounded-lg h3 {
+  font-size: 1.6rem;
+}
+
+.prose {
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.prose h4 {
+  font-size: 1.15rem;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  color: #374151;
+}
+
+.prose ol, .prose ul {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose kbd {
+  padding: 0.2em 0.6em;
+  border-radius: 6px;
+  font-size: 0.9em;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.mt-6.text-right button {
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* --- Confirmation Modal --- */
+.bg-white.rounded-lg.max-w-lg.w-full.p-6.m-4.shadow-xl {
+  border-radius: 16px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.bg-gray-50.rounded-lg.mb-4 {
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.flex.gap-4.mb-3 > div {
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #f7fafc; /* Subtle background for info */
+}
+
+.text-sm.italic {
+  font-style: italic;
+  color: #4a5568;
+}
+
+/* --- Animations (Slight adjustments for smoothness) --- */
+.animate__animated {
+  animation-duration: 0.4s; /* Slightly faster */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px); /* Less initial movement */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes headShake {
+  /* Slightly more subtle shake */
+  0% { transform: translateX(0); }
+  6.5% { transform: translateX(-4px) rotateY(-7deg); }
+  18.5% { transform: translateX(3px) rotateY(5deg); }
+  31.5% { transform: translateX(-2px) rotateY(-3deg); }
+  43.5% { transform: translateX(1px) rotateY(2deg); }
+  50% { transform: translateX(0); }
+}
+
+@keyframes pulseHighlight {
+  0% { background-color: transparent; }
+  30% { background-color: rgba(254, 202, 202, 0.3); } /* More visible pulse */
+  100% { background-color: transparent; }
+}
+
+/* --- Radio Button Style (No significant changes needed) --- */
+/* --- Keyboard Style (No significant changes needed) --- */
+/* --- Template Button Hover (Slightly more pronounced) --- */
+button.text-xs:hover {
+  background-color: #e5e7eb;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* --- Fixed Inset for Modals (Adjusted z-index if needed) --- */
+.fixed.inset-0 {
+  z-index: 1000; /* Ensure modals are on top */
+}

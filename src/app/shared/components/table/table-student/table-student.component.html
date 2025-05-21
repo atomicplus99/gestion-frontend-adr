@@ -1,160 +1,529 @@
-<!-- Spinner de carga -->
-<div *ngIf="loading" class="flex justify-center p-8">
-    <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
-</div>
+<!-- table-student.component.html -->
+<div class="table-student-container">
+  <!-- Barra superior de herramientas -->
+  <div class="toolbar bg-white rounded-t-lg border-b border-gray-200 p-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+    <!-- Filtros rápidos y contador -->
+    <div class="flex items-center space-x-4">
+      <span class="text-sm font-medium text-gray-600" *ngIf="dataSource.length">
+        {{dataSource.length}} resultado<span *ngIf="dataSource.length !== 1">s</span>
+      </span>
+      
+      <div *ngIf="dataSource.length > 0" class="flex space-x-2">
+        <div *ngFor="let nivel of niveles" 
+            class="text-xs px-2 py-1 rounded-full cursor-pointer transition-colors"
+            [class.bg-blue-100]="nivelFiltro === nivel"
+            [class.text-blue-800]="nivelFiltro === nivel"
+            [class.bg-gray-100]="nivelFiltro !== nivel"
+            [class.text-gray-700]="nivelFiltro !== nivel"
+            [class.hover:bg-gray-200]="nivelFiltro !== nivel"
+            (click)="filtrarPorNivel(nivel)">
+          {{nivel}}
+        </div>
+      </div>
+    </div>
 
-<!-- Tabla de resultados -->
-<div *ngIf="!loading && dataSource.data.length" class="overflow-auto">
-    <table mat-table [dataSource]="dataSource" matSort class="min-w-full mb-6">
-        <!-- Columnas -->
-        <ng-container matColumnDef="codigo">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Código</th>
-            <td mat-cell *matCellDef="let s">{{ s.codigo }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="dni_alumno">
-            <th mat-header-cell *matHeaderCellDef>DNI</th>
-            <td mat-cell *matCellDef="let s">{{ s.dni_alumno }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="nombre">
-            <th mat-header-cell *matHeaderCellDef>Nombre</th>
-            <td mat-cell *matCellDef="let s">{{ s.nombre }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="apellido">
-            <th mat-header-cell *matHeaderCellDef>Apellido</th>
-            <td mat-cell *matCellDef="let s">{{ s.apellido }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="fecha_nacimiento">
-            <th mat-header-cell *matHeaderCellDef>Fecha Nac.</th>
-            <td mat-cell *matCellDef="let s">{{ s.fecha_nacimiento | date:'shortDate' }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="direccion">
-            <th mat-header-cell *matHeaderCellDef>Dirección</th>
-            <td mat-cell *matCellDef="let s">{{ s.direccion }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="nivel">
-            <th mat-header-cell *matHeaderCellDef>Nivel</th>
-            <td mat-cell *matCellDef="let s">{{ s.nivel }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="grado">
-            <th mat-header-cell *matHeaderCellDef>Grado</th>
-            <td mat-cell *matCellDef="let s">{{ s.grado }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="seccion">
-            <th mat-header-cell *matHeaderCellDef>Sección</th>
-            <td mat-cell *matCellDef="let s">{{ s.seccion }}</td>
-        </ng-container>
-
-        <!-- Acciones -->
-        <ng-container matColumnDef="acciones">
-            <th mat-header-cell *matHeaderCellDef>Acciones</th>
-            <td mat-cell *matCellDef="let s">
-                <button mat-icon-button (click)="editarAlumno(s)" class="text-blue-600 hover:text-blue-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M15.232 5.232l3.536 3.536M9 13l6-6 3 3-6 6H9v-3z" />
-                    </svg>
-                </button>
-            </td>
-        </ng-container>
-
-        <!-- Filas -->
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-    </table>
-</div>
-
-<!-- Formulario de edición -->
-<div *ngIf="alumnoEditando" class="bg-white shadow-md rounded-lg border border-gray-200 mt-8 w-full px-4 sm:px-6 lg:px-8 py-6">
-  <h3 class="text-xl font-semibold text-blue-600 flex items-center mb-6">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-    </svg>
-    Editar Alumno
-  </h3>
-
-  <form class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-
-    <mat-form-field appearance="fill" class="w-full">
-      <mat-label>Código</mat-label>
-      <input
-        matInput
-        [(ngModel)]="alumnoEditando.codigo"
-        name="codigo"
-        maxlength="10"
-        pattern="^[0-9]{10}$"
-        required
-      />
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="w-full">
-      <mat-label>Nombre</mat-label>
-      <input matInput [(ngModel)]="alumnoEditando.nombre" name="nombre" />
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="w-full">
-      <mat-label>Apellido</mat-label>
-      <input matInput [(ngModel)]="alumnoEditando.apellido" name="apellido" />
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="w-full">
-      <mat-label>DNI</mat-label>
-      <input matInput [(ngModel)]="alumnoEditando.dni_alumno" name="dni_alumno" />
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="w-full">
-      <mat-label>Fecha de nacimiento</mat-label>
-      <input matInput type="date" [(ngModel)]="alumnoEditando.fecha_nacimiento" name="fecha_nacimiento" />
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="w-full">
-      <mat-label>Dirección</mat-label>
-      <input matInput [(ngModel)]="alumnoEditando.direccion" name="direccion" />
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="w-full">
-      <mat-label>Nivel</mat-label>
-      <mat-select [(ngModel)]="alumnoEditando.nivel" name="nivel">
-        <mat-option value="Inicial">Inicial</mat-option>
-        <mat-option value="Primaria">Primaria</mat-option>
-        <mat-option value="Secundaria">Secundaria</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="w-full">
-      <mat-label>Grado</mat-label>
-      <input matInput type="number" [(ngModel)]="alumnoEditando.grado" name="grado" />
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="w-full md:col-span-2">
-      <mat-label>Sección</mat-label>
-      <mat-select [(ngModel)]="alumnoEditando.seccion" name="seccion">
-        <mat-option *ngFor="let s of secciones" [value]="s">{{ s }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <div class="md:col-start-2 flex justify-end space-x-4 mt-4">
-      <button mat-flat-button color="primary" class="custom-button" (click)="guardarEdicion()" type="button">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+    <!-- Herramientas de tabla -->
+    <div class="flex flex-wrap gap-2">
+      <!-- Búsqueda interna -->
+      <div class="custom-input-container search-field">
+        <label for="searchInput" class="form-label">Buscar en tabla</label>
+        <div class="relative">
+          <input 
+            id="searchInput"
+            class="custom-input" 
+            type="text" 
+            placeholder="Buscar..."
+            (input)="applyFilter($event)" 
+            #input
+          >
+          <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+            <i class="custom-icon search-icon"></i>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Botones de acciones -->
+      <button 
+        class="btn-tool h-10 px-4 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md shadow-sm transition-colors duration-200 flex items-center justify-center"
+        (click)="cambiarVista()"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
         </svg>
-        Guardar
-      </button>
-
-      <button mat-stroked-button color="warn" class="custom-button cancelar" (click)="cancelarEdicion()" type="button">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-        Cancelar
+        {{mostrarTarjetas ? 'Ver tabla' : 'Ver tarjetas'}}
       </button>
     </div>
-  </form>
+  </div>
+
+  <!-- Spinner de carga -->
+  <div *ngIf="loading" class="flex justify-center p-8 relative">
+    <div class="loading-indicator">
+      <div class="custom-spinner"></div>
+      <p class="mt-3 text-sm text-gray-500">Cargando datos del alumno...</p>
+    </div>
+  </div>
+
+  <!-- Mensaje sin resultados -->
+  <div *ngIf="!loading && !dataSource.length" class="bg-white rounded-lg p-8 text-center">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <h3 class="text-lg font-medium text-gray-700">No se encontraron resultados</h3>
+    <p class="text-gray-500 mt-1">Verifique el código de alumno e intente nuevamente</p>
+  </div>
+
+  <!-- Vista de tarjetas (alternativa a la tabla) -->
+  <div *ngIf="!loading && dataSource.length && mostrarTarjetas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-b-lg">
+    <div *ngFor="let alumno of filteredData" class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-4 border border-gray-100 student-card">
+      <div class="flex justify-between items-start mb-3">
+        <div class="bg-blue-50 text-blue-700 rounded-full px-3 py-1 text-xs font-semibold">
+          {{alumno.nivel}} - {{alumno.grado}}° {{alumno.seccion}}
+        </div>
+        <button (click)="editarAlumno(alumno)" class="text-blue-600 hover:text-blue-800 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6-6 3 3-6 6H9v-3z" />
+          </svg>
+        </button>
+      </div>
+      
+      <h3 class="text-lg font-semibold text-gray-900">{{alumno.nombre}} {{alumno.apellido}}</h3>
+      
+      <div class="mt-3 space-y-2 text-sm">
+        <div class="flex items-start">
+          <div class="text-gray-500 w-24">Código:</div>
+          <div class="font-medium">{{alumno.codigo}}</div>
+        </div>
+        <div class="flex items-start">
+          <div class="text-gray-500 w-24">DNI:</div>
+          <div class="font-medium">{{alumno.dni_alumno}}</div>
+        </div>
+        <div class="flex items-start">
+          <div class="text-gray-500 w-24">Fecha Nac.:</div>
+          <div class="font-medium">{{alumno.fecha_nacimiento | date:'shortDate'}}</div>
+        </div>
+        <div class="flex items-start">
+          <div class="text-gray-500 w-24">Dirección:</div>
+          <div class="font-medium">{{alumno.direccion}}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de resultados personalizada -->
+  <div *ngIf="!loading && dataSource.length && !mostrarTarjetas" class="overflow-auto bg-white rounded-b-lg border-t border-gray-100">
+    <div class="custom-table-container">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th (click)="sortTable('codigo')" class="sortable-header">
+              Código
+              <i class="sort-icon" [class.active]="sortColumn === 'codigo'" [class.asc]="sortDirection === 'asc'"></i>
+            </th>
+            <th (click)="sortTable('dni_alumno')" class="sortable-header">
+              DNI
+              <i class="sort-icon" [class.active]="sortColumn === 'dni_alumno'" [class.asc]="sortDirection === 'asc'"></i>
+            </th>
+            <th (click)="sortTable('nombre')" class="sortable-header">
+              Nombre
+              <i class="sort-icon" [class.active]="sortColumn === 'nombre'" [class.asc]="sortDirection === 'asc'"></i>
+            </th>
+            <th (click)="sortTable('apellido')" class="sortable-header">
+              Apellido
+              <i class="sort-icon" [class.active]="sortColumn === 'apellido'" [class.asc]="sortDirection === 'asc'"></i>
+            </th>
+            <th (click)="sortTable('fecha_nacimiento')" class="sortable-header">
+              Fecha Nac.
+              <i class="sort-icon" [class.active]="sortColumn === 'fecha_nacimiento'" [class.asc]="sortDirection === 'asc'"></i>
+            </th>
+            <th>Dirección</th>
+            <th (click)="sortTable('nivel')" class="sortable-header">
+              Nivel
+              <i class="sort-icon" [class.active]="sortColumn === 'nivel'" [class.asc]="sortDirection === 'asc'"></i>
+            </th>
+            <th (click)="sortTable('grado')" class="sortable-header">
+              Grado
+              <i class="sort-icon" [class.active]="sortColumn === 'grado'" [class.asc]="sortDirection === 'asc'"></i>
+            </th>
+            <th (click)="sortTable('seccion')" class="sortable-header">
+              Sección
+              <i class="sort-icon" [class.active]="sortColumn === 'seccion'" [class.asc]="sortDirection === 'asc'"></i>
+            </th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let alumno of paginatedData" class="hover:bg-gray-50 transition-colors">
+            <td>{{ alumno.codigo }}</td>
+            <td>{{ alumno.dni_alumno }}</td>
+            <td>{{ alumno.nombre }}</td>
+            <td>{{ alumno.apellido }}</td>
+            <td>{{ alumno.fecha_nacimiento | date:'shortDate' }}</td>
+            <td>{{ alumno.direccion }}</td>
+            <td [ngClass]="{
+              'text-green-700 bg-green-50': alumno.nivel === 'Inicial',
+              'text-blue-700 bg-blue-50': alumno.nivel === 'Primaria',
+              'text-purple-700 bg-purple-50': alumno.nivel === 'Secundaria'
+            }" class="rounded px-2 py-1 text-xs font-medium">
+              {{ alumno.nivel }}
+            </td>
+            <td>{{ alumno.grado }}</td>
+            <td>{{ alumno.seccion }}</td>
+            <td>
+              <div class="flex items-center space-x-2">
+                <button (click)="editarAlumno(alumno)" class="text-blue-600 hover:text-blue-800 action-button">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6-6 3 3-6 6H9v-3z" />
+                  </svg>
+                  <span class="action-tooltip">Editar</span>
+                </button>
+                <button (click)="verDetalles(alumno)" class="text-gray-600 hover:text-gray-800 action-button">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <span class="action-tooltip">Ver detalles</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Paginador personalizado -->
+    <div class="custom-paginator">
+      <div class="paginator-info">
+        Mostrando {{ startIndex + 1 }} - {{ endIndex }} de {{ filteredData.length }}
+      </div>
+      <div class="paginator-controls">
+        <button 
+          class="paginator-button" 
+          [disabled]="currentPage === 1"
+          [class.disabled]="currentPage === 1"
+          (click)="goToPage(1)"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+          </svg>
+        </button>
+        <button 
+          class="paginator-button" 
+          [disabled]="currentPage === 1"
+          [class.disabled]="currentPage === 1"
+          (click)="goToPage(currentPage - 1)"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        
+        <div class="paginator-page-select">
+          <select [(ngModel)]="pageSize" (change)="updatePage()">
+            <option [value]="5">5 / página</option>
+            <option [value]="10">10 / página</option>
+            <option [value]="25">25 / página</option>
+          </select>
+        </div>
+        
+        <button 
+          class="paginator-button" 
+          [disabled]="currentPage === totalPages"
+          [class.disabled]="currentPage === totalPages"
+          (click)="goToPage(currentPage + 1)"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+        <button 
+          class="paginator-button" 
+          [disabled]="currentPage === totalPages"
+          [class.disabled]="currentPage === totalPages"
+          (click)="goToPage(totalPages)"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de edición personalizado -->
+  <div *ngIf="alumnoEditando" class="bg-white shadow-lg rounded-lg border border-gray-200 mt-8 w-full px-4 sm:px-6 lg:px-8 py-6 edit-form-container animate__animated animate__fadeIn">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-semibold text-blue-600 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+        </svg>
+        Editar Alumno
+      </h3>
+      
+      <div class="text-sm text-gray-500">
+        ID original: <span class="font-medium">{{codigoOriginal}}</span>
+      </div>
+    </div>
+
+    <form class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+      <!-- Datos básicos -->
+      <div class="md:col-span-2 bg-blue-50 p-4 rounded-lg mb-2">
+        <h4 class="text-blue-800 font-medium mb-3 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+          </svg>
+          Datos de identificación
+        </h4>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="custom-form-group">
+            <label for="codigo" class="form-label">Código</label>
+            <input
+              id="codigo"
+              type="text"
+              class="custom-input"
+              [(ngModel)]="alumnoEditando.codigo"
+              name="codigo"
+              maxlength="10"
+              pattern="^[0-9]{10}$"
+              required
+            />
+            <div class="input-hint">Debe contener 10 dígitos</div>
+          </div>
+
+          <div class="custom-form-group">
+            <label for="dni" class="form-label">DNI</label>
+            <input 
+              id="dni"
+              type="text"
+              class="custom-input"
+              [(ngModel)]="alumnoEditando.dni_alumno" 
+              name="dni_alumno" 
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Datos personales -->
+      <div class="custom-form-group">
+        <label for="nombre" class="form-label">Nombre</label>
+        <input 
+          id="nombre"
+          type="text"
+          class="custom-input"
+          [(ngModel)]="alumnoEditando.nombre" 
+          name="nombre" 
+          required 
+        />
+      </div>
+
+      <div class="custom-form-group">
+        <label for="apellido" class="form-label">Apellido</label>
+        <input 
+          id="apellido"
+          type="text"
+          class="custom-input"
+          [(ngModel)]="alumnoEditando.apellido" 
+          name="apellido" 
+          required 
+        />
+      </div>
+
+      <div class="custom-form-group">
+        <label for="fechaNac" class="form-label">Fecha de nacimiento</label>
+        <input 
+          id="fechaNac"
+          type="date"
+          class="custom-input"
+          [(ngModel)]="alumnoEditando.fecha_nacimiento" 
+          name="fecha_nacimiento" 
+        />
+      </div>
+
+      <div class="custom-form-group">
+        <label for="direccion" class="form-label">Dirección</label>
+        <input 
+          id="direccion"
+          type="text"
+          class="custom-input"
+          [(ngModel)]="alumnoEditando.direccion" 
+          name="direccion" 
+        />
+      </div>
+
+      <!-- Datos académicos -->
+      <div class="md:col-span-2 bg-green-50 p-4 rounded-lg mb-2">
+        <h4 class="text-green-800 font-medium mb-3 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path d="M12 14l9-5-9-5-9 5 9 5z" />
+            <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+          </svg>
+          Datos académicos
+        </h4>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="custom-form-group">
+            <label for="nivel" class="form-label">Nivel</label>
+            <select 
+              id="nivel"
+              class="custom-select"
+              [(ngModel)]="alumnoEditando.nivel" 
+              name="nivel" 
+              required
+            >
+              <option value="Inicial">Inicial</option>
+              <option value="Primaria">Primaria</option>
+              <option value="Secundaria">Secundaria</option>
+            </select>
+          </div>
+          
+          <div class="custom-form-group">
+            <label for="grado" class="form-label">Grado</label>
+            <input 
+              id="grado"
+              type="number"
+              class="custom-input"
+              min="1" 
+              max="6"
+              [(ngModel)]="alumnoEditando.grado" 
+              name="grado" 
+              required 
+            />
+          </div>
+          
+          <div class="custom-form-group">
+            <label for="seccion" class="form-label">Sección</label>
+            <select 
+              id="seccion"
+              class="custom-select"
+              [(ngModel)]="alumnoEditando.seccion" 
+              name="seccion" 
+              required
+            >
+              <option *ngFor="let s of secciones" [value]="s">{{ s }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="md:col-span-2 flex justify-end space-x-4 mt-4">
+        <button 
+          class="custom-button cancelar" 
+          (click)="cancelarEdicion()" 
+          type="button"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          Cancelar
+        </button>
+
+        <button 
+          class="custom-button primary" 
+          (click)="guardarEdicion()" 
+          type="button" 
+          [disabled]="guardando"
+        >
+          <ng-container *ngIf="!guardando">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            Guardar
+          </ng-container>
+          <ng-container *ngIf="guardando">
+            <svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Guardando...
+          </ng-container>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Modal de detalles (activado por el botón de ver detalles) -->
+  <div *ngIf="alumnoDetalle" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal-container animate__animated animate__fadeIn">
+    <div class="bg-white rounded-lg max-w-2xl w-full m-4 p-6 shadow-xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-semibold text-gray-800">Detalles del Alumno</h3>
+        <button (click)="cerrarDetalles()" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <div class="border-t border-gray-200 pt-4">
+        <div class="flex flex-col md:flex-row">
+          <div class="w-full md:w-1/3 mb-4 md:mb-0 md:pr-6">
+            <div class="bg-gray-100 p-4 rounded-lg flex flex-col items-center justify-center h-full">
+              <div class="bg-blue-100 p-6 rounded-full mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <h4 class="text-lg font-semibold text-center">{{alumnoDetalle.nombre}} {{alumnoDetalle.apellido}}</h4>
+              <p class="text-sm text-gray-500 text-center">Código: {{alumnoDetalle.codigo}}</p>
+              <div class="mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium" 
+                [class.bg-green-100]="alumnoDetalle.nivel === 'Inicial'"
+                [class.text-green-800]="alumnoDetalle.nivel === 'Inicial'"
+                [class.bg-blue-100]="alumnoDetalle.nivel === 'Primaria'"
+                [class.text-blue-800]="alumnoDetalle.nivel === 'Primaria'"
+                [class.bg-purple-100]="alumnoDetalle.nivel === 'Secundaria'"
+                [class.text-purple-800]="alumnoDetalle.nivel === 'Secundaria'">
+                {{alumnoDetalle.nivel}} - {{alumnoDetalle.grado}}° {{alumnoDetalle.seccion}}
+              </div>
+            </div>
+          </div>
+          
+          <div class="w-full md:w-2/3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <p class="text-sm text-gray-500 mb-1">DNI</p>
+                <p class="font-medium">{{alumnoDetalle.dni_alumno}}</p>
+              </div>
+              
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <p class="text-sm text-gray-500 mb-1">Fecha de Nacimiento</p>
+                <p class="font-medium">{{alumnoDetalle.fecha_nacimiento | date:'dd/MM/yyyy'}}</p>
+              </div>
+              
+              <div class="bg-gray-50 p-3 rounded-lg md:col-span-2">
+                <p class="text-sm text-gray-500 mb-1">Dirección</p>
+                <p class="font-medium">{{alumnoDetalle.direccion}}</p>
+              </div>
+              
+              <!-- Información adicional (simulada) -->
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <p class="text-sm text-gray-500 mb-1">Estado</p>
+                <p class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <span class="w-2 h-2 mr-1 rounded-full bg-green-500"></span>
+                  Activo
+                </p>
+              </div>
+              
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <p class="text-sm text-gray-500 mb-1">Última actualización</p>
+                <p class="font-medium">{{ultimaActualizacion | date:'dd/MM/yyyy HH:mm'}}</p>
+              </div>
+            </div>
+            
+            <div class="mt-4 flex justify-end">
+              <button 
+                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 flex items-center"
+                (click)="editarDesdeDetalle()"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                Editar alumno
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

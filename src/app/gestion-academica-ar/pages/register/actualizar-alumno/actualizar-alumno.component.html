@@ -1,68 +1,248 @@
-<div class="px-4 sm:px-6 lg:px-8 py-6">
-  <!-- Card blanca con título y search -->
-  <div class="bg-white shadow rounded-lg p-6 mb-6">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
-      
-      <!-- Título -->
-      <h1 class="text-2xl font-semibold text-gray-800">
-        Actualizar Alumno
-      </h1>
-
-      <!-- Search con Angular Material Autocomplete -->
-      <mat-form-field
-        appearance="outline"
-        class="w-full md:w-64 mt-4 md:mt-0"
-      >
-        <mat-label>Código de estudiante</mat-label>
-        <input
-          matInput
-          [formControl]="searchControl"
-          [matAutocomplete]="auto"
-          [disabled]="editando" 
-          placeholder="000123456"
-        />
-        
-        <!-- Suffix con SVG de lupa -->
-        <div
-          matSuffix
-          class="flex items-center pr-2 cursor-pointer"
-          (click)="onSelectCode(searchControl.value)"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5 text-gray-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"
-            />
-          </svg>
-        </div>
-
-        <!-- Lista de opciones -->
-        <mat-autocomplete
-          #auto="matAutocomplete"
-          (optionSelected)="onSelectCode($event.option.value)"
-        >
-          <mat-option
-            *ngFor="let code of filteredCodes$ | async"
-            [value]="code"
-          >
-            {{ code }}
-          </mat-option>
-        </mat-autocomplete>
-      </mat-form-field>
+<!-- actualizar-alumno.component.html -->
+<div class="student-update-container px-4 sm:px-6 lg:px-8 py-6">
+  <!-- Header con estadísticas rápidas -->
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white shadow rounded-lg p-4 border-l-4 border-blue-500 flex items-center hover-card">
+      <div class="bg-blue-100 p-3 rounded-full mr-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      </div>
+      <div>
+        <p class="text-xs text-gray-500 uppercase font-semibold">Total Alumnos</p>
+        <p class="text-xl font-bold text-gray-800">{{ totalAlumnos }}</p>
+      </div>
+    </div>
+    
+    <div class="bg-white shadow rounded-lg p-4 border-l-4 border-green-500 flex items-center hover-card">
+      <div class="bg-green-100 p-3 rounded-full mr-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div>
+        <p class="text-xs text-gray-500 uppercase font-semibold">Alumnos Activos</p>
+        <p class="text-xl font-bold text-gray-800">{{ alumnosActivos }}</p>
+      </div>
+    </div>
+    
+    <div class="bg-white shadow rounded-lg p-4 border-l-4 border-red-500 flex items-center hover-card">
+      <div class="bg-red-100 p-3 rounded-full mr-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div>
+        <p class="text-xs text-gray-500 uppercase font-semibold">Alumnos Inactivos</p>
+        <p class="text-xl font-bold text-gray-800">{{ alumnosInactivos }}</p>
+      </div>
+    </div>
+    
+    <div class="bg-white shadow rounded-lg p-4 border-l-4 border-purple-500 flex items-center hover-card">
+      <div class="bg-purple-100 p-3 rounded-full mr-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div>
+        <p class="text-xs text-gray-500 uppercase font-semibold">Actualizados Hoy</p>
+        <p class="text-xl font-bold text-gray-800">{{ actualizadosHoy }}</p>
+      </div>
     </div>
   </div>
 
-  <!-- Aquí se monta la tabla -->
-  <shared-table-student
-    [codigoSeleccionado]="selectedCode"
-    (editandoAlumno)="onAlumnoEditando($event)"
-  ></shared-table-student>
+  <!-- Card principal con búsqueda y filtros -->
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <!-- Header con título y acciones -->
+    <div class="border-b border-gray-200 px-6 py-4">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+        <!-- Título con ícono -->
+        <div class="flex items-center mb-4 md:mb-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+          <h1 class="text-2xl font-semibold text-gray-800">
+            Actualizar Información de Alumnos
+          </h1>
+        </div>
+
+        <!-- Botones de acciones y filtro -->
+        <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 w-full md:w-auto">
+          <!-- Selector de nivel para filtrar -->
+          <mat-form-field appearance="outline" class="w-full sm:w-44 text-sm">
+            <mat-label>Filtrar por nivel</mat-label>
+            <mat-select [(ngModel)]="nivelFiltro" (selectionChange)="actualizarFiltros()">
+              <mat-option [value]="''">Todos</mat-option>
+              <mat-option value="Inicial">Inicial</mat-option>
+              <mat-option value="Primaria">Primaria</mat-option>
+              <mat-option value="Secundaria">Secundaria</mat-option>
+            </mat-select>
+          </mat-form-field>
+          
+          <!-- Búsqueda principal -->
+          <mat-form-field appearance="outline" class="w-full sm:w-64 text-sm">
+            <mat-label>Código de estudiante</mat-label>
+            <input 
+              matInput
+              [formControl]="searchControl"
+              [matAutocomplete]="auto"
+              [disabled]="editando"
+              placeholder="000123456"
+              (keydown.enter)="onSelectCode(searchControl.value)"
+              class="search-input"
+            />
+            
+            <!-- Suffix con SVG de lupa -->
+            <div
+              matSuffix
+              class="flex items-center pr-2 cursor-pointer search-icon-container"
+              (click)="onSelectCode(searchControl.value)"
+              [class.disabled]="editando"
+              [attr.title]="editando ? 'Finalice la edición actual para buscar' : 'Buscar alumno'"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 text-gray-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"
+                />
+              </svg>
+            </div>
+            
+            <!-- Lista de opciones con información adicional -->
+            <mat-autocomplete
+              #auto="matAutocomplete"
+              (optionSelected)="onSelectCode($event.option.value)"
+            >
+              <mat-option
+                *ngFor="let alumno of filteredAlumnos$ | async"
+                [value]="alumno.codigo"
+                class="autocomplete-option"
+              >
+                <div class="flex flex-col">
+                  <span class="font-medium">{{ alumno.codigo }}</span>
+                  <span class="text-xs text-gray-500">{{ alumno.nombre }} {{ alumno.apellido }} - {{ alumno.nivel }}</span>
+                </div>
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+          
+          <!-- Botón para exportar -->
+          <button 
+            class="btn-export h-10 px-4 py-1 bg-green-600 hover:bg-green-700 text-white rounded-md shadow transition-colors duration-200 flex items-center justify-center"
+            [disabled]="!selectedCode && !dataLoaded"
+            (click)="exportarDatos()"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Exportar
+          </button>
+        </div>
+      </div>
+      
+      <!-- Historia de búsquedas recientes -->
+      <div *ngIf="historialBusquedas.length > 0" class="mt-4">
+        <p class="text-xs text-gray-600 mb-1 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Búsquedas recientes:
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <button 
+            *ngFor="let alumno of historialBusquedas" 
+            class="history-pill text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-full flex items-center transition-colors"
+            (click)="seleccionarHistorial(alumno.codigo)"
+          >
+            <span>{{ alumno.nombre }} ({{ alumno.codigo }})</span>
+            <span class="inline-block ml-1 text-gray-400">{{ alumno.nivel }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado vacío cuando no hay búsqueda -->
+    <div *ngIf="!selectedCode && !dataLoaded" class="text-center py-16 px-4 flex flex-col items-center justify-center empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <h3 class="text-lg font-medium text-gray-500">Actualizar información de alumnos</h3>
+      <p class="text-gray-400 mt-1 max-w-lg">Busque un alumno por su código para ver y editar su información. También puede seleccionar un alumno de la lista desplegable o el historial de búsquedas.</p>
+      <button 
+        class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200 shadow-sm flex items-center"
+        (click)="cargarAlumnosRecientes()"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+        </svg>
+        Ver alumnos recientes
+      </button>
+    </div>
+
+    <!-- Componente tabla -->
+    <shared-table-student
+      *ngIf="selectedCode || dataLoaded"
+      [codigoSeleccionado]="selectedCode"
+      [nivelFiltro]="nivelFiltro"
+      (editandoAlumno)="onAlumnoEditando($event)"
+      (alumnoActualizado)="onAlumnoActualizado($event)"
+      class="table-container"
+    ></shared-table-student>
+  </div>
+  
+  <!-- Toast de notificación flotante -->
+  <div *ngIf="mostrarNotificacion" class="fixed bottom-4 right-4 bg-white shadow-lg rounded-lg p-4 max-w-md notification-toast" 
+       [class.success]="tipoNotificacion === 'success'"
+       [class.error]="tipoNotificacion === 'error'"
+       [class.info]="tipoNotificacion === 'info'">
+    <div class="flex">
+      <!-- Icono según tipo de notificación -->
+      <div *ngIf="tipoNotificacion === 'success'" class="flex-shrink-0 bg-green-100 rounded-full p-2">
+        <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+      <div *ngIf="tipoNotificacion === 'error'" class="flex-shrink-0 bg-red-100 rounded-full p-2">
+        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </div>
+      <div *ngIf="tipoNotificacion === 'info'" class="flex-shrink-0 bg-blue-100 rounded-full p-2">
+        <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+      
+      <!-- Contenido de la notificación -->
+      <div class="ml-3">
+        <p class="text-sm font-medium text-gray-900">{{ mensajeNotificacion }}</p>
+      </div>
+      
+      <!-- Botón cerrar -->
+      <div class="ml-auto pl-3">
+        <div class="-mx-1.5 -my-1.5">
+          <button class="inline-flex rounded-md p-1.5 text-gray-500 hover:bg-gray-100 focus:outline-none" 
+                  (click)="cerrarNotificacion()">
+            <span class="sr-only">Cerrar</span>
+            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Barra de progreso -->
+    <div class="w-full bg-gray-200 h-1 mt-2 rounded-full overflow-hidden">
+      <div class="bg-blue-600 h-1 rounded-full notification-progress-bar"></div>
+    </div>
+  </div>
 </div>

@@ -1,0 +1,307 @@
+<div class="w-full h-full bg-white flex flex-col overflow-auto">
+  <!-- Encabezado -->
+  <div class="bg-white py-6 px-8 border-b border-gray-200">
+    <div class="max-w-7xl mx-auto">
+      <h1 class="text-2xl font-bold text-gray-800">Registro de Asistencia Manual</h1>
+      <p class="text-gray-500 mt-1">Sistema de control de asistencia para auxiliares</p>
+    </div>
+  </div>
+
+  <!-- Contenido Principal -->
+  <div class="flex-1 w-full p-6 md:p-8 bg-gray-50">
+    <div class="max-w-7xl mx-auto space-y-6">
+      
+      <!-- Buscar Alumno -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-gray-50 py-4 px-6 border-b border-gray-200">
+          <div class="flex items-center">
+            <i class="fas fa-search text-gray-600 mr-3"></i>
+            <h2 class="text-lg font-semibold text-gray-800">Buscar Alumno</h2>
+          </div>
+        </div>
+        
+        <div class="p-6">
+          <form [formGroup]="buscarForm" (ngSubmit)="buscarAlumno()" class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1">
+              <label for="codigo" class="block text-sm font-medium text-gray-700 mb-1">Código del Alumno</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i class="fas fa-id-card text-gray-400"></i>
+                </div>
+                <input 
+                  type="text" 
+                  id="codigo"
+                  formControlName="codigo" 
+                  placeholder="Ingrese el código completo del alumno (Ej: 00000079271581)" 
+                  class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
+                  (keyup.enter)="buscarAlumno()"
+                  [ngClass]="{'border-red-300 focus:ring-red-500 focus:border-red-500': buscarForm.get('codigo')?.invalid && buscarForm.get('codigo')?.touched}"
+                >
+              </div>
+              <p class="mt-1 text-sm text-gray-500">Ingrese el código completo sin espacios</p>
+            </div>
+            
+            <div class="md:self-end">
+              <button 
+                type="submit" 
+                [disabled]="loading || buscarForm.invalid"
+                class="w-full md:w-auto px-6 py-3 bg-gray-600 text-white rounded-lg shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                <span *ngIf="loading" class="animate-spin mr-2">
+                  <i class="fas fa-spinner"></i>
+                </span>
+                <span *ngIf="!loading" class="mr-2">
+                  <i class="fas fa-search"></i>
+                </span>
+                Buscar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Contenido Condicional (Información de Alumno y Registro) -->
+      <ng-container *ngIf="alumnoEncontrado; else noAlumno">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Información del Alumno -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden lg:col-span-1">
+            <div class="bg-gray-50 py-4 px-6 border-b border-gray-200">
+              <div class="flex items-center">
+                <i class="fas fa-user text-gray-600 mr-3"></i>
+                <h2 class="text-lg font-semibold text-gray-800">Datos del Alumno</h2>
+              </div>
+            </div>
+            
+            <div class="p-6">
+              <div class="flex flex-col items-center mb-6">
+                <div class="w-24 h-24 rounded-full bg-gradient-to-r from-gray-500 to-gray-600 flex items-center justify-center text-white text-2xl font-bold">
+                  {{ alumnoEncontrado.nombre.charAt(0) }}{{ alumnoEncontrado.apellido.charAt(0) }}
+                </div>
+                <h3 class="mt-4 text-center text-xl font-bold text-gray-800">
+                  {{ alumnoEncontrado.nombre }} {{ alumnoEncontrado.apellido }}
+                </h3>
+                <div class="mt-1 text-center">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    {{ alumnoEncontrado.nivel }} • {{ alumnoEncontrado.grado }}° {{ alumnoEncontrado.seccion }}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="space-y-4">
+                <div class="flex items-center border-b border-gray-100 py-3">
+                  <div class="w-8 text-gray-400">
+                    <i class="fas fa-id-card"></i>
+                  </div>
+                  <div class="w-1/3 text-gray-500 font-medium">Código:</div>
+                  <div class="w-2/3 font-semibold text-gray-800">{{ alumnoEncontrado.codigo }}</div>
+                </div>
+                
+                <div class="flex items-center border-b border-gray-100 py-3">
+                  <div class="w-8 text-gray-400">
+                    <i class="fas fa-fingerprint"></i>
+                  </div>
+                  <div class="w-1/3 text-gray-500 font-medium">DNI:</div>
+                  <div class="w-2/3 font-semibold text-gray-800">{{ alumnoEncontrado.dni_alumno }}</div>
+                </div>
+                
+                <div class="flex items-center border-b border-gray-100 py-3">
+                  <div class="w-8 text-gray-400">
+                    <i class="fas fa-calendar-alt"></i>
+                  </div>
+                  <div class="w-1/3 text-gray-500 font-medium">Nacimiento:</div>
+                  <div class="w-2/3 font-semibold text-gray-800">{{ alumnoEncontrado.fecha_nacimiento | date:'dd/MM/yyyy' }}</div>
+                </div>
+                
+                <div class="flex items-center border-b border-gray-100 py-3">
+                  <div class="w-8 text-gray-400">
+                    <i class="fas fa-map-marker-alt"></i>
+                  </div>
+                  <div class="w-1/3 text-gray-500 font-medium">Dirección:</div>
+                  <div class="w-2/3 font-semibold text-gray-800">{{ alumnoEncontrado.direccion }}</div>
+                </div>
+                
+                <div class="flex items-center pt-3">
+                  <div class="w-8 text-gray-400">
+                    <i class="fas fa-qrcode"></i>
+                  </div>
+                  <div class="w-1/3 text-gray-500 font-medium">Código QR:</div>
+                  <div class="w-2/3 font-semibold text-gray-800 truncate" title="{{ alumnoEncontrado.codigo_qr }}">
+                    {{ alumnoEncontrado.codigo_qr }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulario de Registro de Asistencia -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden lg:col-span-2">
+            <div class="bg-gray-50 py-4 px-6 border-b border-gray-200">
+              <div class="flex items-center">
+                <i class="fas fa-clock text-gray-600 mr-3"></i>
+                <h2 class="text-lg font-semibold text-gray-800">Registrar Asistencia</h2>
+              </div>
+            </div>
+            
+            <div class="p-6">
+              <!-- Fecha actual (informativo) -->
+              <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6 flex items-center">
+                <i class="fas fa-calendar-day text-gray-500 mr-3"></i>
+                <span class="text-gray-700">Fecha: {{ today | date:'EEEE, d MMMM yyyy' }}</span>
+              </div>
+              
+              <form [formGroup]="asistenciaForm" (ngSubmit)="registrarAsistencia()" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <!-- Hora de Llegada -->
+                  <div>
+                    <label for="hora_llegada" class="block text-sm font-medium text-gray-700 mb-1">Hora de Llegada <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-hourglass-start text-gray-400"></i>
+                      </div>
+                      <input 
+                        type="time" 
+                        id="hora_llegada"
+                        formControlName="hora_de_llegada" 
+                        class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
+                        [ngClass]="{'border-red-300 focus:ring-red-500 focus:border-red-500': asistenciaForm.get('hora_de_llegada')?.invalid && asistenciaForm.get('hora_de_llegada')?.touched}"
+                      >
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">Formato: HH:MM (24 horas)</p>
+                  </div>
+                  
+                  <!-- Hora de Salida -->
+                  <div>
+                    <label for="hora_salida" class="block text-sm font-medium text-gray-700 mb-1">Hora de Salida <span class="text-gray-400">(opcional)</span></label>
+                    <div class="relative">
+                      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-hourglass-end text-gray-400"></i>
+                      </div>
+                      <input 
+                        type="time" 
+                        id="hora_salida"
+                        formControlName="hora_salida" 
+                        class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
+                      >
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">Dejar en blanco si no ha salido</p>
+                  </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <!-- Estado de Asistencia -->
+                  <div>
+                    <label for="estado_asistencia" class="block text-sm font-medium text-gray-700 mb-1">Estado de Asistencia <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-clipboard-check text-gray-400"></i>
+                      </div>
+                      <select 
+                        id="estado_asistencia"
+                        formControlName="estado_asistencia" 
+                        class="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg shadow-sm appearance-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
+                        [ngClass]="{'border-red-300 focus:ring-red-500 focus:border-red-500': asistenciaForm.get('estado_asistencia')?.invalid && asistenciaForm.get('estado_asistencia')?.touched}"
+                      >
+                        <option value="">Seleccione un estado</option>
+                        <option value="PUNTUAL">Puntual</option>
+                        <option value="TARDANZA">Tardanza</option>
+                        <option value="FALTA">Falta</option>
+                      </select>
+                      <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                        <i class="fas fa-chevron-down text-gray-400"></i>
+                      </div>
+                    </div>
+                    <div class="mt-3 flex space-x-4">
+                      <div class="flex items-center">
+                        <div class="h-3 w-3 rounded-full bg-green-500 mr-1"></div>
+                        <span class="text-xs text-gray-500">Puntual</span>
+                      </div>
+                      <div class="flex items-center">
+                        <div class="h-3 w-3 rounded-full bg-yellow-500 mr-1"></div>
+                        <span class="text-xs text-gray-500">Tardanza</span>
+                      </div>
+                      <div class="flex items-center">
+                        <div class="h-3 w-3 rounded-full bg-red-500 mr-1"></div>
+                        <span class="text-xs text-gray-500">Falta</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Motivo -->
+                  <div>
+                    <label for="motivo" class="block text-sm font-medium text-gray-700 mb-1">Motivo de Registro Manual <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                      <div class="absolute top-3 left-3 flex items-start pointer-events-none">
+                        <i class="fas fa-pen text-gray-400"></i>
+                      </div>
+                      <textarea 
+                        id="motivo"
+                        formControlName="motivo" 
+                        placeholder="Explique brevemente el motivo del registro manual"
+                        rows="4"
+                        class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400 resize-none"
+                        [ngClass]="{'border-red-300 focus:ring-red-500 focus:border-red-500': asistenciaForm.get('motivo')?.invalid && asistenciaForm.get('motivo')?.touched}"
+                      ></textarea>
+                    </div>
+                    <div class="mt-1 flex justify-between">
+                      <p class="text-sm text-gray-500">Detalle por qué se registra manualmente</p>
+                      <p class="text-sm text-gray-500">{{ asistenciaForm.get('motivo')?.value?.length || 0 }}/200</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Botones de acción -->
+                <div class="flex flex-col sm:flex-row justify-end gap-3 mt-8">
+                  <button 
+                    type="button" 
+                    class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+                    (click)="cancelar()"
+                  >
+                    <i class="fas fa-times mr-2"></i>
+                    Cancelar
+                  </button>
+                  <button 
+                    type="submit" 
+                    class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    [disabled]="asistenciaForm.invalid"
+                  >
+                    <i class="fas fa-save mr-2"></i>
+                    Registrar Asistencia
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+      
+      <!-- Estado cuando no hay alumno seleccionado -->
+      <ng-template #noAlumno>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+          <div class="flex flex-col items-center justify-center py-16">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+              <i class="fas fa-user-clock text-5xl text-gray-300"></i>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-700 mb-2">Ningún alumno seleccionado</h2>
+            <p class="text-gray-500 max-w-lg mx-auto">
+              Ingrese el código del alumno en el campo de búsqueda y presione el botón "Buscar" para 
+              obtener la información y registrar la asistencia.
+            </p>
+            <div class="mt-8 bg-gray-50 p-4 rounded-lg border border-gray-200 inline-flex items-start text-left max-w-md">
+              <i class="fas fa-info-circle text-gray-500 mt-1 mr-3"></i>
+              <div>
+                <h3 class="font-medium text-gray-800">Cómo registrar una asistencia manual</h3>
+                <ol class="mt-2 text-sm text-gray-600 space-y-2 list-decimal list-inside">
+                  <li>Ingrese el código completo del alumno</li>
+                  <li>Verifique que los datos del alumno sean correctos</li>
+                  <li>Complete la hora de llegada y salida (opcional)</li>
+                  <li>Seleccione el estado de asistencia correspondiente</li>
+                  <li>Indique el motivo del registro manual</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>

@@ -20,9 +20,15 @@ export const routes: Routes = [
         component: MainPageComponent,
         canActivate: [authGuard],
         children: [
+
+            {
+                path: 'welcome',
+                loadComponent: () => import('./gestion-academica-ar/pages/welcome/main-welcome/main-welcome.component').then(m => m.MainWelcomeComponent),
+
+            },
             {
                 path: 'registrar',
-                children:[
+                children: [
                     {
                         path: 'manual',
                         loadComponent: () => import('./gestion-academica-ar/pages/register/manualRegister/manualRegister.component').then(m => m.ManualRegisterComponent),
@@ -54,9 +60,22 @@ export const routes: Routes = [
                 path: 'asistencia',
                 children: [
                     {
+                        path: 'register-manual-alumnos',
+                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/create-asistencia-alumno/create-asistencia-alumno.component').then(m => m.CreateAsistenciaAlumnoComponent),
+
+                    },
+                    {
                         path: 'list-asistencia-alumnos',
-                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/list-asistencia-alumnos/list-asistencia-alumnos.component').then(m => m.ListAsistenciaAlumnosComponent),
-                    }
+                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/list-asistencia-alumnos/main-component/list-asistencia-alumnos.component').then(m => m.ListAsistenciaAlumnosComponent),
+                    },
+                    {
+                        path: 'update-asistencia-alumnos',
+                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/update-asistencia-alumnos/update-asistencia-alumnos.component').then(m => m.UpdateAsistenciaAlumnosComponent),
+                    },
+                    {
+                        path: 'delete-asistencia-alumnos',
+                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/delete-asistencia-alumnos/delete-asistencia-alumnos.component').then(m => m.DeleteAsistenciaAlumnosComponent),
+                    },
                 ]
             },
             {

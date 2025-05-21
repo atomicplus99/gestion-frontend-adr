@@ -5,5 +5,6 @@ export interface SidebarItem {
   badge?: string;
   external?: boolean;
   isSeparator?: boolean;
+  allowedRoles?: string[]; 
   children?: SidebarItem[]; // 👈 Subítems opcionales
 }

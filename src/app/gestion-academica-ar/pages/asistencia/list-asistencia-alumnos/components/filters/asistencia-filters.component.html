@@ -1,0 +1,170 @@
+<!-- asistencia-filters.component.html -->
+<div class="filter-panel">
+  <div class="filter-header">
+    <h2 class="filter-title"><i class="fas fa-filter"></i> Filtros</h2>
+    <button class="toggle-filters" (click)="toggleFiltersVisibility()">
+      <span *ngIf="!isFiltersPanelExpanded">
+        <i class="fas fa-chevron-down"></i> Mostrar filtros avanzados
+      </span>
+      <span *ngIf="isFiltersPanelExpanded">
+        <i class="fas fa-chevron-up"></i> Ocultar filtros avanzados
+      </span>
+    </button>
+  </div>
+
+  <form [formGroup]="filterForm" class="filters-form">
+    <div class="quick-filters">
+      <!-- Buscador mejorado -->
+      <div class="form-group">
+        <label for="searchText">Buscar</label>
+        <div class="search-input-container">
+          <input 
+            type="text" 
+            id="searchText" 
+            class="form-control" 
+            placeholder="Código, nombre, apellido..." 
+            formControlName="searchText"
+            (input)="applyFilter()"
+          >
+          <button 
+            *ngIf="filterForm.get('searchText')?.value" 
+            class="clear-btn" 
+            (click)="filterForm.patchValue({searchText: ''}); applyFilter()">
+            <i class="fas fa-times"></i>
+          </button>
+          <button class="search-btn" (click)="applyFilter()">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- DNI input mejorado -->
+      <div class="form-group">
+        <label for="dni">DNI</label>
+        <div class="search-input-container">
+          <input 
+            type="text" 
+            id="dni" 
+            class="form-control" 
+            placeholder="Ingrese DNI" 
+            formControlName="dni"
+            (input)="applyFilter()"
+          >
+          <button 
+            *ngIf="filterForm.get('dni')?.value" 
+            class="clear-btn" 
+            (click)="filterForm.patchValue({dni: ''}); applyFilter()">
+            <i class="fas fa-times"></i>
+          </button>
+          <button class="search-btn" (click)="applyFilter()">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Filtros de estado -->
+      <div class="form-group">
+        <label>Estado</label>
+        <div class="estado-filter">
+          <button 
+            type="button" 
+            class="btn-estados btn-todos"
+            [ngClass]="{'active': filterForm.get('estado')?.value === 'TODOS'}"
+            (click)="setEstadoFilter('TODOS')">
+            <i class="fas fa-list"></i>
+            <span>Todos</span>
+          </button>
+          <button 
+            type="button" 
+            class="btn-estados btn-puntual"
+            [ngClass]="{'active': filterForm.get('estado')?.value === 'PUNTUAL'}"
+            (click)="setEstadoFilter('PUNTUAL')">
+            <i class="fas fa-check-circle"></i>
+            <span>Puntual</span>
+          </button>
+          <button 
+            type="button" 
+            class="btn-estados btn-tardanza"
+            [ngClass]="{'active': filterForm.get('estado')?.value === 'TARDANZA'}"
+            (click)="setEstadoFilter('TARDANZA')">
+            <i class="fas fa-clock"></i>
+            <span>Tardanza</span>
+          </button>
+          <button 
+            type="button" 
+            class="btn-estados btn-ausente"
+            [ngClass]="{'active': filterForm.get('estado')?.value === 'AUSENTE'}"
+            (click)="setEstadoFilter('AUSENTE')">
+            <i class="fas fa-times-circle"></i>
+            <span>Ausente</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Filtros avanzados -->
+    <div class="advanced-filters" [ngClass]="{'show': isFiltersPanelExpanded}">
+      <div class="advanced-filters-grid">
+        <!-- Fecha -->
+        <div class="form-group">
+          <label for="fechaInicio">Desde</label>
+          <input type="date" id="fechaInicio" class="form-control" formControlName="fechaInicio" (change)="applyFilter()">
+        </div>
+        
+        <div class="form-group">
+          <label for="fechaFin">Hasta</label>
+          <input type="date" id="fechaFin" class="form-control" formControlName="fechaFin" (change)="applyFilter()">
+        </div>
+        
+        <!-- Turno -->
+        <div class="form-group">
+          <label for="turno">Turno</label>
+          <select id="turno" class="form-control" formControlName="turno" (change)="applyFilter()">
+            <option *ngFor="let turno of turnos" [value]="turno">{{ turno }}</option>
+          </select>
+        </div>
+        
+        <!-- Nivel -->
+        <div class="form-group">
+          <label for="nivel">Nivel</label>
+          <select id="nivel" class="form-control" formControlName="nivel" (change)="applyFilter()">
+            <option *ngFor="let nivel of niveles" [value]="nivel">{{ nivel }}</option>
+          </select>
+        </div>
+        
+        <!-- Grado -->
+        <div class="form-group">
+          <label for="grado">Grado</label>
+          <select id="grado" class="form-control" formControlName="grado" (change)="applyFilter()">
+            <option value="TODOS">TODOS</option>
+            <option *ngFor="let grado of grados" [value]="grado">{{ grado }}</option>
+          </select>
+        </div>
+        
+        <!-- Sección -->
+        <div class="form-group">
+          <label for="seccion">Sección</label>
+          <select id="seccion" class="form-control" formControlName="seccion" (change)="applyFilter()">
+            <option *ngFor="let seccion of secciones" [value]="seccion">{{ seccion }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </form>
+  
+  <!-- Filtros activos -->
+  <div *ngIf="activeFilters.length > 0" class="active-filters-container">
+    <span class="filters-label"><i class="fas fa-tags"></i> Filtros activos:</span>
+    <div class="filter-chips">
+      <app-filter-chip *ngFor="let filter of activeFilters; let i = index" 
+                      [value]="filter" 
+                      [index]="i"
+                      (remove)="onRemoveFilter($event)">
+      </app-filter-chip>
+      <button class="clear-filters-btn" (click)="onClearFilters()">
+        <i class="fas fa-eraser"></i>
+        Limpiar todos
+      </button>
+    </div>
+  </div>
+</div>

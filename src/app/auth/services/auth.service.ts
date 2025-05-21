@@ -29,6 +29,25 @@ export class AuthService {
   getUserInfo(): Observable<UserInfo> {
     return this.http.get<UserInfo>(`${environment.apiUrl}/auth/me`, { withCredentials: true });
   }
+
+  async validarYObtenerUsuario(): Promise<UserInfo | null> {
+    try {
+      const estaAutenticado = await this.isAuthenticated();
+      if (!estaAutenticado) {
+        return null;
+      }
+      const usuario = await firstValueFrom(this.getUserInfo());
+      // Agrega verificación de validación de usuario
+      if (!usuario || !usuario.nombreCompleto) {
+        console.warn('Se recuperó un objeto de usuario inválido:', usuario);
+        return null;
+      }
+      return usuario;
+    } catch (error) {
+      console.error('Error al validar usuario:', error);
+      return null;
+    }
+  }
   
 
 }

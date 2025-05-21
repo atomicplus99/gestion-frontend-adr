@@ -1,84 +1,226 @@
-<div class="bg-white p-8 rounded-2xl shadow-lg max-w-3xl mx-auto mt-12">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6 uppercase tracking-wide">Importar Alumnos desde Excel</h2>
-  
-    <form (ngSubmit)="onImport()" #importForm="ngForm">
-      <div class="mb-6">
-        <label class="block text-sm font-semibold text-gray-700 mb-2">Selecciona archivo Excel (.xlsx)</label>
-        <input
-          #fileInput
-          type="file"
-          (change)="onFileChange($event)"
-          accept=".xlsx, .xls"
-          class="block w-full text-sm text-gray-700 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded file:bg-blue-600 file:text-white hover:file:bg-blue-700"
-        />
+<div class="full-container">
+  <header class="header-section">
+    <div class="header-info">
+      <h1 class="header-title">Administración de Alumnos</h1>
+      <p class="header-subtitle">Importación y gestión eficiente de datos.</p>
+    </div>
+    <div class="header-actions">
+      <div class="relative rounded-md shadow-sm search-bar">
+        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+          <i class="fas fa-search"></i>
+        </div>
+        <input type="text" name="search" id="search" class="form-input" placeholder="Buscar...">
       </div>
-  
-      <div class="text-right">
-        <button
-          type="submit"
-          class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold shadow-md transition duration-300"
-          [disabled]="!selectedFile"
-        >
-          Importar alumnos
+      <button class="button button-secondary">
+        <i class="fas fa-question-circle mr-2"></i> Ayuda
+      </button>
+    </div>
+  </header>
+
+  <section class="import-section">
+    <div class="section-header">
+      <h2 class="section-title"><i class="fas fa-upload mr-2 text-blue-500"></i> Importar Alumnos</h2>
+      <p class="section-subtitle">Sube un archivo Excel para agregar o actualizar información de alumnos.</p>
+    </div>
+
+    <div class="info-box info-blue">
+      <i class="fas fa-info-circle"></i>
+      <p>Asegúrate de que el archivo contenga las columnas: <strong>Grado</strong>, <strong>Sección</strong>, <strong>Número de Documento</strong>, y otros datos relevantes.</p>
+    </div>
+
+    <form (ngSubmit)="onImport()" #importForm="ngForm" class="import-form">
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-clock mr-2 text-indigo-500"></i> Selecciona el Turno</label>
+        <select [(ngModel)]="selectedTurnoId" name="turnoId" required class="form-select">
+          <option [ngValue]="null" disabled>Selecciona un turno...</option>
+          <option *ngFor="let turno of turnos" [value]="turno.id_turno">
+            {{ turno.turno | uppercase }} ({{ turno.hora_inicio }} - {{ turno.hora_fin }})
+          </option>
+        </select>
+        <div *ngIf="importForm.submitted && !selectedTurnoId" class="form-error">El turno es obligatorio</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-file-excel mr-2 text-green-500"></i> Selecciona archivo Excel (.xlsx)</label>
+        <div class="file-input-wrapper">
+          <input #fileInput type="file" (change)="onFileChange($event)" accept=".xlsx, .xls" class="form-file-input" />
+          <span class="file-input-placeholder">{{ selectedFile ? selectedFile.name : 'Seleccionar archivo' }}</span>
+          <button type="button" class="button button-outline button-small">Buscar</button>
+          <div *ngIf="selectedFile" class="file-selected-icon"><i class="fas fa-check-circle text-green-500"></i></div>
+        </div>
+        <div *ngIf="importForm.submitted && !selectedFile" class="form-error">Debes seleccionar un archivo</div>
+      </div>
+
+      <div class="form-group checkbox-group">
+        <input type="checkbox" id="crearUsuarios" name="crearUsuarios" [(ngModel)]="crearUsuarios" class="form-checkbox">
+        <label for="crearUsuarios" class="form-label-checkbox">Crear usuarios automáticamente</label>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" routerLink="/alumnos" class="button button-secondary">
+          <i class="fas fa-ban mr-2"></i> Cancelar
+        </button>
+        <button type="submit" [disabled]="isLoading || !selectedFile || !selectedTurnoId" class="button button-primary">
+          <i *ngIf="isLoading" class="fas fa-spinner animate-spin mr-2"></i>
+          <i *ngIf="!isLoading" class="fas fa-upload mr-2"></i>
+          Importar
         </button>
       </div>
     </form>
-  </div>
-  
-  <!-- Tabla estilizada con Tailwind + paginación -->
-  <div *ngIf="alumnos.length > 0" class="max-w-7xl mx-auto mt-12">
-    <h3 class="text-xl font-bold text-gray-800 mb-6">Listado de alumnos importados:</h3>
-  
-    <div class="overflow-x-auto rounded-xl shadow ring-1 ring-gray-200">
+  </section>
+
+  <section class="dashboard-widgets">
+    <div class="widget widget-primary">
+      <i class="fas fa-graduation-cap widget-icon"></i>
+      <h3 class="widget-title">Total Alumnos</h3>
+      <p class="widget-value">1250</p>
+      <div class="widget-footer">
+        <i class="fas fa-arrow-up text-green-500 mr-1"></i> 15% más que el mes pasado
+      </div>
+    </div>
+
+    <div class="widget widget-success">
+      <i class="fas fa-user-plus widget-icon"></i>
+      <h3 class="widget-title">Nuevos Hoy</h3>
+      <p class="widget-value">35</p>
+      <div class="widget-progress">
+        <div class="progress-bar" style="width: 70%;"></div>
+      </div>
+      <div class="widget-footer">
+        <i class="fas fa-check-circle text-green-500 mr-1"></i> Completo
+      </div>
+    </div>
+
+    <div class="widget widget-warning">
+      <i class="fas fa-exclamation-triangle widget-icon"></i>
+      <h3 class="widget-title">Alumnos Pendientes</h3>
+      <p class="widget-value">12</p>
+      <div class="widget-footer">
+        <i class="fas fa-bell text-yellow-500 mr-1"></i> Requiere atención
+      </div>
+    </div>
+
+    <div class="widget widget-info">
+      <i class="fas fa-chart-bar widget-icon"></i>
+      <h3 class="widget-title">Promedio de Grado</h3>
+      <p class="widget-value">7.8</p>
+      <div class="widget-footer">
+        <i class="fas fa-info-circle text-blue-500 mr-1"></i> Basado en el último semestre
+      </div>
+    </div>
+  </section>
+
+  <section *ngIf="alumnos.length > 0" class="data-table-section">
+    <div class="section-header">
+      <h2 class="section-title"><i class="fas fa-table mr-2 text-gray-600"></i> Alumnos Importados</h2>
+      <p class="section-subtitle">Lista de alumnos importados desde el archivo Excel ({{alumnos.length}}).</p>
+    </div>
+
+    <div class="table-actions">
+      <button (click)="exportarExcel()" class="button button-success">
+        <i class="fas fa-file-excel mr-2"></i> Exportar a Excel
+      </button>
+      <button (click)="limpiarResultados()" class="button button-danger">
+        <i class="fas fa-trash mr-2"></i> Limpiar Tabla
+      </button>
+    </div>
+
+    <div class="overflow-x-auto rounded-lg shadow ring-1 ring-gray-200 bg-white">
       <table class="min-w-full text-sm text-left text-gray-700">
-        <thead class="bg-blue-600 text-white">
+        <thead class="bg-gray-100 text-gray-700">
           <tr>
-            <th class="px-4 py-3">#</th>
-            <th class="px-4 py-3">Código</th>
-            <th class="px-4 py-3">Nombre</th>
-            <th class="px-4 py-3">Apellido</th>
-            <th class="px-4 py-3">DNI</th>
-            <th class="px-4 py-3">Nivel</th>
-            <th class="px-4 py-3">Grado</th>
-            <th class="px-4 py-3">Sección</th>
+            <th class="px-4 py-3 font-semibold tracking-wider">#</th>
+            <th class="px-4 py-3 font-semibold tracking-wider">Código</th>
+            <th class="px-4 py-3 font-semibold tracking-wider">Nombre</th>
+            <th class="px-4 py-3 font-semibold tracking-wider">Apellido</th>
+            <th class="px-4 py-3 font-semibold tracking-wider">DNI</th>
+            <th class="px-4 py-3 font-semibold tracking-wider">Nivel</th>
+            <th class="px-4 py-3 font-semibold tracking-wider">Grado</th>
+            <th class="px-4 py-3 font-semibold tracking-wider">Sección</th>
+            <th class="px-4 py-3 font-semibold tracking-wider">Usuario</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let a of alumnos.slice((paginaActual - 1) * itemsPorPagina, paginaActual * itemsPorPagina); let i = index" class="even:bg-gray-100 border-t">
-            <td class="px-4 py-2">{{ (paginaActual - 1) * itemsPorPagina + i + 1 }}</td>
-            <td class="px-4 py-2 font-mono text-blue-600">{{ a.codigo }}</td>
-            <td class="px-4 py-2">{{ a.nombre }}</td>
-            <td class="px-4 py-2">{{ a.apellido }}</td>
-            <td class="px-4 py-2">{{ a.dni_alumno }}</td>
-            <td class="px-4 py-2">{{ a.nivel }}</td>
-            <td class="px-4 py-2">{{ a.grado }}</td>
-            <td class="px-4 py-2">{{ a.seccion }}</td>
+          <tr *ngFor="let a of alumnos.slice((paginaActual - 1) * itemsPorPagina, paginaActual * itemsPorPagina); let i = index"
+              class="hover:bg-gray-50 border-t transition-colors"
+              [ngClass]="{'bg-white': i % 2 === 0, 'bg-gray-50': i % 2 !== 0}">
+            <td class="px-4 py-3 font-medium">{{ (paginaActual - 1) * itemsPorPagina + i + 1 }}</td>
+            <td class="px-4 py-3 font-mono text-blue-600">{{ a.codigo }}</td>
+            <td class="px-4 py-3">{{ a.nombre }}</td>
+            <td class="px-4 py-3">{{ a.apellido }}</td>
+            <td class="px-4 py-3">{{ a.dni_alumno }}</td>
+            <td class="px-4 py-3">
+              <span [ngClass]="{
+                'bg-yellow-100 text-yellow-800': a.nivel === 'Inicial',
+                'bg-green-100 text-green-800': a.nivel === 'Primaria',
+                'bg-blue-100 text-blue-800': a.nivel === 'Secundaria'
+              }" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                {{ a.nivel }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-center">{{ a.grado }}</td>
+            <td class="px-4 py-3 text-center">{{ a.seccion }}</td>
+            <td class="px-4 py-3">
+              <div *ngIf="a.usuario" class="flex items-center space-x-1">
+                <i class="fas fa-user text-green-500"></i>
+                <span class="text-green-600">{{ a.usuario.nombre_usuario }}</span>
+              </div>
+              <div *ngIf="!a.usuario" class="text-red-500 text-xs">
+                <i class="fas fa-times-circle"></i> Sin usuario
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="alumnos.length === 0">
+            <td colspan="9" class="px-4 py-8 text-center text-gray-500">
+              No hay alumnos importados para mostrar
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
-  
-    <!-- Paginación -->
-    <div class="flex justify-between items-center mt-6 px-2">
-      <button
-        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition"
-        [disabled]="paginaActual === 1"
-        (click)="paginaAnterior()"
-      >
-        ← Anterior
-      </button>
-  
-      <span class="text-sm text-gray-600">
-        Página {{ paginaActual }} de {{ totalPaginas }}
-      </span>
-  
-      <button
-        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition"
-        [disabled]="paginaActual === totalPaginas"
-        (click)="paginaSiguiente()"
-      >
-        Siguiente →
-      </button>
+
+    <div class="flex-pagination">
+      <div class="items-per-page">
+        <label for="itemsPerPage" class="text-sm text-gray-600 mr-2">Mostrar:</label>
+        <select [(ngModel)]="itemsPorPagina" (change)="cambiarItemsPorPagina()" id="itemsPerPage" class="form-select-small">
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+          <option [value]="100">100</option>
+        </select>
+        <span class="text-sm text-gray-600 ml-2">registros por página</span>
+      </div>
+      <div class="pagination-controls">
+        <button class="pagination-button" [disabled]="paginaActual === 1" (click)="irAPagina(1)">
+          <i class="fas fa-angle-double-left"></i>
+        </button>
+        <button class="pagination-button" [disabled]="paginaActual === 1" (click)="paginaAnterior()">
+          <i class="fas fa-angle-left"></i>
+        </button>
+        <ng-container *ngFor="let pag of obtenerPaginas()">
+          <button *ngIf="pag !== '...'" class="pagination-button"
+            [ngClass]="{'button-primary': paginaActual === pag}" (click)="irAPagina(pag)">
+            {{ pag }}
+          </button>
+          <span *ngIf="pag === '...'" class="pagination-dots">...</span>
+        </ng-container>
+        <button class="pagination-button" [disabled]="paginaActual === totalPaginas" (click)="paginaSiguiente()">
+          <i class="fas fa-angle-right"></i>
+        </button>
+        <button class="pagination-button" [disabled]="paginaActual === totalPaginas" (click)="irAPagina(totalPaginas)">
+          <i class="fas fa-angle-double-right"></i>
+        </button>
+      </div>
     </div>
-  </div>
-  
+  </section>
+
+  <footer class="footer-section">
+    <p>&copy; 2025 Mi Sistema Educativo. Todos los derechos reservados.</p>
+    <div class="social-icons">
+      <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+      <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+      <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+      <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+    </div>
+  </footer>
+</div>

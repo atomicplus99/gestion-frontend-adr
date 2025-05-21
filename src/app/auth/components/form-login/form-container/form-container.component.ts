@@ -26,7 +26,6 @@ import { AppInitService } from '../../../../core/services/app-init.service';
 })
 export class FormContainerComponent {
 
-
   constructor(
               private userStore: UserStoreService,
               private appInitService: AppInitService,
@@ -37,8 +36,6 @@ export class FormContainerComponent {
             ){
 
   }  
-
-
   formLogin =  new FormGroup({
     username: new FormControl('', 
       [ Validators.required, Validators.minLength(5)]),

@@ -11,12 +11,13 @@ export class AppInitService {
   ) {}
 
   async init(): Promise<void> {
-
     try {
-        const user = await firstValueFrom(this.authService.getUserInfo());
-        this.userStore.setUser(user);
-      } catch (err) {
-        this.userStore.clearUser();
-      }
+      const user = await firstValueFrom(this.authService.getUserInfo());
+      console.log('Usuario recuperado en la inicialización:', user); // Agrega registros
+      this.userStore.setUser(user);
+    } catch (err) {
+      console.error('Error al recuperar usuario:', err); // Agrega registro de errores
+      this.userStore.clearUser();
+    }
   }
 }
