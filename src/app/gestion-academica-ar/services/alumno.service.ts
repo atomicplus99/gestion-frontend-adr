@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { Alumno, PersonalAlumno } from '../pages/register/interfaces/alumno.interface';
+import { AlumnoUpdate } from '../pages/register/actualizar-alumno/actualizar-alumno.component';
 
 @Injectable({
   providedIn: 'root'
@@ -46,9 +47,9 @@ export class AlumnoService {
     return this.http.put<Alumno>(`${this.apiUrl}/alumno${id}`, data);
   }
 
-  getByCodigo(codigo: string): Observable<Alumno> {
+  getByCodigo(codigo: string): Observable<AlumnoUpdate> {
     return this.http
-      .get<Alumno>(`${this.apiUrl}/alumnos/codigo/${codigo}`);
+      .get<AlumnoUpdate>(`${this.apiUrl}/alumnos/codigo/${codigo}`);
   }
 
   actualizarAlumno(alumno: Alumno): Observable<Alumno> {

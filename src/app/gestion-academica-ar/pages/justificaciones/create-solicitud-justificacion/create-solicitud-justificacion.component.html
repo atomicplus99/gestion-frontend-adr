@@ -1,0 +1,356 @@
+<div class="min-h-screen bg-gray-50 py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">
+        Nueva Solicitud de Justificación
+      </h1>
+      <p class="text-gray-600">
+        Complete el formulario para registrar una solicitud de justificación de asistencia
+      </p>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="justificacionForm" (ngSubmit)="onSubmit()" class="space-y-6">
+      <!-- Búsqueda de Alumno -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Buscar Alumno</h2>
+        
+        <div class="space-y-4">
+          <!-- Campo de código -->
+          <div>
+            <label for="codigo_alumno" class="block text-sm font-medium text-gray-700 mb-2">
+              Código del Alumno *
+            </label>
+            <div class="flex gap-3">
+              <input
+                id="codigo_alumno"
+                type="text"
+                formControlName="codigo_alumno"
+                placeholder="Ej: EST2025001"
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                [class.border-red-500]="justificacionForm.get('codigo_alumno')?.invalid && justificacionForm.get('codigo_alumno')?.touched"
+              />
+              <button
+                type="button"
+                (click)="buscarAlumno()"
+                [disabled]="!justificacionForm.get('codigo_alumno')?.value || isSearchingAlumno"
+                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              >
+                <svg *ngIf="isSearchingAlumno" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <svg *ngIf="!isSearchingAlumno" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                {{ isSearchingAlumno ? 'Buscando...' : 'Buscar' }}
+              </button>
+            </div>
+            <div *ngIf="justificacionForm.get('codigo_alumno')?.invalid && justificacionForm.get('codigo_alumno')?.touched" class="mt-1 text-sm text-red-600">
+              El código del alumno es obligatorio
+            </div>
+          </div>
+
+          <!-- Información del alumno encontrado -->
+          <div *ngIf="alumnoEncontrado" class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex items-center mb-3">
+              <svg class="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+              </svg>
+              <h3 class="text-lg font-medium text-green-800">Alumno Encontrado</h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="font-medium text-gray-700">Nombre:</span>
+                <span class="ml-1 text-gray-900">{{ alumnoEncontrado.nombre }} {{ alumnoEncontrado.apellido }}</span>
+              </div>
+              <div>
+                <span class="font-medium text-gray-700">Código:</span>
+                <span class="ml-1 text-gray-900">{{ alumnoEncontrado.codigo }}</span>
+              </div>
+              <div>
+                <span class="font-medium text-gray-700">DNI:</span>
+                <span class="ml-1 text-gray-900">{{ alumnoEncontrado.dni_alumno }}</span>
+              </div>
+              <div>
+                <span class="font-medium text-gray-700">Nivel:</span>
+                <span class="ml-1 text-gray-900">{{ alumnoEncontrado.nivel }} - {{ alumnoEncontrado.grado }}° {{ alumnoEncontrado.seccion }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error si no se encuentra alumno -->
+          <div *ngIf="errorBusquedaAlumno" class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex items-center">
+              <svg class="w-5 h-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+              </svg>
+              <span class="text-sm text-red-800">{{ errorBusquedaAlumno }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información de Justificación -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Información de la Justificación</h2>
+        
+        <div class="space-y-6">
+          <!-- Tipo de Justificación -->
+          <div>
+            <label for="tipo_justificacion" class="block text-sm font-medium text-gray-700 mb-2">
+              Tipo de Justificación *
+            </label>
+            <select
+              id="tipo_justificacion"
+              formControlName="tipo_justificacion"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              [class.border-red-500]="justificacionForm.get('tipo_justificacion')?.invalid && justificacionForm.get('tipo_justificacion')?.touched"
+            >
+              <option value="">Seleccione el tipo de justificación</option>
+              <option value="MEDICA">Médica</option>
+              <option value="FAMILIAR">Familiar</option>
+              <option value="ACADEMICA">Académica</option>
+              <option value="PERSONAL">Personal</option>
+              <option value="EMERGENCIA">Emergencia</option>
+            </select>
+            <div *ngIf="justificacionForm.get('tipo_justificacion')?.invalid && justificacionForm.get('tipo_justificacion')?.touched" class="mt-1 text-sm text-red-600">
+              Seleccione un tipo de justificación
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fechas -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Fechas a Justificar</h2>
+        
+        <!-- Toggle para tipo de selección -->
+        <div class="mb-4">
+          <div class="flex items-center space-x-4">
+            <label class="flex items-center">
+              <input
+                type="radio"
+                [value]="false"
+                formControlName="usar_rango_fechas"
+                (change)="onTipoFechaChange()"
+                class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+              />
+              <span class="ml-2 text-sm text-gray-700">Fechas individuales</span>
+            </label>
+            <label class="flex items-center">
+              <input
+                type="radio"
+                [value]="true"
+                formControlName="usar_rango_fechas"
+                (change)="onTipoFechaChange()"
+                class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+              />
+              <span class="ml-2 text-sm text-gray-700">Rango de fechas</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Selector de rango de fechas -->
+        <div *ngIf="usarRangoFechas" class="space-y-4 mb-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="fechaInicio" class="block text-sm font-medium text-gray-700 mb-2">
+                Fecha de inicio *
+              </label>
+              <input
+                id="fechaInicio"
+                type="date"
+                formControlName="fecha_inicio"
+                (change)="generarRangoFechas()"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label for="fechaFin" class="block text-sm font-medium text-gray-700 mb-2">
+                Fecha de fin *
+              </label>
+              <input
+                id="fechaFin"
+                type="date"
+                formControlName="fecha_fin"
+                (change)="generarRangoFechas()"
+                [min]="fechaInicio"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+          
+          <!-- Resumen del rango -->
+          <div *ngIf="fechaInicio && fechaFin && fechasArray.length > 0" class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div class="flex items-center mb-2">
+              <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              <span class="text-sm font-medium text-blue-800">Rango seleccionado</span>
+            </div>
+            <p class="text-sm text-blue-700">
+              Desde <strong>{{ formatearFechaDisplay(fechaInicio) }}</strong> 
+              hasta <strong>{{ formatearFechaDisplay(fechaFin) }}</strong>
+            </p>
+            <p class="text-xs text-blue-600 mt-1">
+              Total: {{ fechasArray.length }} día(s)
+            </p>
+            <!-- Mostrar todas las fechas del rango -->
+            <div class="mt-2">
+              <p class="text-xs text-blue-600 font-medium">Fechas incluidas:</p>
+              <div class="flex flex-wrap gap-1 mt-1">
+                <span *ngFor="let fecha of fechasArray.value" class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                  {{ formatearFecha(fecha) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Selector de fechas individuales -->
+        <div *ngIf="!usarRangoFechas" formArrayName="fechas_justificacion" class="space-y-3">
+          <div *ngFor="let fecha of fechasArray.controls; let i = index" class="flex items-center gap-3">
+            <div class="flex-1">
+              <input
+                type="date"
+                [formControlName]="i"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <button
+              type="button"
+              (click)="removerFecha(i)"
+              *ngIf="fechasArray.length > 1"
+              class="px-3 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <button
+            type="button"
+            (click)="agregarFecha()"
+            class="mt-3 px-4 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors flex items-center gap-2"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Agregar otra fecha
+          </button>
+        </div>
+        
+        <!-- Validación de fechas -->
+        <div *ngIf="(!usarRangoFechas && fechasArray.length === 0) || (usarRangoFechas && (!fechaInicio || !fechaFin))" 
+             class="mt-2 text-sm text-red-600">
+          {{ usarRangoFechas ? 'Debe seleccionar fecha de inicio y fin' : 'Debe agregar al menos una fecha' }}
+        </div>
+      </div>
+
+      <!-- Motivo -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Motivo</h2>
+        
+        <div>
+          <label for="motivo" class="block text-sm font-medium text-gray-700 mb-2">
+            Detalle del motivo *
+          </label>
+          <textarea
+            id="motivo"
+            formControlName="motivo"
+            rows="4"
+            placeholder="Motivo de salud se presenta certificado médico con descanso de 2 días"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            [class.border-red-500]="justificacionForm.get('motivo')?.invalid && justificacionForm.get('motivo')?.touched"
+          ></textarea>
+          <div *ngIf="justificacionForm.get('motivo')?.invalid && justificacionForm.get('motivo')?.touched" class="mt-1 text-sm text-red-600">
+            El motivo es obligatorio
+          </div>
+        </div>
+      </div>
+
+      <!-- Documentos -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Documentos Adjuntos</h2>
+        
+        <div formArrayName="documentos_adjuntos" class="space-y-3">
+          <div *ngFor="let doc of documentosArray.controls; let i = index" class="flex items-center gap-3">
+            <div class="flex-1">
+              <input
+                type="text"
+                [formControlName]="i"
+                placeholder="certificado.pdf"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <button
+              type="button"
+              (click)="removerDocumento(i)"
+              class="px-3 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <button
+          type="button"
+          (click)="agregarDocumento()"
+          class="mt-3 px-4 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors flex items-center gap-2"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          Agregar documento
+        </button>
+      </div>
+
+      <!-- Botones -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex justify-end gap-4">
+          <button
+            type="button"
+            (click)="cancelar()"
+            class="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="justificacionForm.invalid || isLoading || !alumnoEncontrado || !validarRangoFechas()"
+            class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          >
+            <svg *ngIf="isLoading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ isLoading ? 'Enviando...' : 'Registrar Solicitud' }}
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Alert Messages -->
+    <div *ngIf="showAlert" class="fixed bottom-4 right-4 max-w-sm w-full">
+      <div [ngClass]="{
+        'bg-green-50 border-green-200 text-green-800': alertType === 'success',
+        'bg-red-50 border-red-200 text-red-800': alertType === 'error'
+      }" class="border rounded-lg p-4 shadow-lg">
+        <div class="flex items-center">
+          <svg *ngIf="alertType === 'success'" class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+          </svg>
+          <svg *ngIf="alertType === 'error'" class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+          </svg>
+          <span class="text-sm font-medium">{{ alertMessage }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

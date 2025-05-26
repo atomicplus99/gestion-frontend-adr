@@ -42,7 +42,8 @@ export class SidebarComponent {
             { label: 'Desde Excel', link: '/home/registrar/excel' },
             { label: 'Actualizar Alumno', link: '/home/registrar/actualizar-alumno' },
             { label: 'Lista de Alumnos', link: '/home/registrar/list-alumno' },
-            { label: 'Eliminar Alumno', link: '/home/registrar/delete-alumno' }
+            { label: 'Imprimir QR', link: '/home/registrar/imprimir-qr-alumnos' },
+            { label: 'Estado de Alumno', link: '/home/registrar/delete-alumno' }
           ],
         },
         {
@@ -53,9 +54,22 @@ export class SidebarComponent {
           allowedRoles: ['ALUMNO','AUXILIAR'],
           children: [
             { label: 'Asistencia Manual', link: '/home/asistencia/register-manual-alumnos' },
+            { label: 'Registrar Ausencia', link: '/home/asistencia/create-ausencia-alumnos' },
             { label: 'Lista de Asistencia', link: '/home/asistencia/list-asistencia-alumnos' },
             { label: 'Actualizar Asistencia', link: '/home/asistencia/update-asistencia-alumnos' },
             { label: 'Anular Asistencia', link: '/home/asistencia/delete-asistencia-alumnos' },
+          ],
+        },
+        {
+          icon: 'kanban',
+          label: 'Justificaciones',
+          badge: 'Pro',
+          external: true,
+          allowedRoles: ['ALUMNO','AUXILIAR'],
+          children: [
+            { label: 'Registrar Solicitud', link: '/home/justificaciones/create-solicitud-justificacion' },
+            { label: 'Ver Solicitudes', link: '/home/justificaciones/list-solicitudes-justificaciones-alumnos' },
+            { label: 'Marcar Justificaciones', link: '/home/justificaciones/actualizar-estado-justificaciones' },
           ],
         },
         { isSeparator: true },

@@ -52,6 +52,11 @@ export const routes: Routes = [
 
                     },
                     {
+                        path:'imprimir-qr-alumnos',
+                        loadComponent: () => import('./gestion-academica-ar/pages/register/codigos-qr-alumnos/codigos-qr-alumnos.component').then(m => m.QrPrinterComponent),
+
+                    },
+                    {
                         path: '', redirectTo: 'manual', pathMatch: 'full',
                     }
                 ]
@@ -61,20 +66,41 @@ export const routes: Routes = [
                 children: [
                     {
                         path: 'register-manual-alumnos',
-                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/create-asistencia-alumno/create-asistencia-alumno.component').then(m => m.CreateAsistenciaAlumnoComponent),
+                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/create-asistencia-alumno/create-asistencia-alumno.component').then(m => m.RegistroAsistenciaComponent),
 
                     },
                     {
                         path: 'list-asistencia-alumnos',
-                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/list-asistencia-alumnos/main-component/list-asistencia-alumnos.component').then(m => m.ListAsistenciaAlumnosComponent),
+                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/list-asistencia-alumnos/main-component/list-asistencia-alumnos.component').then(m => m.ListaAsistenciaComponent),
                     },
                     {
                         path: 'update-asistencia-alumnos',
-                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/update-asistencia-alumnos/update-asistencia-alumnos.component').then(m => m.UpdateAsistenciaAlumnosComponent),
+                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/update-asistencia-alumnos/update-asistencia-alumnos.component').then(m => m.ActualizarAsistenciaComponent),
                     },
                     {
                         path: 'delete-asistencia-alumnos',
-                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/delete-asistencia-alumnos/delete-asistencia-alumnos.component').then(m => m.DeleteAsistenciaAlumnosComponent),
+                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/delete-asistencia-alumnos/delete-asistencia-alumnos.component').then(m => m.AnularAsistenciasComponent),
+                    },
+                    {
+                        path: 'create-ausencia-alumnos',
+                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/create-ausencia-alumno/create-ausencia-alumno.component').then(m => m.RegistroAusenciasComponent),
+                    },
+                ]
+            },
+            {
+                path: 'justificaciones',
+                children: [
+                    {
+                        path: 'create-solicitud-justificacion',
+                        loadComponent: () => import('./gestion-academica-ar/pages/justificaciones/create-solicitud-justificacion/create-solicitud-justificacion.component').then(m => m.SolicitudJustificacionComponent),
+                    },
+                    {
+                        path: 'list-solicitudes-justificaciones-alumnos',
+                        loadComponent: () => import('./gestion-academica-ar/pages/justificaciones/list-solicitudes-justificaciones-alumnos/list-solicitudes-justificaciones-alumnos.component').then(m => m.ListaJustificacionesComponent),
+                    },
+                    {
+                        path: 'actualizar-estado-justificaciones',
+                        loadComponent: () => import('./gestion-academica-ar/pages/justificaciones/actualizar-estado-justificaciones/actualizar-estado-justificaciones.component').then(m => m.GestionEstadosJustificacionesComponent),
                     },
                 ]
             },

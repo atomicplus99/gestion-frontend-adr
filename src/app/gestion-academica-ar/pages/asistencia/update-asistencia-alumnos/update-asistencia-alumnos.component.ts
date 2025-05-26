@@ -1,213 +1,321 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+// src/app/components/actualizar-asistencia/actualizar-asistencia.component.ts
+
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AsistenciaService, EstadoAsistencia, UpdateAsistenciaRequest, VerificarAsistenciaResponse } from './service/UpdateAsistencia.service';
+import { HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-
 import Swal from 'sweetalert2';
-import { environment } from '../../../../../environments/environment';
-
-interface Asistencia {
-  id_asistencia: string;
-  hora_de_llegada: string;
-  hora_salida: string | null;
-  estado_asistencia: 'PUNTUAL' | 'TARDE' | 'FALTA';
-  fecha: string;
-}
-
-interface AlumnoConAsistencia {
-  nombre: string;
-  apellido: string;
-  codigo: string;
-  asistencias: Asistencia[];
-}
 
 @Component({
-  selector: 'app-update-asistencia-alumnos',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
-  template: `
-    <div class="container mx-auto p-6">
-      <h2 class="text-2xl font-semibold mb-4 text-gray-800">Consultar Asistencia de Alumno</h2>
-
-      <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-        <div class="mb-4">
-          <label for="codigo" class="block text-gray-700 text-sm font-bold mb-2">
-            Código del Alumno:
-          </label>
-          <div class="flex rounded-md shadow-sm">
-            <input
-              type="text"
-              id="codigo"
-              class="form-input flex-grow block w-full min-w-0 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              placeholder="Ingrese el código del alumno"
-              [formControl]="codigoControl"
-            />
-            <button
-              (click)="buscarAsistencia()"
-              class="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-6a7 7 0 10-14 0 7 7 0 0014 0z" />
-              </svg>
-              Buscar
-            </button>
-          </div>
-          <div *ngIf="codigoControl.invalid && (codigoControl.dirty || codigoControl.touched)" class="text-red-500 text-sm mt-1">
-            El código del alumno es requerido.
-          </div>
-        </div>
-
-        <div *ngIf="alumnoConAsistencia()" class="mt-6 border-t pt-6">
-          <h3 class="text-xl font-semibold text-gray-800 mb-3">Información del Alumno</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <strong class="font-medium text-gray-700">Nombre:</strong>
-              <span class="text-gray-600">{{ alumnoConAsistencia()?.nombre }}</span>
-            </div>
-            <div>
-              <strong class="font-medium text-gray-700">Apellido:</strong>
-              <span class="text-gray-600">{{ alumnoConAsistencia()?.apellido }}</span>
-            </div>
-            <div>
-              <strong class="font-medium text-gray-700">Código:</strong>
-              <span class="text-gray-600">{{ alumnoConAsistencia()?.codigo }}</span>
-            </div>
-          </div>
-
-          <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-3">Historial de Asistencia</h3>
-          <div class="overflow-x-auto rounded-lg shadow ring-1 ring-gray-300">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hora de Llegada</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hora de Salida</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <tr *ngFor="let asistencia of alumnoConAsistencia()?.asistencias">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ asistencia.fecha | date: 'dd/MM/yyyy' }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ asistencia.hora_de_llegada }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ asistencia.hora_salida || '-' }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm">
-                    <span
-                      class="px-2 py-1 rounded-full text-xs font-semibold"
-                      [ngClass]="{
-                        'bg-green-100 text-green-800': asistencia.estado_asistencia === 'PUNTUAL',
-                        'bg-yellow-100 text-yellow-800': asistencia.estado_asistencia === 'TARDE',
-                        'bg-red-100 text-red-800': asistencia.estado_asistencia === 'FALTA'
-                      }"
-                    >{{ asistencia.estado_asistencia }}</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div *ngIf="mostrarMensajeNoAsistencia()" class="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <div class="ml-3">
-              <p class="text-sm font-medium text-yellow-800">
-                No se encontraron registros de asistencia para el alumno con código: {{ codigoControl.value }}.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [ReactiveFormsModule, FormsModule, HttpClientModule, CommonModule],
+  selector: 'app-actualizar-asistencia',
+  templateUrl: './update-asistencia-alumnos.component.html',
 })
-export class UpdateAsistenciaAlumnosComponent implements OnInit {
-  private readonly http = inject(HttpClient);
-  private readonly apiUrl = environment.apiUrl;
+export class ActualizarAsistenciaComponent implements OnInit {
 
-  codigoControl = new FormControl('', Validators.required);
-  alumnoConAsistencia = signal<AlumnoConAsistencia | null>(null);
-  mostrarMensajeNoAsistencia = signal<boolean>(false);
+  // Formularios
+  buscarForm!: FormGroup;
+  actualizarForm!: FormGroup;
+
+  // Estados del componente
+  isLoading = false;
+  isLoadingUpdate = false;
+  showUpdateForm = false;
+
+  // Datos del alumno y asistencia
+  alumnoData: VerificarAsistenciaResponse | null = null;
+
+  // Opciones para select
+  estadosAsistencia = [
+    { value: EstadoAsistencia.PUNTUAL, label: 'Puntual' },
+    { value: EstadoAsistencia.TARDANZA, label: 'Tardanza' }
+  ];
+
+  // ID del auxiliar (esto debería venir de la sesión/auth)
+  private readonly auxiliarId = '158c6a01-1701-4c41-b732-d1b83c0a6e7b'; // TODO: Obtener del servicio de autenticación
+
+  constructor(
+    private fb: FormBuilder,
+    private asistenciaService: AsistenciaService,
+    private cdr: ChangeDetectorRef
+  ) {
+    this.initializeForms();
+  }
 
   ngOnInit(): void {
-    // Opcional: Puedes enfocar el input al cargar el componente
-    const inputElement = document.getElementById('codigo') as HTMLInputElement;
-    if (inputElement) {
-      inputElement.focus();
-    }
+    // Componente inicializado
   }
 
-  buscarAsistencia(): void {
-    if (this.codigoControl.valid) {
-      const codigo = this.codigoControl.value!;
-      this.http.get<Asistencia[]>(`${this.apiUrl}/asistencia/list/alumno/${codigo}`).subscribe({
-        next: (asistencias) => {
-          console.log(asistencias);
-          if (asistencias && asistencias.length > 0) {
-            // Suponiendo que el backend también devuelve la información del alumno
-            // Si no es así, necesitarías otra llamada para obtener los datos del alumno
-            this.obtenerDatosAlumno(codigo, asistencias);
-            this.mostrarMensajeNoAsistencia.set(false);
-          } else {
-            this.alumnoConAsistencia.set(null);
-            this.mostrarMensajeNoAsistencia.set(true);
-            Swal.fire({
-              icon: 'error',
-              title: 'No hay asistencia',
-              text: `No se encontraron registros de asistencia para el alumno con código: ${codigo}`,
-            });
-          }
-        },
-        error: (error) => {
-          this.alumnoConAsistencia.set(null);
-          this.mostrarMensajeNoAsistencia.set(true);
-          let errorMessage = 'Error al buscar la asistencia.';
-          if (error.status === 404) {
-            errorMessage = `No se encontró ningún alumno con el código: ${codigo}.`;
-          } else if (error.error?.message) {
-            errorMessage = error.error.message;
-          }
+  /**
+   * Inicializa los formularios reactivos
+   */
+  private initializeForms(): void {
+    // Formulario para buscar alumno
+    this.buscarForm = this.fb.group({
+      codigo: ['', [
+        Validators.required,
+        Validators.minLength(3),
+        Validators.pattern(/^[a-zA-Z0-9]+$/)
+      ]]
+    });
+
+    // Formulario para actualizar asistencia
+    this.actualizarForm = this.fb.group({
+      hora_de_llegada: ['', [Validators.pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/)]],
+      hora_salida: ['', [Validators.pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/)]],
+      estado_asistencia: [''],
+      motivo: ['', [Validators.required, Validators.minLength(10)]]
+    });
+  }
+
+  /**
+   * Busca y verifica la asistencia del alumno
+   */
+  onBuscarAlumno(): void {
+    if (this.buscarForm.invalid) {
+      this.markFormGroupTouched(this.buscarForm);
+      return;
+    }
+
+    const codigo = this.buscarForm.get('codigo')?.value?.trim();
+    if (!codigo) return;
+
+    this.isLoading = true;
+    this.resetUpdateForm();
+    
+    // Forzar actualización del DOM
+    this.cdr.detectChanges();
+
+    this.asistenciaService.verificarAsistenciaPorCodigo(codigo).subscribe({
+      next: (response) => {
+        console.log('🔍 RESPUESTA COMPLETA:', response); // DEBUG
+        console.log('🔍 ALUMNO DATA:', response.alumno); // DEBUG
+        console.log('🔍 ASISTENCIA DATA:', response.asistencia); // DEBUG
+        
+        this.alumnoData = response;
+        
+        if (response.tiene_asistencia && response.asistencia) {
+          // Tiene asistencia - mostrar formulario de actualización
+          this.prepareUpdateForm(response);
+          this.showUpdateForm = true;
+        } else {
+          // No tiene asistencia - solo mostrar info del alumno
+          this.showUpdateForm = false;
+          // Mostrar mensaje informativo con SweetAlert2
           Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: errorMessage,
+            icon: 'info',
+            title: 'Sin Asistencia',
+            text: response.mensaje,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#3085d6'
           });
-        },
-      });
-    } else {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Campo requerido',
-        text: 'Por favor, ingresa el código del alumno.',
-      });
-    }
-  }
-
-  // Función auxiliar para obtener los datos del alumno (si el backend no los incluye en la respuesta de asistencia)
-  private obtenerDatosAlumno(codigo: string, asistencias: Asistencia[]): void {
-    this.http.get<any>(`${this.apiUrl}/asistencia/list/alumno/${codigo}`).subscribe({
-      next: (alumno) => {
-        this.alumnoConAsistencia.set({
-          nombre: alumno.nombre,
-          apellido: alumno.apellido,
-          codigo: alumno.codigo,
-          asistencias: asistencias,
-        });
+        }
+        
+        this.isLoading = false;
+        
+        // Forzar actualización del DOM después de recibir respuesta
+        this.cdr.detectChanges();
       },
       error: (error) => {
-        console.error('Error al obtener datos del alumno', error);
+        // Mostrar error con SweetAlert2
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'No se pudieron obtener los datos del alumno.',
+          text: error,
+          confirmButtonText: 'Cerrar',
+          confirmButtonColor: '#d33'
         });
-        this.alumnoConAsistencia.set(null);
-        this.mostrarMensajeNoAsistencia.set(true);
-      },
+        
+        this.showUpdateForm = false;
+        this.isLoading = false;
+        
+        // Forzar actualización del DOM en caso de error
+        this.cdr.detectChanges();
+      }
     });
+  }
+
+  /**
+   * Prepara el formulario de actualización con los datos actuales
+   */
+  private prepareUpdateForm(data: VerificarAsistenciaResponse): void {
+    if (!data.asistencia) return;
+
+    this.actualizarForm.patchValue({
+      hora_de_llegada: data.asistencia.hora_de_llegada,
+      hora_salida: data.asistencia.hora_salida || '',
+      estado_asistencia: data.asistencia.estado_asistencia,
+      motivo: ''
+    });
+  }
+
+  /**
+   * Actualiza la asistencia del alumno
+   */
+  onActualizarAsistencia(): void {
+    if (this.actualizarForm.invalid || !this.alumnoData?.alumno) {
+      this.markFormGroupTouched(this.actualizarForm);
+      return;
+    }
+
+    this.isLoadingUpdate = true;
+    
+    // Forzar actualización del DOM
+    this.cdr.detectChanges();
+
+    const formValues = this.actualizarForm.value;
+    const updateData: UpdateAsistenciaRequest = {
+      motivo: formValues.motivo,
+      id_auxiliar: this.auxiliarId
+    };
+
+    // Solo incluir campos que han cambiado o tienen valor
+    if (formValues.hora_de_llegada && formValues.hora_de_llegada.trim()) {
+      updateData.hora_de_llegada = formValues.hora_de_llegada.trim();
+    }
+
+    if (formValues.hora_salida && formValues.hora_salida.trim()) {
+      updateData.hora_salida = formValues.hora_salida.trim();
+    }
+
+    if (formValues.estado_asistencia) {
+      updateData.estado_asistencia = formValues.estado_asistencia;
+    }
+
+    const codigo = this.alumnoData.alumno.codigo;
+
+    this.asistenciaService.actualizarAsistenciaPorCodigo(codigo, updateData).subscribe({
+      next: (response) => {
+        this.isLoadingUpdate = false;
+        
+        // Actualizar datos locales con la respuesta
+        if (this.alumnoData && this.alumnoData.asistencia) {
+          this.alumnoData.asistencia = {
+            ...this.alumnoData.asistencia,
+            ...response.asistencia_actualizada
+          };
+        }
+
+        // Forzar actualización del DOM inmediatamente después de éxito
+        this.cdr.detectChanges();
+
+        // Mostrar éxito con SweetAlert2
+        Swal.fire({
+          icon: 'success',
+          title: '¡Actualización Exitosa!',
+          text: response.mensaje,
+          timer: 3000,
+          timerProgressBar: true,
+          confirmButtonText: 'Continuar',
+          confirmButtonColor: '#10b981'
+        }).then(() => {
+          // Limpiar TODO después de cerrar el alert
+          this.buscarForm.reset();
+          this.resetUpdateForm();
+          this.showUpdateForm = false;
+          this.alumnoData = null;
+          
+          // Forzar actualización del DOM después de limpiar
+          this.cdr.detectChanges();
+        });
+      },
+      error: (error) => {
+        this.isLoadingUpdate = false;
+        
+        // Mostrar error con SweetAlert2
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al Actualizar',
+          text: error,
+          confirmButtonText: 'Cerrar',
+          confirmButtonColor: '#d33'
+        });
+        
+        // Forzar actualización del DOM en caso de error
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  /**
+   * Reinicia el formulario de búsqueda y oculta el formulario de actualización
+   */
+  onNuevaBusqueda(): void {
+    this.buscarForm.reset();
+    this.resetUpdateForm();
+    this.showUpdateForm = false;
+    this.alumnoData = null;
+    
+    // Forzar actualización del DOM
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Reinicia el formulario de actualización
+   */
+  private resetUpdateForm(): void {
+    this.actualizarForm.reset();
+    this.showUpdateForm = false;
+  }
+
+  /**
+   * Marca todos los campos de un FormGroup como touched para mostrar validaciones
+   */
+  private markFormGroupTouched(formGroup: FormGroup): void {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      control?.markAsTouched();
+    });
+  }
+
+  /**
+   * Verifica si un campo tiene errores y ha sido tocado
+   */
+  hasFieldError(formGroup: FormGroup, fieldName: string): boolean {
+    const field = formGroup.get(fieldName);
+    return !!(field && field.invalid && field.touched);
+  }
+
+  /**
+   * Obtiene el mensaje de error para un campo específico
+   */
+  getFieldError(formGroup: FormGroup, fieldName: string): string {
+    const field = formGroup.get(fieldName);
+    if (!field || !field.errors || !field.touched) return '';
+
+    const errors = field.errors;
+    
+    if (errors['required']) return 'Este campo es obligatorio';
+    if (errors['minlength']) return `Mínimo ${errors['minlength'].requiredLength} caracteres`;
+    if (errors['pattern']) {
+      if (fieldName === 'codigo') return 'Solo se permiten letras y números';
+      if (fieldName.includes('hora')) return 'Formato válido: HH:MM:SS (ej: 08:30:00)';
+    }
+    
+    return 'Campo inválido';
+  }
+
+  /**
+   * Verifica si el formulario de búsqueda es válido
+   */
+  get isBuscarFormValid(): boolean {
+    return this.buscarForm.valid;
+  }
+
+  /**
+   * Verifica si el formulario de actualización es válido
+   */
+  get isActualizarFormValid(): boolean {
+    return this.actualizarForm.valid;
+  }
+
+  /**
+   * Obtiene información del turno formateada
+   */
+  get turnoInfo(): string {
+    if (!this.alumnoData?.alumno?.turno) return '';
+    const turno = this.alumnoData.alumno.turno;
+    return `${turno.turno} (${turno.hora_inicio} - ${turno.hora_fin})`;
   }
 }

@@ -1,5 +1,3 @@
-// table-student.component.ts
-
 import {
   Component,
   Input,
@@ -15,8 +13,39 @@ import { HttpClient } from '@angular/common/http';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AlumnoService } from '../../../../gestion-academica-ar/services/alumno.service';
-import { PersonalAlumno } from '../../../../gestion-academica-ar/pages/register/interfaces/alumno.interface';
 import { AlertsService } from '../../../alerts.service';
+
+export interface Turno {
+  id_turno: string;
+  hora_inicio: string;
+  hora_fin: string;
+  hora_limite: string;
+  turno: string;
+}
+
+export interface Usuario {
+  id_user: string;
+  nombre_usuario: string;
+  password_user: string;
+  rol_usuario: string;
+  profile_image: string;
+}
+
+export interface AlumnoUpdate {
+  id_alumno: string;
+  codigo: string;
+  dni_alumno: string;
+  nombre: string;
+  apellido: string;
+  fecha_nacimiento: Date;
+  direccion: string;
+  codigo_qr?: string;
+  nivel: string;
+  grado: number;
+  seccion: string;
+  turno?: Turno;
+  usuario?: Usuario;
+}
 
 @Component({
   selector: 'shared-table-student',
@@ -24,39 +53,20 @@ import { AlertsService } from '../../../alerts.service';
   styleUrls: ['./table-student.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    DatePipe
-  ]
+  imports: [CommonModule, FormsModule, DatePipe]
 })
 export class TableStudentComponent implements OnChanges, OnInit {
   @Input() codigoSeleccionado!: string;
   @Input() nivelFiltro: string = '';
-  
   @Output() editandoAlumno = new EventEmitter<boolean>();
-  @Output() alumnoActualizado = new EventEmitter<PersonalAlumno>();
+  @Output() alumnoActualizado = new EventEmitter<AlumnoUpdate>();
 
-  // Configuración de la tabla
-  displayedColumns: string[] = [
-    'codigo',
-    'dni_alumno',
-    'nombre',
-    'apellido',
-    'fecha_nacimiento',
-    'direccion',
-    'nivel',
-    'grado',
-    'seccion',
-    'acciones'
-  ];
-
-  // Datos y estado
-  dataSource: PersonalAlumno[] = [];
-  filteredData: PersonalAlumno[] = [];
-  paginatedData: PersonalAlumno[] = [];
-  alumnoEditando: PersonalAlumno | null = null;
-  alumnoDetalle: PersonalAlumno | null = null;
+  displayedColumns: string[] = ['codigo', 'dni_alumno', 'nombre', 'apellido', 'fecha_nacimiento', 'direccion', 'codigo_qr', 'nivel', 'grado', 'seccion', 'turno', 'acciones'];
+  dataSource: AlumnoUpdate[] = [];
+  filteredData: AlumnoUpdate[] = [];
+  paginatedData: AlumnoUpdate[] = [];
+  alumnoEditando: AlumnoUpdate | null = null;
+  alumnoDetalle: AlumnoUpdate | null = null;
   secciones: string[] = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
   niveles: string[] = ['Inicial', 'Primaria', 'Secundaria'];
   loading = false;
@@ -64,63 +74,83 @@ export class TableStudentComponent implements OnChanges, OnInit {
   codigoOriginal!: string;
   mostrarTarjetas = false;
   ultimaActualizacion = new Date();
-  
-  // Paginación personalizada
+  turnosDisponibles: Turno[] = [];
+  cargandoTurnos = false;
   currentPage = 1;
   pageSize = 10;
   totalPages = 1;
   startIndex = 0;
   endIndex = 0;
-  
-  // Ordenamiento
   sortColumn: string = 'codigo';
   sortDirection: 'asc' | 'desc' = 'asc';
-  
-  // Filtrado
   filterValue: string = '';
 
-  constructor(
-    private alumnoSvc: AlumnoService,
-    private cd: ChangeDetectorRef,
-    private http: HttpClient,
-    private alerts: AlertsService
-  ) {}
+  constructor(private alumnoSvc: AlumnoService, private cd: ChangeDetectorRef, private http: HttpClient, private alerts: AlertsService) { }
 
   ngOnInit(): void {
-    // No hay ninguna inicialización necesaria aquí
+    this.cargarTurnos();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Manejar cambios en las entradas
     if (changes['codigoSeleccionado'] && this.codigoSeleccionado) {
       this.fetchAlumno(this.codigoSeleccionado);
     }
-
     if (changes['nivelFiltro']) {
       this.aplicarFiltroNivel();
     }
   }
 
-  /**
-   * Obtiene los datos del alumno desde el servicio
-   */
+  private cargarTurnos(): void {
+    this.cargandoTurnos = true;
+    this.cd.markForCheck();
+    this.http.get<Turno[]>('http://localhost:3000/turno').subscribe({
+      next: (turnos) => {
+        this.turnosDisponibles = turnos;
+        this.cargandoTurnos = false;
+        this.cd.markForCheck();
+      },
+      error: (error) => {
+        console.error('Error al cargar turnos:', error);
+        this.alerts.error('No se pudieron cargar los turnos disponibles');
+        this.cargandoTurnos = false;
+        this.cd.markForCheck();
+      }
+    });
+  }
+
+  getTurnoById(id_turno: string): Turno | null {
+    return this.turnosDisponibles.find(turno => turno.id_turno === id_turno) || null;
+  }
+
+  formatearHorarioTurno(turno: Turno): string {
+    if (!turno) return '';
+    return `${turno.turno} (${turno.hora_inicio} - ${turno.hora_fin})`;
+  }
+
+  onTurnoChange(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    const nuevoTurnoId = select.value;
+
+    if (this.alumnoEditando) {
+      if (nuevoTurnoId) {
+        this.alumnoEditando.turno = this.getTurnoById(nuevoTurnoId) || undefined;
+      } else {
+        this.alumnoEditando.turno = undefined;
+      }
+    }
+  }
+
   private fetchAlumno(codigo: string) {
     this.loading = true;
     this.cd.markForCheck();
-
     this.alumnoSvc.getByCodigo(codigo).subscribe({
       next: alumno => {
         this.dataSource = [alumno];
         this.filteredData = [...this.dataSource];
-        
-        // Actualizar paginación
         this.updatePagination();
-        
         this.loading = false;
-        
-        // Simulamos una fecha de última actualización
         this.ultimaActualizacion = new Date();
-        
+        console.log('Alumno cargado:', alumno);
         this.cd.markForCheck();
       },
       error: (error) => {
@@ -135,188 +165,135 @@ export class TableStudentComponent implements OnChanges, OnInit {
     });
   }
 
-  /**
-   * Actualiza la paginación basada en los datos filtrados
-   */
   private updatePagination(): void {
     this.totalPages = Math.ceil(this.filteredData.length / this.pageSize);
-    
-    // Ajustar página actual si es necesario
     if (this.currentPage > this.totalPages) {
       this.currentPage = this.totalPages || 1;
     }
-    
-    // Calcular índices
     this.startIndex = (this.currentPage - 1) * this.pageSize;
     this.endIndex = Math.min(this.startIndex + this.pageSize, this.filteredData.length);
-    
-    // Actualizar datos paginados
     this.paginatedData = this.filteredData.slice(this.startIndex, this.endIndex);
   }
 
-  /**
-   * Navega a una página específica
-   */
   goToPage(page: number): void {
-    if (page < 1 || page > this.totalPages) {
-      return;
-    }
-    
+    if (page < 1 || page > this.totalPages) return;
     this.currentPage = page;
     this.updatePage();
   }
 
-  /**
-   * Actualiza la página actual después de cambiar el tamaño de página
-   */
   updatePage(): void {
     this.updatePagination();
     this.cd.markForCheck();
   }
 
-  /**
-   * Ordena la tabla por columna
-   */
   sortTable(column: string): void {
     if (this.sortColumn === column) {
-      // Invertir dirección si es la misma columna
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
-      // Nueva columna, establecer a ascendente por defecto
       this.sortColumn = column;
       this.sortDirection = 'asc';
     }
-    
-    // Ordenar datos
     this.filteredData.sort((a: any, b: any) => {
       const valueA = a[column];
       const valueB = b[column];
-      
-      // Manejar fechas especialmente
       if (column === 'fecha_nacimiento') {
         const dateA = new Date(valueA);
         const dateB = new Date(valueB);
-        return this.sortDirection === 'asc' ? 
-          dateA.getTime() - dateB.getTime() : 
-          dateB.getTime() - dateA.getTime();
+        return this.sortDirection === 'asc' ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime();
       }
-      
-      // Manejar números
       if (typeof valueA === 'number' && typeof valueB === 'number') {
         return this.sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
       }
-      
-      // Manejar strings
       if (typeof valueA === 'string' && typeof valueB === 'string') {
-        return this.sortDirection === 'asc' ? 
-          valueA.localeCompare(valueB) : 
-          valueB.localeCompare(valueA);
+        return this.sortDirection === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
       }
-      
       return 0;
     });
-    
-    // Actualizar paginación
     this.updatePagination();
   }
 
-  /**
-   * Aplica un filtro de búsqueda a la tabla
-   */
   applyFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
     this.filterValue = filterValue;
-    
     if (!filterValue) {
-      // Sin filtro, mostrar todos los datos
       this.filteredData = [...this.dataSource];
     } else {
-      // Aplicar filtro
-      this.filteredData = this.dataSource.filter((alumno: PersonalAlumno) => {
+      this.filteredData = this.dataSource.filter((alumno: AlumnoUpdate) => {
         return alumno.codigo.toLowerCase().includes(filterValue) ||
-               alumno.nombre.toLowerCase().includes(filterValue) ||
-               alumno.apellido.toLowerCase().includes(filterValue) ||
-               alumno.dni_alumno.toLowerCase().includes(filterValue) ||
-               alumno.nivel.toLowerCase().includes(filterValue);
+          alumno.nombre.toLowerCase().includes(filterValue) ||
+          alumno.apellido.toLowerCase().includes(filterValue) ||
+          alumno.dni_alumno.toLowerCase().includes(filterValue) ||
+          alumno.nivel.toLowerCase().includes(filterValue) ||
+          (alumno.codigo_qr && alumno.codigo_qr.toLowerCase().includes(filterValue)) ||
+          (alumno.turno && alumno.turno.turno.toLowerCase().includes(filterValue));
       });
     }
-    
-    // Resetear a la primera página
     this.currentPage = 1;
-    
-    // Actualizar paginación
     this.updatePagination();
   }
 
-  /**
-   * Aplica el filtro por nivel académico
-   */
   filtrarPorNivel(nivel: string): void {
     this.nivelFiltro = this.nivelFiltro === nivel ? '' : nivel;
     this.aplicarFiltroNivel();
   }
 
-  /**
-   * Aplica el filtro por nivel académico a los datos
-   */
   private aplicarFiltroNivel(): void {
-    // Restaurar datos originales sin filtro
     if (!this.nivelFiltro) {
-      // Si teníamos un filtro y lo estamos quitando, recargar el alumno
       if (this.codigoSeleccionado) {
         this.fetchAlumno(this.codigoSeleccionado);
       }
       return;
     }
-
-    // Aplicar filtro de nivel si hay uno seleccionado
-    this.filteredData = this.dataSource.filter(alumno => 
-      alumno.nivel.toLowerCase() === this.nivelFiltro.toLowerCase()
-    );
-    
-    // Actualizar paginación
+    this.filteredData = this.dataSource.filter(alumno => alumno.nivel.toLowerCase() === this.nivelFiltro.toLowerCase());
     this.updatePagination();
-    
     this.cd.markForCheck();
   }
 
-  /**
-   * Cambia entre vista de tabla y tarjetas
-   */
   cambiarVista(): void {
     this.mostrarTarjetas = !this.mostrarTarjetas;
     this.cd.markForCheck();
   }
 
-  /**
-   * Inicia la edición de un alumno
-   */
-  editarAlumno(alumno: PersonalAlumno): void {
+  editarAlumno(alumno: AlumnoUpdate): void {
     this.alumnoEditando = { ...alumno };
     this.codigoOriginal = alumno.codigo;
     this.editandoAlumno.emit(true);
     this.cd.markForCheck();
   }
 
-  /**
-   * Cancela la edición del alumno
-   */
   cancelarEdicion(): void {
     this.alumnoEditando = null;
     this.editandoAlumno.emit(false);
     this.cd.markForCheck();
   }
 
-  /**
-   * Guarda los cambios del alumno editado
-   */
+  private validarFormulario(): string | null {
+    if (!this.alumnoEditando) return 'No hay datos para validar';
+    if (this.alumnoEditando.codigo.length !== 14) return 'El código debe tener exactamente 14 dígitos';
+    if (this.alumnoEditando.dni_alumno.length !== 8) return 'El DNI debe tener exactamente 8 dígitos';
+    if (this.alumnoEditando.nombre.length > 100) return 'El nombre no puede superar los 100 caracteres';
+    if (this.alumnoEditando.apellido.length > 100) return 'El apellido no puede superar los 100 caracteres';
+    if (this.alumnoEditando.direccion.length > 100) return 'La dirección no puede superar los 100 caracteres';
+    if (!['Inicial', 'Primaria', 'Secundaria'].includes(this.alumnoEditando.nivel)) return 'El nivel debe ser Inicial, Primaria o Secundaria';
+    if (this.alumnoEditando.grado < 1 || this.alumnoEditando.grado > 6) return 'El grado debe estar entre 1 y 6';
+    if (this.alumnoEditando.seccion.length !== 1) return 'La sección debe ser un solo carácter';
+    if (this.alumnoEditando.codigo_qr && this.alumnoEditando.codigo_qr.length > 100) return 'El código QR no puede superar los 100 caracteres';
+    if (this.alumnoEditando.turno) {
+      const turnoExiste = this.turnosDisponibles.find(turno => turno.id_turno === this.alumnoEditando!.turno!.id_turno);
+      if (!turnoExiste) return 'El turno seleccionado no es válido';
+    }
+    return null;
+  }
+
   guardarEdicion(): void {
     if (!this.alumnoEditando) return;
-
+    const error = this.validarFormulario();
+    if (error) {
+      this.alerts.error(error);
+      return;
+    }
     this.guardando = true;
     this.cd.markForCheck();
-
-    // Prepara los datos para enviar al servidor
     const payload: any = {
       codigo: this.alumnoEditando.codigo,
       dni_alumno: this.alumnoEditando.dni_alumno,
@@ -326,27 +303,24 @@ export class TableStudentComponent implements OnChanges, OnInit {
       direccion: this.alumnoEditando.direccion,
       nivel: this.alumnoEditando.nivel,
       grado: this.alumnoEditando.grado,
-      seccion: this.alumnoEditando.seccion,
+      seccion: this.alumnoEditando.seccion
     };
-
-    // Realiza la petición al servidor
+    if (this.alumnoEditando.codigo_qr && this.alumnoEditando.codigo_qr.trim()) {
+      payload.codigo_qr = this.alumnoEditando.codigo_qr.trim();
+    }
+    if (this.alumnoEditando.turno && this.alumnoEditando.turno.id_turno) {
+      payload.id_turno = this.alumnoEditando.turno.id_turno;
+    } else {
+      payload.id_turno = null;
+    }
+    console.log('Payload a enviar:', payload);
     this.http.put(`http://localhost:3000/alumnos/actualizar/${this.codigoOriginal}`, payload).subscribe({
-      next: () => {
+      next: (response: any) => {
         this.alerts.success('El alumno fue actualizado correctamente ✅');
-
-        // Actualiza los datos en la tabla
-        const index = this.dataSource.findIndex(a => a.codigo === this.codigoOriginal);
-        if (index !== -1) {
-          this.dataSource[index] = { ...this.dataSource[index], ...payload };
-          
-          // Actualizar datos filtrados y paginados
-          this.aplicarFiltroNivel();
-          
-          // Emitir evento de actualización para que el componente padre pueda actualizar sus datos
-          this.alumnoActualizado.emit(this.dataSource[index]);
+        this.fetchAlumno(this.alumnoEditando!.codigo);
+        if (response.alumno) {
+          this.alumnoActualizado.emit(response.alumno);
         }
-
-        // Resetear estado
         this.alumnoEditando = null;
         this.editandoAlumno.emit(false);
         this.guardando = false;
@@ -355,46 +329,63 @@ export class TableStudentComponent implements OnChanges, OnInit {
       error: (err) => {
         console.error('Error completo del backend:', err);
         this.guardando = false;
-        
-        const mensaje = Array.isArray(err?.error?.message)
-          ? err.error.message.join(', ')
-          : err?.error?.message || err?.message || 'Error desconocido al actualizar';
-
-        // Mensaje personalizado si el código está duplicado
+        const mensaje = Array.isArray(err?.error?.message) ? err.error.message.join(', ') : err?.error?.message || err?.message || 'Error desconocido al actualizar';
         if (mensaje.includes('El código ya está registrado')) {
           this.alerts.error('Ese código ya pertenece a otro alumno. Intenta con uno diferente.');
         } else {
           this.alerts.error(mensaje);
         }
-        
         this.cd.markForCheck();
       }
     });
   }
 
-  /**
-   * Muestra los detalles de un alumno
-   */
-  verDetalles(alumno: PersonalAlumno): void {
+  verDetalles(alumno: AlumnoUpdate): void {
     this.alumnoDetalle = { ...alumno };
     this.cd.markForCheck();
   }
 
-  /**
-   * Cierra el modal de detalles
-   */
   cerrarDetalles(): void {
     this.alumnoDetalle = null;
     this.cd.markForCheck();
   }
 
-  /**
-   * Edita desde la vista de detalles
-   */
   editarDesdeDetalle(): void {
     if (this.alumnoDetalle) {
       this.editarAlumno(this.alumnoDetalle);
       this.alumnoDetalle = null;
     }
+  }
+
+  onlyNumbers(event: any, field: string): void {
+    const input = event.target;
+    let value = input.value.replace(/[^0-9]/g, '');
+    if (field === 'codigo' && value.length > 14) {
+      value = value.slice(0, 14);
+    } else if (field === 'dni' && value.length > 8) {
+      value = value.slice(0, 8);
+    }
+    input.value = value;
+    if (this.alumnoEditando) {
+      if (field === 'codigo') {
+        this.alumnoEditando.codigo = value;
+      } else if (field === 'dni') {
+        this.alumnoEditando.dni_alumno = value;
+      }
+    }
+  }
+
+  generarCodigoQR(): void {
+    if (this.alumnoEditando) {
+      this.alumnoEditando.codigo_qr = this.generateUUID();
+    }
+  }
+
+  private generateUUID(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      const r = Math.random() * 16 | 0;
+      const v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   }
 }

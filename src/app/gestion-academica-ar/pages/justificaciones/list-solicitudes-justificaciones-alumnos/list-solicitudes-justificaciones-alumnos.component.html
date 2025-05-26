@@ -1,0 +1,503 @@
+<div class="min-h-screen bg-gray-50 py-8 px-4">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900 mb-2">
+            Gestión de Justificaciones
+          </h1>
+          <p class="text-gray-600">
+            Visualiza y gestiona las solicitudes de justificación de asistencia
+          </p>
+        </div>
+        <div class="mt-4 md:mt-0 flex gap-3">
+          <button
+            (click)="actualizarLista()"
+            [disabled]="isLoading"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 transition-colors flex items-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Actualizar
+          </button>
+          <button
+            (click)="exportarCSV()"
+            [disabled]="justificacionesFiltradas.length === 0"
+            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 transition-colors flex items-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Exportar CSV
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">Filtros y Búsqueda</h2>
+      
+      <form [formGroup]="filtroForm" class="space-y-4">
+        <!-- Búsqueda por alumno -->
+        <div>
+          <label for="codigo_alumno" class="block text-sm font-medium text-gray-700 mb-2">
+            Buscar por código de alumno
+          </label>
+          <div class="flex gap-3">
+            <input
+              id="codigo_alumno"
+              type="text"
+              formControlName="codigo_alumno"
+              placeholder="Ej: EST2025001"
+              class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <button
+              type="button"
+              (click)="buscarAlumno()"
+              [disabled]="isSearchingAlumno"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 transition-colors flex items-center gap-2"
+            >
+              <svg *ngIf="isSearchingAlumno" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <svg *ngIf="!isSearchingAlumno" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              {{ isSearchingAlumno ? 'Buscando...' : 'Buscar' }}
+            </button>
+            <button
+              type="button"
+              (click)="limpiarFiltros()"
+              class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              Limpiar
+            </button>
+          </div>
+        </div>
+
+        <!-- Información del alumno encontrado -->
+        <div *ngIf="alumnoEncontrado" class="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div class="flex items-center mb-2">
+            <svg class="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+            <h3 class="text-lg font-medium text-green-800">Mostrando justificaciones de:</h3>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <span class="font-medium text-gray-700">Nombre:</span>
+              <span class="ml-1 text-gray-900">{{ alumnoEncontrado.nombre }} {{ alumnoEncontrado.apellido }}</span>
+            </div>
+            <div>
+              <span class="font-medium text-gray-700">Código:</span>
+              <span class="ml-1 text-gray-900">{{ alumnoEncontrado.codigo }}</span>
+            </div>
+            <div>
+              <span class="font-medium text-gray-700">Nivel:</span>
+              <span class="ml-1 text-gray-900">{{ alumnoEncontrado.nivel }} - {{ alumnoEncontrado.grado }}° {{ alumnoEncontrado.seccion }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error de búsqueda -->
+        <div *ngIf="errorBusquedaAlumno" class="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div class="flex items-center">
+            <svg class="w-5 h-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="text-sm text-red-800">{{ errorBusquedaAlumno }}</span>
+          </div>
+        </div>
+
+        <!-- Filtros adicionales -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Filtro por estado -->
+          <div>
+            <label for="estado" class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+            <select
+              id="estado"
+              formControlName="estado"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Todos los estados</option>
+              <option value="PENDIENTE">Pendiente</option>
+              <option value="APROBADA">Aprobada</option>
+              <option value="RECHAZADA">Rechazada</option>
+            </select>
+          </div>
+
+          <!-- Filtro por tipo -->
+          <div>
+            <label for="tipo_justificacion" class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
+            <select
+              id="tipo_justificacion"
+              formControlName="tipo_justificacion"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Todos los tipos</option>
+              <option value="MEDICA">Médica</option>
+              <option value="FAMILIAR">Familiar</option>
+              <option value="ACADEMICA">Académica</option>
+              <option value="PERSONAL">Personal</option>
+              <option value="EMERGENCIA">Emergencia</option>
+            </select>
+          </div>
+
+          <!-- Fecha desde -->
+          <div>
+            <label for="fecha_desde" class="block text-sm font-medium text-gray-700 mb-2">Fecha desde</label>
+            <input
+              id="fecha_desde"
+              type="date"
+              formControlName="fecha_desde"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <!-- Fecha hasta -->
+          <div>
+            <label for="fecha_hasta" class="block text-sm font-medium text-gray-700 mb-2">Fecha hasta</label>
+            <input
+              id="fecha_hasta"
+              type="date"
+              formControlName="fecha_hasta"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Información de resultados -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div class="flex items-center text-sm text-gray-600">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9a2 2 0 01-2-2z"></path>
+          </svg>
+          <span>
+            Mostrando {{ justificacionesPaginadas.length }} de {{ justificacionesFiltradas.length }} justificaciones
+            <span *ngIf="justificaciones.length !== justificacionesFiltradas.length">
+              (filtradas de {{ justificaciones.length }} totales)
+            </span>
+          </span>
+        </div>
+        
+        <div *ngIf="totalPaginas > 1" class="mt-2 md:mt-0">
+          <span class="text-sm text-gray-600">
+            Página {{ paginaActual }} de {{ totalPaginas }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+      <svg class="animate-spin w-8 h-8 mx-auto mb-4 text-blue-600" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p class="text-gray-600">Cargando justificaciones...</p>
+    </div>
+
+    <!-- Tabla de justificaciones -->
+    <div *ngIf="!isLoading" class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <!-- Tabla Desktop -->
+      <div class="hidden md:block overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alumno</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha Solicitud</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fechas Just.</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <ng-container *ngFor="let justificacion of justificacionesPaginadas">
+              <!-- Fila principal -->
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div>
+                    <div class="text-sm font-medium text-gray-900">
+                      {{ justificacion.alumno_solicitante.nombre }} {{ justificacion.alumno_solicitante.apellido }}
+                    </div>
+                    <div class="text-sm text-gray-500">{{ justificacion.alumno_solicitante.codigo }}</div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span [ngClass]="getTipoClase(justificacion.tipo_justificacion)" 
+                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                    {{ justificacion.tipo_justificacion }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span [ngClass]="getEstadoClase(justificacion.estado)" 
+                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                    {{ justificacion.estado }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {{ formatearFechaCorta(justificacion.fecha_solicitud) }}
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-900">
+                  <div class="max-w-xs truncate">
+                    {{ formatearFechasJustificacion(justificacion.fechas_de_justificacion) }}
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <button
+                    (click)="toggleDetalles(justificacion.id_justificacion)"
+                    class="text-blue-600 hover:text-blue-900 flex items-center gap-1"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            [attr.d]="justificacionExpandida === justificacion.id_justificacion ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'"></path>
+                    </svg>
+                    {{ justificacionExpandida === justificacion.id_justificacion ? 'Ocultar' : 'Ver' }} detalles
+                  </button>
+                </td>
+              </tr>
+              
+              <!-- Fila de detalles expandida -->
+              <tr *ngIf="justificacionExpandida === justificacion.id_justificacion" class="bg-blue-50">
+                <td colspan="6" class="px-6 py-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Información general -->
+                    <div>
+                      <h4 class="text-sm font-medium text-gray-900 mb-3">Información General</h4>
+                      <dl class="space-y-2">
+                        <div>
+                          <dt class="text-xs font-medium text-gray-500">ID Justificación:</dt>
+                          <dd class="text-sm text-gray-900">{{ justificacion.id_justificacion }}</dd>
+                        </div>
+                        <div>
+                          <dt class="text-xs font-medium text-gray-500">Motivo:</dt>
+                          <dd class="text-sm text-gray-900">{{ justificacion.motivo }}</dd>
+                        </div>
+                        <div *ngIf="justificacion.observaciones_solicitante">
+                          <dt class="text-xs font-medium text-gray-500">Observaciones:</dt>
+                          <dd class="text-sm text-gray-900">{{ justificacion.observaciones_solicitante }}</dd>
+                        </div>
+                        <div *ngIf="justificacion.fecha_respuesta">
+                          <dt class="text-xs font-medium text-gray-500">Fecha de Respuesta:</dt>
+                          <dd class="text-sm text-gray-900">{{ formatearFecha(justificacion.fecha_respuesta) }}</dd>
+                        </div>
+                        <div *ngIf="justificacion.asistencias_creadas">
+                          <dt class="text-xs font-medium text-gray-500">Asistencias Procesadas:</dt>
+                          <dd class="text-sm text-gray-900">{{ justificacion.asistencias_creadas }}</dd>
+                        </div>
+                      </dl>
+                    </div>
+                    
+                    <!-- Información del auxiliar y documentos -->
+                    <div>
+                      <h4 class="text-sm font-medium text-gray-900 mb-3">Auxiliar Encargado</h4>
+                      <dl class="space-y-2">
+                        <div>
+                          <dt class="text-xs font-medium text-gray-500">Nombre:</dt>
+                          <dd class="text-sm text-gray-900">{{ justificacion.auxiliar_encargado.nombre }} {{ justificacion.auxiliar_encargado.apellido }}</dd>
+                        </div>
+                        <div>
+                          <dt class="text-xs font-medium text-gray-500">Correo:</dt>
+                          <dd class="text-sm text-gray-900">{{ justificacion.auxiliar_encargado.correo_electronico }}</dd>
+                        </div>
+                      </dl>
+                      
+                      <div *ngIf="justificacion.documentos_adjuntos && justificacion.documentos_adjuntos.length > 0" class="mt-4">
+                        <h4 class="text-sm font-medium text-gray-900 mb-2">Documentos Adjuntos</h4>
+                        <ul class="space-y-1">
+                          <li *ngFor="let documento of justificacion.documentos_adjuntos" 
+                              class="text-sm text-blue-600 hover:text-blue-800">
+                            {{ documento }}
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Cards Mobile -->
+      <div class="md:hidden divide-y divide-gray-200">
+        <div *ngFor="let justificacion of justificacionesPaginadas" class="p-4">
+          <div class="space-y-3">
+            <!-- Header de la card -->
+            <div class="flex items-start justify-between">
+              <div>
+                <h3 class="text-sm font-medium text-gray-900">
+                  {{ justificacion.alumno_solicitante.nombre }} {{ justificacion.alumno_solicitante.apellido }}
+                </h3>
+                <p class="text-xs text-gray-500">{{ justificacion.alumno_solicitante.codigo }}</p>
+              </div>
+              <div class="flex flex-col items-end space-y-1">
+                <span [ngClass]="getEstadoClase(justificacion.estado)" 
+                      class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                  {{ justificacion.estado }}
+                </span>
+                <span [ngClass]="getTipoClase(justificacion.tipo_justificacion)" 
+                      class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                  {{ justificacion.tipo_justificacion }}
+                </span>
+              </div>
+            </div>
+            
+            <!-- Información básica -->
+            <div class="space-y-1">
+              <p class="text-xs text-gray-600">
+                <span class="font-medium">Fecha solicitud:</span> {{ formatearFechaCorta(justificacion.fecha_solicitud) }}
+              </p>
+              <p class="text-xs text-gray-600">
+                <span class="font-medium">Fechas justificación:</span> 
+                {{ formatearFechasJustificacion(justificacion.fechas_de_justificacion) }}
+              </p>
+            </div>
+            
+            <!-- Botón de detalles -->
+            <button
+              (click)="toggleDetalles(justificacion.id_justificacion)"
+              class="w-full flex items-center justify-center gap-2 py-2 text-sm text-blue-600 hover:text-blue-800 border border-blue-200 rounded-md hover:bg-blue-50 transition-colors"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      [attr.d]="justificacionExpandida === justificacion.id_justificacion ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'"></path>
+              </svg>
+              {{ justificacionExpandida === justificacion.id_justificacion ? 'Ocultar' : 'Ver' }} detalles
+            </button>
+            
+            <!-- Detalles expandidos en mobile -->
+            <div *ngIf="justificacionExpandida === justificacion.id_justificacion" 
+                 class="bg-gray-50 rounded-lg p-3 space-y-3">
+              <div>
+                <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Motivo</h4>
+                <p class="text-sm text-gray-900">{{ justificacion.motivo }}</p>
+              </div>
+              
+              <div *ngIf="justificacion.observaciones_solicitante">
+                <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Observaciones</h4>
+                <p class="text-sm text-gray-900">{{ justificacion.observaciones_solicitante }}</p>
+              </div>
+              
+              <div>
+                <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Auxiliar Encargado</h4>
+                <p class="text-sm text-gray-900">
+                  {{ justificacion.auxiliar_encargado.nombre }} {{ justificacion.auxiliar_encargado.apellido }}
+                </p>
+                <p class="text-xs text-gray-600">{{ justificacion.auxiliar_encargado.correo_electronico }}</p>
+              </div>
+              
+              <div *ngIf="justificacion.documentos_adjuntos && justificacion.documentos_adjuntos.length > 0">
+                <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Documentos</h4>
+                <ul class="space-y-1">
+                  <li *ngFor="let documento of justificacion.documentos_adjuntos" 
+                      class="text-sm text-blue-600">
+                    {{ documento }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado sin resultados -->
+      <div *ngIf="justificacionesFiltradas.length === 0 && !isLoading" class="p-12 text-center">
+        <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No se encontraron justificaciones</h3>
+        <p class="text-gray-600 mb-4">
+          {{ alumnoEncontrado ? 'Este alumno no tiene solicitudes de justificación.' : 'No hay justificaciones que coincidan con los filtros aplicados.' }}
+        </p>
+        <button
+          (click)="limpiarFiltros()"
+          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+        >
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+
+    <!-- Paginación -->
+    <div *ngIf="totalPaginas > 1" class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-6">
+      <div class="flex items-center justify-between">
+        <div class="text-sm text-gray-700">
+          Mostrando 
+          <span class="font-medium">{{ (paginaActual - 1) * itemsPorPagina + 1 }}</span>
+          a 
+          <span class="font-medium">{{ Math.min(paginaActual * itemsPorPagina, justificacionesFiltradas.length) }}</span>
+          de 
+          <span class="font-medium">{{ justificacionesFiltradas.length }}</span>
+          resultados
+        </div>
+        
+        <nav class="flex items-center space-x-2">
+          <!-- Botón anterior -->
+          <button
+            (click)="cambiarPagina(paginaActual - 1)"
+            [disabled]="paginaActual === 1"
+            class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
+          >
+            Anterior
+          </button>
+          
+          <!-- Números de página -->
+          <div class="flex space-x-1">
+            <button
+              *ngFor="let pagina of paginasArray"
+              (click)="cambiarPagina(pagina)"
+              [class.bg-blue-600]="pagina === paginaActual"
+              [class.text-white]="pagina === paginaActual"
+              [class.text-gray-500]="pagina !== paginaActual"
+              [class.hover:bg-gray-100]="pagina !== paginaActual"
+              class="px-3 py-2 text-sm rounded-md transition-colors"
+            >
+              {{ pagina }}
+            </button>
+          </div>
+          
+          <!-- Botón siguiente -->
+          <button
+            (click)="cambiarPagina(paginaActual + 1)"
+            [disabled]="paginaActual === totalPaginas"
+            class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
+          >
+            Siguiente
+          </button>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div *ngIf="showAlert" class="fixed bottom-4 right-4 max-w-sm w-full z-50">
+      <div [ngClass]="{
+        'bg-green-50 border-green-200 text-green-800': alertType === 'success',
+        'bg-red-50 border-red-200 text-red-800': alertType === 'error',
+        'bg-blue-50 border-blue-200 text-blue-800': alertType === 'info'
+      }" class="border rounded-lg p-4 shadow-lg">
+        <div class="flex items-center">
+          <svg *ngIf="alertType === 'success'" class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+          </svg>
+          <svg *ngIf="alertType === 'error'" class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+          </svg>
+          <svg *ngIf="alertType === 'info'" class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+          </svg>
+          <span class="text-sm font-medium">{{ alertMessage }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

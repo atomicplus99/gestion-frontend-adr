@@ -1,4 +1,3 @@
-// actualizar-alumno.component.ts
 import {
   Component,
   OnInit,
@@ -8,37 +7,62 @@ import {
   inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Observable, of, Subscription, timer } from 'rxjs';
-import { map, startWith, debounceTime, switchMap, catchError, tap } from 'rxjs/operators';
+import { map, startWith, debounceTime, catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
-
-// Angular Material
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { FormsModule } from '@angular/forms';
-
-// Componentes y servicios
 import { TableStudentComponent } from '../../../../shared/components/table/table-student/table-student.component';
 import { AlertsService } from '../../../../shared/alerts.service';
 
-// Modelos e interfaces
-interface Alumno {
+export interface Turno {
+  id_turno: string;
+  hora_inicio: string;
+  hora_fin: string;
+  hora_limite: string;
+  turno: string;
+}
+
+export interface Usuario {
+  id_user: string;
+  nombre_usuario: string;
+  password_user: string;
+  rol_usuario: string;
+  profile_image: string;
+}
+
+export interface AlumnoUpdate {
+  id_alumno: string;
   codigo: string;
+  dni_alumno: string;
   nombre: string;
   apellido: string;
+  fecha_nacimiento: Date;
+  direccion: string;
+  codigo_qr?: string;
   nivel: string;
   grado: number;
   seccion: string;
+  turno?: Turno;
+  usuario?: Usuario;
+}
+
+interface AlumnoUpdateResponse {
+  alumno: AlumnoUpdate;
+  message: string;
+}
+
+interface UpdateAlumnoDto {
+  codigo: string;
   dni_alumno: string;
-  fecha_nacimiento: string;
+  nombre: string;
+  apellido: string;
+  fecha_nacimiento: Date;
   direccion: string;
-  estado?: string;
-  ultima_actualizacion?: string;
+  codigo_qr?: string;
+  nivel: string;
+  grado: number;
+  seccion: string;
+  id_turno?: string;
 }
 
 interface HistorialItem {
@@ -51,18 +75,7 @@ interface HistorialItem {
 @Component({
   selector: 'app-actualizar-alumno',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    FormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatAutocompleteModule,
-    MatIconModule,
-    MatSelectModule,
-    MatButtonModule,
-    TableStudentComponent
-  ],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, TableStudentComponent],
   templateUrl: './actualizar-alumno.component.html',
   styleUrls: ['./actualizar-alumno.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -72,49 +85,25 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
   private alertSvc = inject(AlertsService);
   private cd = inject(ChangeDetectorRef);
   
-  // Estado del componente
   editando = false;
-  dataLoaded = false;
   selectedCode = '';
   nivelFiltro = '';
-  
-  // Estadísticas
-  totalAlumnos = 0;
-  alumnosActivos = 0;
-  alumnosInactivos = 0;
-  actualizadosHoy = 0;
-  
-  // Notificaciones
+  alumnoEncontrado: AlumnoUpdate | null = null;
+  buscando = false;
+  mostrarSugerencias = false;
   mostrarNotificacion = false;
   tipoNotificacion: 'success' | 'error' | 'info' = 'info';
   mensajeNotificacion = '';
   private notificacionTimer?: Subscription;
-  
-  // Datos de alumnos para autocompletado
-  alumnosData: Alumno[] = [];
-  filteredAlumnos$!: Observable<Alumno[]>;
   searchControl = new FormControl<string>('', { nonNullable: true });
-  
-  // Historial de búsquedas
   historialBusquedas: HistorialItem[] = [];
-  
-  // Control de subscripciones
   private subscriptions = new Subscription();
+  nivelesEducativos = ['Inicial', 'Primaria', 'Secundaria'];
 
   ngOnInit() {
-    // Inicializar el autocompletado
-    this.initializeAutocomplete();
-    
-    // Cargar datos iniciales
-    this.cargarEstadisticas();
-    this.cargarAlumnos();
     this.cargarHistorialBusquedas();
-    
-    // Monitorear cambios en filtro
     this.subscriptions.add(
-      this.searchControl.valueChanges.pipe(
-        debounceTime(300)
-      ).subscribe(() => {
+      this.searchControl.valueChanges.pipe(debounceTime(300)).subscribe(() => {
         this.cd.markForCheck();
       })
     );
@@ -127,85 +116,71 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Inicialización del autocompletado
-  private initializeAutocomplete() {
-    this.filteredAlumnos$ = this.searchControl.valueChanges.pipe(
-      startWith(''),
-      map(value => {
-        const filterValue = (value || '').toLowerCase();
-        
-        // Si no hay datos cargados todavía, retornar array vacío
-        if (this.alumnosData.length === 0) {
-          return [];
-        }
-        
-        // Filtrar por código, nombre o apellido
-        return this.alumnosData.filter(alumno => 
-          alumno.codigo.toLowerCase().includes(filterValue) ||
-          alumno.nombre.toLowerCase().includes(filterValue) ||
-          alumno.apellido.toLowerCase().includes(filterValue)
-        ).slice(0, 7); // Limitar a 7 resultados para no sobrecargar la UI
-      })
-    );
-  }
+  buscarAlumno(codigo: string) {
+    if (!codigo || codigo.length !== 14 || this.editando) {
+      if (codigo && codigo.length !== 14) {
+        this.mostrarToast('error', 'El código debe tener exactamente 14 caracteres');
+      }
+      return;
+    }
 
-  // Carga de datos de alumnos
-  private cargarAlumnos() {
+    this.buscando = true;
+    this.cd.markForCheck();
+
     this.subscriptions.add(
-      this.http.get<Alumno[]>('http://localhost:3000/alumnos')
-        .pipe(
-          catchError(error => {
-            console.error('Error al cargar alumnos:', error);
-            this.mostrarToast('error', 'Error al cargar la lista de alumnos');
-            return of([]);
-          })
-        )
-        .subscribe(alumnos => {
-          this.alumnosData = alumnos;
+      this.http.get<AlumnoUpdate>(`http://localhost:3000/alumnos/codigo/${codigo}`)
+        .pipe(catchError(error => {
+          console.error('Error al buscar alumno:', error);
+          this.mostrarToast('error', 'No se encontró ningún alumno con ese código');
+          return of(null);
+        }))
+        .subscribe(alumno => {
+          this.buscando = false;
+          if (alumno) {
+            this.alumnoEncontrado = alumno;
+            this.selectedCode = codigo;
+            this.agregarAlHistorial(alumno);
+            let mensaje = `Alumno ${alumno.nombre} ${alumno.apellido} encontrado`;
+            if (alumno.turno) {
+              mensaje += ` - Turno: ${alumno.turno.turno}`;
+            }
+            this.mostrarToast('success', mensaje);
+          } else {
+            this.alumnoEncontrado = null;
+            this.selectedCode = '';
+          }
           this.cd.markForCheck();
         })
     );
   }
 
-  // Carga de estadísticas
-  private cargarEstadisticas() {
+  actualizarAlumno(updateData: UpdateAlumnoDto) {
+    if (!this.selectedCode) return;
     this.subscriptions.add(
-      this.http.get<any>('http://localhost:3000/alumnos/estadisticas')
-        .pipe(
-          catchError(error => {
-            console.error('Error al cargar estadísticas:', error);
-            return of({
-              totalAlumnos: 0,
-              alumnosActivos: 0,
-              alumnosInactivos: 0,
-              actualizadosHoy: 0
-            });
-          })
-        )
-        .subscribe(stats => {
-          this.totalAlumnos = stats.totalAlumnos || 0;
-          this.alumnosActivos = stats.alumnosActivos || 0;
-          this.alumnosInactivos = stats.alumnosInactivos || 0;
-          this.actualizadosHoy = stats.actualizadosHoy || 0;
-          this.cd.markForCheck();
+      this.http.put<AlumnoUpdateResponse>(`http://localhost:3000/alumnos/actualizar/${this.selectedCode}`, updateData)
+        .pipe(catchError(error => {
+          console.error('Error al actualizar alumno:', error);
+          this.mostrarToast('error', 'Error al actualizar el alumno');
+          return of(null);
+        }))
+        .subscribe(response => {
+          if (response) {
+            this.alumnoEncontrado = response.alumno;
+            this.mostrarToast('success', response.message);
+            this.cd.markForCheck();
+          }
         })
     );
   }
 
-  // Manejo de notificaciones tipo toast
   mostrarToast(tipo: 'success' | 'error' | 'info', mensaje: string, duracion: number = 5000) {
-    // Cancelar timer anterior si existe
     if (this.notificacionTimer) {
       this.notificacionTimer.unsubscribe();
     }
-    
-    // Configurar nueva notificación
     this.tipoNotificacion = tipo;
     this.mensajeNotificacion = mensaje;
     this.mostrarNotificacion = true;
     this.cd.markForCheck();
-    
-    // Programar auto-cierre
     this.notificacionTimer = timer(duracion).subscribe(() => {
       this.cerrarNotificacion();
     });
@@ -216,80 +191,52 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
     this.cd.markForCheck();
   }
 
-  // Gestión de historial de búsqueda
   private cargarHistorialBusquedas() {
     try {
       const historialJson = localStorage.getItem('historialAlumnos');
       if (historialJson) {
         const historial = JSON.parse(historialJson);
-        // Validar estructura y convertir timestamp a Date
         if (Array.isArray(historial)) {
           this.historialBusquedas = historial
             .filter(item => item && item.codigo && item.nombre)
-            .map(item => ({
-              ...item,
-              timestamp: new Date(item.timestamp)
-            }))
-            .slice(0, 5); // Limitar a 5 elementos
+            .map(item => ({ ...item, timestamp: new Date(item.timestamp) }))
+            .slice(0, 5);
         }
       }
     } catch (error) {
       console.error('Error al cargar historial:', error);
       this.historialBusquedas = [];
     }
-
     this.cd.markForCheck();
   }
 
-  private agregarAlHistorial(alumno: Alumno) {
-    // Verificar si ya existe
+  private agregarAlHistorial(alumno: AlumnoUpdate) {
     const index = this.historialBusquedas.findIndex(i => i.codigo === alumno.codigo);
-    
     if (index !== -1) {
-      // Si existe, remover para añadirlo al inicio (más reciente)
       this.historialBusquedas.splice(index, 1);
     }
-    
-    // Añadir al inicio
     this.historialBusquedas.unshift({
       codigo: alumno.codigo,
       nombre: `${alumno.nombre} ${alumno.apellido}`,
       nivel: alumno.nivel,
       timestamp: new Date()
     });
-    
-    // Limitar a 5 elementos
     if (this.historialBusquedas.length > 5) {
       this.historialBusquedas = this.historialBusquedas.slice(0, 5);
     }
-    
-    // Guardar en localStorage
     try {
       localStorage.setItem('historialAlumnos', JSON.stringify(this.historialBusquedas));
     } catch (error) {
       console.error('Error al guardar historial:', error);
     }
-    
     this.cd.markForCheck();
   }
 
-  // Acciones del usuario
-  onSelectCode(code: string) {
-    if (this.editando || !code) return;
-    
-    this.selectedCode = code;
-    console.log('Código seleccionado:', code);
-    
-    // Buscar el alumno en la lista para añadirlo al historial
-    const alumno = this.alumnosData.find(a => a.codigo === code);
-    if (alumno) {
-      this.agregarAlHistorial(alumno);
+  onSelectCode() {
+    const code = this.searchControl.value.trim();
+    if (code) {
+      this.buscarAlumno(code);
     }
-    
-    // Mostrar notificación
-    this.mostrarToast('info', `Buscando alumno con código ${code}...`, 2000);
-    
-    this.cd.markForCheck();
   }
 
   onAlumnoEditando(state: boolean) {
@@ -297,66 +244,40 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
     this.cd.markForCheck();
   }
 
-  onAlumnoActualizado(alumno: Alumno) {
-    // Actualizar estadísticas después de modificar un alumno
-    this.cargarEstadisticas();
-    
-    // Mostrar notificación de éxito
-    this.mostrarToast('success', `Alumno ${alumno.nombre} ${alumno.apellido} actualizado correctamente`);
-    
-    // Actualizar la lista de alumnos
-    this.cargarAlumnos();
+  onAlumnoActualizado(alumno: AlumnoUpdate) {
+    this.alumnoEncontrado = alumno;
+    let mensaje = `Alumno ${alumno.nombre} ${alumno.apellido} actualizado correctamente`;
+    if (alumno.turno) {
+      mensaje += ` - Turno: ${alumno.turno.turno}`;
+    }
+    this.mostrarToast('success', mensaje);
   }
 
   seleccionarHistorial(codigo: string) {
     if (this.editando) return;
-    
     this.searchControl.setValue(codigo);
-    this.onSelectCode(codigo);
+    this.buscarAlumno(codigo);
   }
 
   actualizarFiltros() {
-    // Esta función se llama cuando cambia el filtro de nivel
     console.log('Filtro de nivel actualizado:', this.nivelFiltro);
     this.cd.markForCheck();
   }
 
-  cargarAlumnosRecientes() {
-    this.dataLoaded = true;
-    this.http.get<Alumno[]>('http://localhost:3000/alumnos/recientes')
-      .pipe(
-        catchError(error => {
-          console.error('Error al cargar alumnos recientes:', error);
-          this.mostrarToast('error', 'Error al cargar alumnos recientes');
-          return of([]);
-        })
-      )
-      .subscribe(alumnos => {
-        // Enviar datos al componente de tabla
-        // Esto depende de cómo esté implementado tu componente de tabla
-        this.cd.markForCheck();
-        this.mostrarToast('info', `Se cargaron ${alumnos.length} alumnos recientes`);
-      });
+  limpiarBusqueda() {
+    this.searchControl.setValue('');
+    this.selectedCode = '';
+    this.alumnoEncontrado = null;
+    this.cd.markForCheck();
   }
 
-  exportarDatos() {
-    // Simular exportación a CSV/Excel
-    if (!this.selectedCode && !this.dataLoaded) {
-      this.mostrarToast('error', 'No hay datos para exportar');
-      return;
+  onCodigoInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const valor = input.value;
+    input.value = valor.replace(/[^0-9]/g, '');
+    if (input.value.length > 14) {
+      input.value = input.value.slice(0, 14);
     }
-
-    this.mostrarToast('info', 'Preparando exportación...', 1500);
-    
-    // Simular procesamiento
-    setTimeout(() => {
-      this.mostrarToast('success', 'Datos exportados correctamente');
-      
-      // Aquí iría la lógica real de exportación
-      console.log('Exportando datos...');
-      
-      // Ejemplo de cómo sería una exportación real
-      // this.exportService.exportToExcel('alumnos', this.dataSource.data);
-    }, 1500);
+    this.searchControl.setValue(input.value);
   }
 }

@@ -1,774 +1,579 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, ViewEncapsulation } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
-import { HttpClientModule, HttpClient } from '@angular/common/http';
-import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
 
-import { forkJoin, Subscription } from 'rxjs';
-import { catchError, map, debounceTime, distinctUntilChanged } from 'rxjs/operators';
-
-// Interfaces
-import { AsistenciaResponse, ViewMode, AsistenciaRowList, AsistenciaFilters } from '../models/ListAsistencia.model';
-import { environment } from '../../../../../../environments/environment';
-
-// Component imports
-
-
-import { LoadingIndicatorComponent } from '../components/shared/loading-indicator/loading-indicator.component';
-import { EstadoBadgeComponent } from '../components/shared/estado-badge/estado-badge.component';
-import { FilterChipComponent } from '../components/shared/filter-chip/filter-chip.component';
-import { AsistenciaTableComponent } from '../components/table-view/asistencia-table.component';
-import { AsistenciaFiltersComponent } from '../components/filters/asistencia-filters.component';
-import { AsistenciaHeaderComponent } from '../components/header/asistencia-header.component';
-import { AsistenciaPaginationComponent } from '../components/pagination/asistencia-pagination.component';
-import { AsistenciaEmptyStateComponent } from '../components/empty-state/asistencia-empty.component';
-import { AsistenciaCardComponent } from '../components/card-view/asistencia-card.component';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { Asistencia, AsistenciaConAlumno, AsistenciaService } from '../services/ListAsistencia.service';
 
 @Component({
-  selector: 'app-list-asistencia-alumnos',
+  selector: 'app-lista-asistencia',
   standalone: true,
-  imports: [
-    CommonModule,
-    HttpClientModule,
-    ReactiveFormsModule,
-    FormsModule,
-    AsistenciaTableComponent,
-    AsistenciaFiltersComponent,
-    AsistenciaHeaderComponent,
-    AsistenciaPaginationComponent,
-    AsistenciaEmptyStateComponent,
-    AsistenciaCardComponent,
-    LoadingIndicatorComponent,
-    // EstadoBadgeComponent,
-    // FilterChipComponent
-  ],
-  templateUrl: './list-asistencia-alumnos.component.html',
-  styleUrls: ['./list-asistencia-alumnos.component.css'],
-  providers: [DatePipe],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  encapsulation: ViewEncapsulation.Emulated
+  imports: [CommonModule, FormsModule, HttpClientModule],
+  providers: [AsistenciaService],
+  templateUrl: './list-asistencia-alumnos.component.html'
 })
-export class ListAsistenciaAlumnosComponent implements OnInit, OnDestroy {
-  // Datos de la tabla
-  dataSource: AsistenciaRowList[] = [];
-  filteredData: AsistenciaRowList[] = [];
-  originalData: AsistenciaRowList[] = [];
-  originalResponse: AsistenciaResponse[] = [];
+export class ListaAsistenciaComponent implements OnInit {
+  asistencias: Asistencia[] = [];
+  asistenciasFiltradas: Asistencia[] = [];
+  loading = false;
+  error: string | null = null;
+  Math = Math;
+  // Filtros
+  filtros = {
+    busquedaGeneral: '',
+    estadoAsistencia: '',
+    turno: '',
+    fechaDesde: '',
+    fechaHasta: '',
+    nivel: '',
+    grado: '',
+    seccion: ''
+  };
 
-  // Estado de la UI
-  isLoading = true;
-  activeFilters: string[] = [];
-  isFiltersPanelExpanded = false;
-  currentView: ViewMode = 'table';
-  
-  // Notificaciones
-  showNotification = false;
-  notificationMessage = '';
-  notificationType: 'success' | 'error' = 'success';
-  
-  // Opciones de filtros
-  turnos: string[] = [];
-  niveles: string[] = [];
-  secciones: string[] = [];
-  grados: number[] = [];
-  filterForm!: FormGroup;
-  filterValue = '';
+  // Datos únicos para filtros
+  turnosUnicos: string[] = [];
+  nivelesUnicos: string[] = [];
+  gradosUnicos: number[] = [];
+  seccionesUnicas: string[] = [];
 
-  // Paginación y ordenamiento
-  currentPage = 1;
-  pageSize = 10;
-  sortColumn = 'codigo';
-  sortDirection: 'asc' | 'desc' = 'asc';
-  
-  // Manejo de suscripciones
-  private subscriptions: Subscription[] = [];
+  // Paginación
+  paginaActual = 1;
+  itemsPorPagina = 25;
 
-  constructor(
-    private http: HttpClient,
-    private fb: FormBuilder,
-    private cdr: ChangeDetectorRef,
-    private datePipe: DatePipe
-  ) {}
+  // Ordenamiento
+  ordenActual = { campo: 'fecha', direccion: 'desc' as 'asc' | 'desc' };
 
-  ngOnInit(): void {
-    this.setupFilterForm();
-    this.loadData();
+  // Columnas de la tabla
+  columnas = [
+    { campo: 'alumno.codigo', label: 'Código' },
+    { campo: 'alumno.nombre', label: 'Alumno' },
+    { campo: 'alumno.nivel', label: 'Nivel/Grado' },
+    { campo: 'alumno.turno.turno', label: 'Turno' },
+    { campo: 'fecha', label: 'Fecha' },
+    { campo: 'hora_de_llegada', label: 'Hora Llegada' },
+    { campo: 'hora_salida', label: 'Hora Salida' },
+    { campo: 'estado_asistencia', label: 'Estado' }
+  ];
+
+  // Modal de detalle
+  mostrarModalDetalle = false;
+  alumnoDetalle: AsistenciaConAlumno | null = null;
+
+  constructor(private asistenciaService: AsistenciaService,  private cdr: ChangeDetectorRef) { }
+
+  ngOnInit() {
+    this.cargarAsistencias();
+    this.cargarTurnos();
   }
 
-  ngOnDestroy(): void {
-    // Limpiar todas las suscripciones
-    this.subscriptions.forEach(sub => sub.unsubscribe());
+  cargarAsistencias() {
+    this.loading = true;
+    this.error = null;
+    this.cdr.detectChanges(); // Forzar actualización del loading
+
+    this.asistenciaService.getAllAsistencias().subscribe({
+      next: (data) => {
+        this.asistencias = data;
+        this.asistenciasFiltradas = [...data];
+        this.extraerDatosUnicos();
+        this.aplicarOrdenamiento();
+        this.loading = false;
+        this.cdr.detectChanges(); // Forzar actualización cuando termine
+      },
+      error: (error) => {
+        console.error('Error al cargar asistencias:', error);
+        this.error = 'No se pudieron cargar los datos de asistencia. Verifique que el servidor esté funcionando.';
+        this.loading = false;
+        this.cdr.detectChanges(); // Forzar actualización del error
+      }
+    });
   }
 
-  // Configuración del formulario de filtros
-  setupFilterForm(): void {
-    const today = new Date();
-    const formattedDate = this.formatDateForInput(today);
+  cargarTurnos() {
+    this.asistenciaService.getAllTurnos().subscribe({
+      next: (turnos) => {
+        this.turnosUnicos = turnos.map(turno => turno.turno).sort();
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al cargar turnos:', error);
+        this.extraerTurnosDeAsistencias();
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
-    this.filterForm = this.fb.group({
-      fechaInicio: [formattedDate],
-      fechaFin: [formattedDate],
-      estado: ['TODOS'],
-      turno: ['TODOS'],
-      nivel: ['TODOS'],
-      grado: ['TODOS'],
-      seccion: ['TODOS'],
-      searchText: [''],
-      dni: ['']
+  extraerTurnosDeAsistencias() {
+    const turnos = new Set<string>();
+    this.asistencias.forEach(asistencia => {
+      if (asistencia.alumno.turno?.turno) {
+        turnos.add(asistencia.alumno.turno.turno);
+      }
+    });
+    this.turnosUnicos = Array.from(turnos).sort();
+  }
+
+  extraerDatosUnicos() {
+    const niveles = new Set<string>();
+    const grados = new Set<number>();
+    const secciones = new Set<string>();
+
+    this.asistencias.forEach(asistencia => {
+      if (asistencia.alumno.nivel) {
+        niveles.add(asistencia.alumno.nivel);
+      }
+      if (asistencia.alumno.grado) {
+        grados.add(asistencia.alumno.grado);
+      }
+      if (asistencia.alumno.seccion) {
+        secciones.add(asistencia.alumno.seccion);
+      }
     });
 
-    // Suscripción a cambios en el campo de búsqueda
-    const searchSub = this.filterForm.get('searchText')!.valueChanges
-      .pipe(
-        debounceTime(300),
-        distinctUntilChanged()
-      )
-      .subscribe(value => {
-        this.filterValue = value;
-        this.applyFilter();
-      });
-
-    this.subscriptions.push(searchSub);
-
-    // Suscripción a cambios en el campo DNI
-    const dniSub = this.filterForm.get('dni')!.valueChanges
-      .pipe(
-        debounceTime(300),
-        distinctUntilChanged()
-      )
-      .subscribe(() => {
-        this.applyFilter();
-      });
-
-    this.subscriptions.push(dniSub);
+    this.nivelesUnicos = Array.from(niveles).sort();
+    this.gradosUnicos = Array.from(grados).sort((a, b) => a - b);
+    this.seccionesUnicas = Array.from(secciones).sort();
   }
 
-  // Cargar datos de asistencia
-  loadData(): void {
-    this.isLoading = true;
-    
-    const sub = this.http.get<AsistenciaResponse[]>(`${environment.apiUrl}/asistencia/list`)
-      .pipe(
-        map(response => {
-          console.log('Datos recibidos:', response);
-          return response;
-        }),
-        catchError(err => {
-          console.error('Error al cargar datos:', err);
-          this.isLoading = false;
-          this.cdr.markForCheck();
-          this.showErrorNotification('Error al cargar los datos. Intente nuevamente.');
-          throw err;
-        })
-      )
-      .subscribe({
-        next: (response) => {
-          this.originalResponse = response;
-          this.processAsistenciasData(response);
-          this.extractFilterOptions();
-          this.isLoading = false;
-          this.cdr.markForCheck();
+  aplicarFiltros() {
+    this.asistenciasFiltradas = this.asistencias.filter(asistencia => {
+      // Búsqueda general
+      if (this.filtros.busquedaGeneral) {
+        const termino = this.filtros.busquedaGeneral.toLowerCase();
+        const nombreCompleto = `${asistencia.alumno.nombre} ${asistencia.alumno.apellido}`.toLowerCase();
+        const codigo = asistencia.alumno.codigo.toLowerCase();
+
+        if (!nombreCompleto.includes(termino) && !codigo.includes(termino)) {
+          return false;
         }
-      });
-
-    this.subscriptions.push(sub);
-  }
-
-  // Procesar datos de asistencia
-  processAsistenciasData(data: AsistenciaResponse[]): void {
-    if (!Array.isArray(data)) {
-      console.error('Se esperaba un array:', data);
-      return;
-    }
-
-    console.log('Processing', data.length, 'records');
-
-    this.originalData = data.map(item => {
-      // Safely access nested properties with null checks
-      const alumno = item.alumno || {};
-      const turno = alumno.turno || {};
-      
-      // Extract values with proper type handling
-      const codigo = alumno.codigo || '';
-      const dni = alumno.dni_alumno || '';
-      
-      console.log(`Item: codigo=${codigo}, dni=${dni}`); // Debug log
-      
-      // Ensure estado_asistencia is one of the accepted values or default to 'AUSENTE'
-      let estado: 'PUNTUAL' | 'TARDANZA' | 'AUSENTE';
-      if (item.estado_asistencia === 'PUNTUAL' || item.estado_asistencia === 'TARDANZA' || 
-          item.estado_asistencia === 'AUSENTE') {
-        estado = item.estado_asistencia as 'PUNTUAL' | 'TARDANZA' | 'AUSENTE';
-      } else {
-        estado = 'AUSENTE'; // Default value if invalid
       }
 
-      return {
-        id: item.id_asistencia,
-        codigo: codigo,
-        dni: dni,
-        nombre: alumno.nombre || '',
-        apellido: alumno.apellido || '',
-        nivel: alumno.nivel || '',
-        grado: alumno.grado || 0,
-        seccion: alumno.seccion || '',
-        turno: turno.turno || '—',
-        horaLlegada: item.hora_de_llegada || '',
-        horaSalida: item.hora_salida,
-        estado: estado,
-        fecha: item.fecha || new Date().toISOString(),
-        observaciones: item.observaciones || ''
-      };
-    });
-
-    this.filteredData = [...this.originalData];
-    this.sortData(this.sortColumn);
-    this.updateDataSource();
-  }
-
-  // Extraer opciones de filtros de los datos
-  extractFilterOptions(): void {
-    const turnosSet = new Set<string>();
-    const nivelesSet = new Set<string>();
-    const seccionesSet = new Set<string>();
-    const gradosSet = new Set<number>();
-
-    // Extract unique values from response data
-    this.originalResponse.forEach(item => {
-      if (item.alumno?.turno?.turno) turnosSet.add(item.alumno.turno.turno);
-      if (item.alumno?.nivel) nivelesSet.add(item.alumno.nivel);
-      if (item.alumno?.seccion) seccionesSet.add(item.alumno.seccion);
-      if (item.alumno?.grado) gradosSet.add(item.alumno.grado);
-    });
-
-    this.turnos = ['TODOS', ...Array.from(turnosSet)];
-    this.niveles = ['TODOS', ...Array.from(nivelesSet)];
-    this.secciones = ['TODOS', ...Array.from(seccionesSet)];
-    this.grados = [...Array.from(gradosSet)].sort((a, b) => a - b);
-  }
-
-  // Métodos de filtrado
-  applyFilter(): void {
-    console.log('Applying filters with values:', this.filterForm.value);
-    
-    const filters = this.filterForm.value;
-    let filteredData = [...this.originalData];
-
-    // Aplicar filtros según los criterios seleccionados
-    if (filters.fechaInicio && filters.fechaFin) {
-      try {
-        const startDate = new Date(filters.fechaInicio);
-        startDate.setHours(0, 0, 0, 0);
-        const endDate = new Date(filters.fechaFin);
-        endDate.setHours(23, 59, 59, 999);
-
-        filteredData = filteredData.filter(item => {
-          try {
-            const itemDate = new Date(item.fecha);
-            return itemDate >= startDate && itemDate <= endDate;
-          } catch (e) {
-            console.error('Error parsing date:', item.fecha);
-            return false;
-          }
-        });
-      } catch (e) {
-        console.error('Error setting up date filters:', e);
+      // Filtro por estado
+      if (this.filtros.estadoAsistencia && asistencia.estado_asistencia !== this.filtros.estadoAsistencia) {
+        return false;
       }
-    }
 
-    // Estado filter
-    if (filters.estado && filters.estado !== 'TODOS') {
-      filteredData = filteredData.filter(item => 
-        item.estado && item.estado.toUpperCase() === filters.estado.toUpperCase()
-      );
-    }
+      // Filtro por turno
+      if (this.filtros.turno && asistencia.alumno.turno?.turno !== this.filtros.turno) {
+        return false;
+      }
 
-    // Turno filter
-    if (filters.turno && filters.turno !== 'TODOS') {
-      filteredData = filteredData.filter(item => 
-        item.turno && item.turno.toLowerCase() === filters.turno.toLowerCase()
-      );
-    }
+      // Filtro por nivel
+      if (this.filtros.nivel && asistencia.alumno.nivel !== this.filtros.nivel) {
+        return false;
+      }
 
-    // Nivel filter
-    if (filters.nivel && filters.nivel !== 'TODOS') {
-      filteredData = filteredData.filter(item => 
-        item.nivel && item.nivel.toUpperCase() === filters.nivel.toUpperCase()
-      );
-    }
+      // Filtro por grado
+      if (this.filtros.grado && asistencia.alumno.grado.toString() !== this.filtros.grado) {
+        return false;
+      }
 
-    // Grado filter
-    if (filters.grado && filters.grado !== 'TODOS') {
-      filteredData = filteredData.filter(item => {
-        return item.grado !== undefined && 
-               String(item.grado).trim() === String(filters.grado).trim();
-      });
-    }
+      // Filtro por sección
+      if (this.filtros.seccion && asistencia.alumno.seccion !== this.filtros.seccion) {
+        return false;
+      }
 
-    // Seccion filter
-    if (filters.seccion && filters.seccion !== 'TODOS') {
-      filteredData = filteredData.filter(item => 
-        item.seccion && item.seccion.toUpperCase() === filters.seccion.toUpperCase()
-      );
-    }
-
-    // DNI filter - FIX HERE
-    if (filters.dni && filters.dni.trim() !== '') {
-      const dniStr = filters.dni.toLowerCase().trim();
-      console.log('Filtering by DNI:', dniStr);
-      
-      filteredData = filteredData.filter(item => {
-        if (!item.dni) return false;
-        const match = item.dni.toLowerCase().includes(dniStr);
-        console.log(`DNI comparison: "${item.dni}" includes "${dniStr}"? ${match}`);
-        return match;
-      });
-    }
-
-    // SearchText filter - FIX HERE
-    if (filters.searchText && filters.searchText.trim() !== '') {
-      const searchStr = filters.searchText.toLowerCase().trim();
-      console.log('Filtering by search text:', searchStr);
-      
-      filteredData = filteredData.filter(item => {
-        // For debugging
-        if (item.codigo) {
-          console.log(`Comparing codigo: "${item.codigo}" with search: "${searchStr}"`);
+      // Filtro por fecha desde
+      if (this.filtros.fechaDesde) {
+        const fechaAsistencia = new Date(asistencia.fecha);
+        const fechaDesde = new Date(this.filtros.fechaDesde);
+        if (fechaAsistencia < fechaDesde) {
+          return false;
         }
-        
-        return (
-          (item.codigo && item.codigo.toLowerCase().includes(searchStr)) ||
-          (item.dni && item.dni.toLowerCase().includes(searchStr)) ||
-          (item.nombre && item.nombre.toLowerCase().includes(searchStr)) ||
-          (item.apellido && item.apellido.toLowerCase().includes(searchStr)) ||
-          (item.turno && item.turno.toLowerCase().includes(searchStr)) ||
-          (item.estado && item.estado.toLowerCase().includes(searchStr)) ||
-          (item.seccion && item.seccion.toLowerCase().includes(searchStr)) ||
-          (item.nivel && item.nivel.toLowerCase().includes(searchStr)) ||
-          (item.grado !== undefined && String(item.grado).includes(searchStr))
-        );
-      });
-    }
+      }
 
-    console.log(`Filter applied: ${filteredData.length} out of ${this.originalData.length} records shown`);
-    
-    this.filteredData = filteredData;
-    this.currentPage = 1;
-    this.updateActiveFilters();
-    this.updateDataSource();
-    this.cdr.markForCheck();
-  }
+      // Filtro por fecha hasta
+      if (this.filtros.fechaHasta) {
+        const fechaAsistencia = new Date(asistencia.fecha);
+        const fechaHasta = new Date(this.filtros.fechaHasta);
+        if (fechaAsistencia > fechaHasta) {
+          return false;
+        }
+      }
 
-  // Handle filter changes from AsistenciaFiltersComponent
-  onFiltersChange(filters: AsistenciaFilters): void {
-    console.log('Received filters from child component:', filters);
-    this.filterForm.patchValue(filters, { emitEvent: false });
-    this.applyFilter();
-  }
-
-  clearFilters(): void {
-    const today = new Date();
-    const formattedDate = this.formatDateForInput(today);
-
-    this.filterForm.reset({
-      fechaInicio: formattedDate,
-      fechaFin: formattedDate,
-      estado: 'TODOS',
-      turno: 'TODOS',
-      nivel: 'TODOS',
-      grado: 'TODOS',
-      seccion: 'TODOS',
-      searchText: '',
-      dni: ''
+      return true;
     });
 
-    this.filterValue = '';
-    this.filteredData = [...this.originalData];
-    this.activeFilters = [];
-    this.updateDataSource();
-    this.cdr.markForCheck();
+    this.paginaActual = 1; // Resetear a primera página
+    this.aplicarOrdenamiento();
+    this.cdr.detectChanges(); 
   }
 
-  setEstadoFilter(estado: string): void {
-    this.filterForm.patchValue({ estado });
-    this.applyFilter();
+  limpiarFiltros() {
+    this.filtros = {
+      busquedaGeneral: '',
+      estadoAsistencia: '',
+      turno: '',
+      fechaDesde: '',
+      fechaHasta: '',
+      nivel: '',
+      grado: '',
+      seccion: ''
+    };
+    this.aplicarFiltros();
+    this.cdr.detectChanges();
   }
 
-  removeFilter(filter: string): void {
-    const filterParts = filter.split(': ');
-    if (filterParts.length === 2) {
-      const filterName = filterParts[0].toLowerCase();
-      const today = new Date();
-      const formattedDate = this.formatDateForInput(today);
-      
-      switch(filterName) {
-        case 'desde':
-          this.filterForm.patchValue({ fechaInicio: formattedDate });
-          break;
-        case 'hasta':
-          this.filterForm.patchValue({ fechaFin: formattedDate });
-          break;
-        case 'estado':
-          this.filterForm.patchValue({ estado: 'TODOS' });
-          break;
-        case 'turno':
-          this.filterForm.patchValue({ turno: 'TODOS' });
-          break;
-        case 'nivel':
-          this.filterForm.patchValue({ nivel: 'TODOS' });
-          break;
-        case 'grado':
-          this.filterForm.patchValue({ grado: 'TODOS' });
-          break;
-        case 'sección':
-          this.filterForm.patchValue({ seccion: 'TODOS' });
-          break;
-        case 'dni':
-          this.filterForm.patchValue({ dni: '' });
-          break;
-        case 'texto':
-          this.filterForm.patchValue({ searchText: '' });
-          this.filterValue = '';
-          break;
-      }
-      
-      this.applyFilter();
-    }
-  }
-
-  updateActiveFilters(): void {
-    this.activeFilters = [];
-    const filters = this.filterForm.value;
-
-    if (filters.fechaInicio) {
-      this.activeFilters.push(`Desde: ${this.formatDate(filters.fechaInicio)}`);
-    }
-
-    if (filters.fechaFin) {
-      this.activeFilters.push(`Hasta: ${this.formatDate(filters.fechaFin)}`);
-    }
-
-    if (filters.estado && filters.estado !== 'TODOS') {
-      this.activeFilters.push(`Estado: ${filters.estado}`);
-    }
-
-    if (filters.turno && filters.turno !== 'TODOS') {
-      this.activeFilters.push(`Turno: ${filters.turno}`);
-    }
-
-    if (filters.nivel && filters.nivel !== 'TODOS') {
-      this.activeFilters.push(`Nivel: ${filters.nivel}`);
-    }
-
-    if (filters.grado && filters.grado !== 'TODOS') {
-      this.activeFilters.push(`Grado: ${filters.grado}`);
-    }
-
-    if (filters.seccion && filters.seccion !== 'TODOS') {
-      this.activeFilters.push(`Sección: ${filters.seccion}`);
-    }
-
-    if (filters.dni) {
-      this.activeFilters.push(`DNI: ${filters.dni}`);
-    }
-
-    if (filters.searchText) {
-      this.activeFilters.push(`Texto: "${filters.searchText}"`);
-    }
-  }
-
-  // Métodos de paginación
-  updateDataSource(): void {
-    const startIndex = (this.currentPage - 1) * this.pageSize;
-    const endIndex = Math.min(startIndex + this.pageSize, this.filteredData.length);
-    this.dataSource = this.filteredData.slice(startIndex, endIndex);
-    console.log(`Pagination: showing ${startIndex+1}-${endIndex} of ${this.filteredData.length}`);
-  }
-
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.getTotalPages()) {
-      this.currentPage = page;
-      this.updateDataSource();
-      this.cdr.markForCheck();
-    }
-  }
-
-  getTotalPages(): number {
-    return Math.ceil(this.filteredData.length / this.pageSize);
-  }
-
-  get totalPages(): number {
-    return this.getTotalPages();
-  }
-
-  getPageNumbers(): number[] {
-    const totalPages = this.getTotalPages();
-    const currentPage = this.currentPage;
-    const maxVisiblePages = 5;
-    
-    if (totalPages <= maxVisiblePages) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
-    
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = startPage + maxVisiblePages - 1;
-    
-    if (endPage > totalPages) {
-      endPage = totalPages;
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-    
-    return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
-  }
-
-  // Métodos de ordenamiento
-  sortData(column: string): void {
-    if (this.sortColumn === column) {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+  ordenarPor(campo: string) {
+    if (this.ordenActual.campo === campo) {
+      this.ordenActual.direccion = this.ordenActual.direccion === 'asc' ? 'desc' : 'asc';
     } else {
-      this.sortColumn = column;
-      this.sortDirection = 'asc';
+      this.ordenActual.campo = campo;
+      this.ordenActual.direccion = 'asc';
+    }
+    this.aplicarOrdenamiento();
+  }
+
+  aplicarOrdenamiento() {
+    this.asistenciasFiltradas.sort((a, b) => {
+      let valorA: any;
+      let valorB: any;
+
+      // Obtener valores según el campo
+      switch (this.ordenActual.campo) {
+        case 'alumno.codigo':
+          valorA = a.alumno.codigo;
+          valorB = b.alumno.codigo;
+          break;
+        case 'alumno.nombre':
+          valorA = `${a.alumno.nombre} ${a.alumno.apellido}`;
+          valorB = `${b.alumno.nombre} ${b.alumno.apellido}`;
+          break;
+        case 'alumno.nivel':
+          valorA = `${a.alumno.nivel} ${a.alumno.grado}${a.alumno.seccion}`;
+          valorB = `${b.alumno.nivel} ${b.alumno.grado}${b.alumno.seccion}`;
+          break;
+        case 'alumno.turno.turno':
+          valorA = a.alumno.turno?.turno || '';
+          valorB = b.alumno.turno?.turno || '';
+          break;
+        case 'fecha':
+          valorA = new Date(a.fecha);
+          valorB = new Date(b.fecha);
+          break;
+        case 'hora_de_llegada':
+          valorA = a.hora_de_llegada;
+          valorB = b.hora_de_llegada;
+          break;
+        case 'hora_salida':
+          valorA = a.hora_salida || '';
+          valorB = b.hora_salida || '';
+          break;
+        case 'estado_asistencia':
+          valorA = a.estado_asistencia;
+          valorB = b.estado_asistencia;
+          break;
+        default:
+          return 0;
+      }
+
+      // Comparar valores
+      if (valorA < valorB) return this.ordenActual.direccion === 'asc' ? -1 : 1;
+      if (valorA > valorB) return this.ordenActual.direccion === 'asc' ? 1 : -1;
+      return 0;
+    });
+    this.cdr.detectChanges();
+  }
+
+  // Paginación
+  getTotalPaginas(): number {
+    return Math.ceil(this.asistenciasFiltradas.length / this.itemsPorPagina);
+  }
+
+  getPaginatedData(): Asistencia[] {
+    const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
+    const fin = inicio + this.itemsPorPagina;
+    return this.asistenciasFiltradas.slice(inicio, fin);
+  }
+
+  getPaginasVisibles(): number[] {
+    const totalPaginas = this.getTotalPaginas();
+    const paginasVisibles: number[] = [];
+    const rango = 2;
+
+    let inicio = Math.max(1, this.paginaActual - rango);
+    let fin = Math.min(totalPaginas, this.paginaActual + rango);
+
+    for (let i = inicio; i <= fin; i++) {
+      paginasVisibles.push(i);
     }
 
-    this.filteredData.sort((a: any, b: any) => {
-      const valueA = a[column];
-      const valueB = b[column];
-      
-      if (column === 'fecha') {
-        return this.sortDirection === 'asc'
-          ? new Date(valueA).getTime() - new Date(valueB).getTime()
-          : new Date(valueB).getTime() - new Date(valueA).getTime();
-      }
+    return paginasVisibles;
+  }
 
-      if (typeof valueA === 'string' && typeof valueB === 'string') {
-        return this.sortDirection === 'asc'
-          ? valueA.localeCompare(valueB)
-          : valueB.localeCompare(valueA);
-      }
+  irAPagina(pagina: number) {
+    if (pagina >= 1 && pagina <= this.getTotalPaginas()) {
+      this.paginaActual = pagina;
+      this.cdr.detectChanges();
+    }
+  }
 
-      return this.sortDirection === 'asc'
-        ? (valueA || 0) - (valueB || 0)
-        : (valueB || 0) - (valueA || 0);
+  irAPaginaAnterior() {
+    if (this.paginaActual > 1) {
+      this.paginaActual--;
+      this.cdr.detectChanges();
+    }
+  }
+
+  irAPaginaSiguiente() {
+    if (this.paginaActual < this.getTotalPaginas()) {
+      this.paginaActual++;
+    }
+  }
+
+  irAPrimeraPagina() {
+    this.paginaActual = 1;
+  }
+
+  irAUltimaPagina() {
+    this.paginaActual = this.getTotalPaginas();
+  }
+
+  cambiarItemsPorPagina() {
+    this.paginaActual = 1;
+    this.cdr.detectChanges();
+  }
+
+  // Modal de detalle
+  verDetalleAlumno(codigo: string) {
+    this.mostrarModalDetalle = true;
+    this.alumnoDetalle = null;
+    this.cdr.detectChanges(); // Forzar detección de cambios
+
+    this.asistenciaService.getAsistenciaPorCodigoAlumno(codigo).subscribe({
+      next: (data) => {
+        this.alumnoDetalle = data;
+        this.cdr.detectChanges(); // Forzar detección de cambios aquí también
+      },
+      error: (error) => {
+        console.error('Error al cargar detalle del alumno:', error);
+        this.cerrarModalDetalle();
+        this.cdr.detectChanges();
+      }
     });
-
-    this.updateDataSource();
-    this.cdr.markForCheck();
   }
 
-  // Acciones
-  refreshData(): void {
-    this.loadData();
-    this.showSuccessNotification('Datos actualizados correctamente');
+  cerrarModalDetalle() {
+    this.mostrarModalDetalle = false;
+    this.alumnoDetalle = null;
+    this.cdr.detectChanges(); // También aquí por si acaso
   }
 
-  exportToCSV(): void {
-    const headers = ['Código', 'DNI', 'Nombre', 'Apellido', 'Nivel', 'Grado', 'Sección', 'Turno', 
-                     'Hora de Llegada', 'Hora de Salida', 'Estado', 'Fecha', 'Observaciones'];
-    
-    const csvRows = [
-      headers.join(','),
-      ...this.filteredData.map(row => [
-        `"${row.codigo || ''}"`,
-        `"${row.dni || ''}"`,
-        `"${row.nombre || ''}"`,
-        `"${row.apellido || ''}"`,
-        `"${row.nivel || ''}"`,
-        row.grado || 0,
-        `"${row.seccion || ''}"`,
-        `"${row.turno || '—'}"`,
-        `"${row.horaLlegada || ''}"`,
-        `"${row.horaSalida || '—'}"`,
-        `"${row.estado || ''}"`,
-        `"${this.formatDate(row.fecha)}"`,
-        `"${row.observaciones || ''}"`,
-      ].join(','))
+  // Exportaciones
+  exportarExcel() {
+    const datosParaExportar = this.asistenciasFiltradas.map(asistencia => ({
+      'Código': asistencia.alumno.codigo,
+      'DNI': asistencia.alumno.dni_alumno,
+      'Nombre': asistencia.alumno.nombre,
+      'Apellido': asistencia.alumno.apellido,
+      'Nivel': asistencia.alumno.nivel,
+      'Grado': asistencia.alumno.grado,
+      'Sección': asistencia.alumno.seccion,
+      'Turno': asistencia.alumno.turno?.turno || 'Sin turno',
+      'Hora Inicio Turno': asistencia.alumno.turno?.hora_inicio || '',
+      'Hora Fin Turno': asistencia.alumno.turno?.hora_fin || '',
+      'Fecha': this.formatearFecha(asistencia.fecha),
+      'Hora Llegada': asistencia.hora_de_llegada,
+      'Hora Salida': asistencia.hora_salida || 'No registrada',
+      'Estado': asistencia.estado_asistencia
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(datosParaExportar);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Asistencias');
+
+    const fecha = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(workbook, `asistencias_${fecha}.xlsx`);
+  }
+
+  exportarPDF() {
+    const doc = new jsPDF();
+
+    // Título
+    doc.setFontSize(16);
+    doc.text('Lista de Asistencia', 14, 15);
+
+    // Fecha de generación
+    doc.setFontSize(10);
+    doc.text(`Generado el: ${new Date().toLocaleDateString()}`, 14, 25);
+    doc.text(`Total de registros: ${this.asistenciasFiltradas.length}`, 14, 30);
+
+    // Datos para la tabla
+    const columns = [
+      'Código', 'Nombre', 'Nivel', 'Turno', 'Fecha', 'Llegada', 'Salida', 'Estado'
     ];
 
-    const csvContent = csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', `asistencias_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    this.showSuccessNotification('Archivo CSV exportado correctamente');
-  }
+    const rows = this.asistenciasFiltradas.map(asistencia => [
+      asistencia.alumno.codigo,
+      `${asistencia.alumno.nombre} ${asistencia.alumno.apellido}`,
+      `${asistencia.alumno.nivel} ${asistencia.alumno.grado}°${asistencia.alumno.seccion}`,
+      asistencia.alumno.turno?.turno || 'Sin turno',
+      this.formatearFecha(asistencia.fecha),
+      asistencia.hora_de_llegada,
+      asistencia.hora_salida || 'No reg.',
+      asistencia.estado_asistencia
+    ]);
 
-  onMarkAttendance(row: AsistenciaRowList, status: 'PUNTUAL' | 'TARDANZA' | 'AUSENTE'): void {
-    this.http.put(`${environment.apiUrl}/asistencia/${row.id}`, {
-      estado_asistencia: status
-    }).subscribe({
-      next: () => {
-        const index = this.originalData.findIndex(item => item.id === row.id);
-        if (index !== -1) {
-          this.originalData[index].estado = status;
-          
-          const respIndex = this.originalResponse.findIndex(item => item.id_asistencia === row.id);
-          if (respIndex !== -1) {
-            this.originalResponse[respIndex].estado_asistencia = status;
-          }
-        }
-        
-        this.applyFilter();
-        this.showSuccessNotification(`Asistencia actualizada a ${status}`);
-      },
-      error: (err) => {
-        console.error('Error al actualizar asistencia:', err);
-        this.showErrorNotification('Error al actualizar la asistencia');
-      }
+    // Generar tabla
+    (doc as any).autoTable({
+      head: [columns],
+      body: rows,
+      startY: 35,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [66, 139, 202] }
     });
-  }
 
-  onMarkExit(row: AsistenciaRowList): void {
-    const now = new Date();
-    const timeString = now.toTimeString().slice(0, 8); // Format HH:MM:SS
-    
-    this.http.put(`${environment.apiUrl}/asistencia/${row.id}`, {
-      hora_salida: timeString
-    }).subscribe({
-      next: () => {
-        const index = this.originalData.findIndex(item => item.id === row.id);
-        if (index !== -1) {
-          this.originalData[index].horaSalida = timeString;
-          
-          const respIndex = this.originalResponse.findIndex(item => item.id_asistencia === row.id);
-          if (respIndex !== -1) {
-            this.originalResponse[respIndex].hora_salida = timeString;
-          }
-        }
-        
-        this.applyFilter();
-        this.showSuccessNotification('Salida registrada correctamente');
-      },
-      error: (err) => {
-        console.error('Error al registrar salida:', err);
-        this.showErrorNotification('Error al registrar la salida');
-      }
-    });
-  }
-
-  onAddObservation(row: AsistenciaRowList): void {
-    const observation = prompt('Ingrese observación:', row.observaciones || '');
-    
-    if (observation !== null) {
-      this.http.put(`${environment.apiUrl}/asistencia/${row.id}`, {
-        observaciones: observation
-      }).subscribe({
-        next: () => {
-          const index = this.originalData.findIndex(item => item.id === row.id);
-          if (index !== -1) {
-            this.originalData[index].observaciones = observation;
-            
-            // Actualizar también en la respuesta original
-            const respIndex = this.originalResponse.findIndex(item => item.id_asistencia === row.id);
-            if (respIndex !== -1) {
-              (this.originalResponse[respIndex] as any).observaciones = observation;
-            }
-          }
-          
-          this.applyFilter();
-          this.showSuccessNotification('Observación actualizada correctamente');
-        },
-        error: (err) => {
-          console.error('Error al agregar observación:', err);
-          this.showErrorNotification('Error al actualizar la observación');
-        }
-      });
-    }
-  }
-
-  markAllPresent(): void {
-    if (confirm('¿Está seguro de marcar todos los alumnos visibles como PUNTUAL?')) {
-      const requests = this.dataSource.map(row => {
-        return this.http.put(`${environment.apiUrl}/asistencia/${row.id}`, {
-          estado_asistencia: 'PUNTUAL'
-        });
-      });
-
-      forkJoin(requests).subscribe({
-        next: () => {
-          this.dataSource.forEach(row => {
-            const index = this.originalData.findIndex(item => item.id === row.id);
-            if (index !== -1) {
-              this.originalData[index].estado = 'PUNTUAL';
-              
-              const respIndex = this.originalResponse.findIndex(item => item.id_asistencia === row.id);
-              if (respIndex !== -1) {
-                this.originalResponse[respIndex].estado_asistencia = 'PUNTUAL';
-              }
-            }
-          });
-          
-          this.applyFilter();
-          this.showSuccessNotification('Todos los alumnos visibles marcados como PUNTUAL');
-        },
-        error: (err) => {
-          console.error('Error al marcar asistencias:', err);
-          this.showErrorNotification('Error al marcar asistencias');
-        }
-      });
-    }
-  }
-
-  // Métodos de UI
-  setView(view: ViewMode): void {
-    this.currentView = view;
-    this.cdr.markForCheck();
-  }
-
-  toggleFiltersVisibility(): void {
-    this.isFiltersPanelExpanded = !this.isFiltersPanelExpanded;
-    this.cdr.markForCheck();
-  }
-
-  // Handle events from child components
-  onAttendanceStatusChange(event: {row: AsistenciaRowList, status: 'PUNTUAL' | 'TARDANZA' | 'AUSENTE'}): void {
-    this.onMarkAttendance(event.row, event.status);
-  }
-
-  // Notificaciones
-  showSuccessNotification(message: string): void {
-    this.notificationMessage = message;
-    this.notificationType = 'success';
-    this.showNotification = true;
-    
-    setTimeout(() => {
-      this.showNotification = false;
-      this.cdr.markForCheck();
-    }, 3000);
-    
-    this.cdr.markForCheck();
-  }
-
-  showErrorNotification(message: string): void {
-    this.notificationMessage = message;
-    this.notificationType = 'error';
-    this.showNotification = true;
-    
-    setTimeout(() => {
-      this.showNotification = false;
-      this.cdr.markForCheck();
-    }, 4000);
-    
-    this.cdr.markForCheck();
+    // Guardar PDF
+    const fecha = new Date().toISOString().split('T')[0];
+    doc.save(`asistencias_${fecha}.pdf`);
   }
 
   // Utilidades
-  formatDate(date: string | Date): string {
-    if (!date) return '';
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return this.datePipe.transform(dateObj, 'dd/MM/yyyy') || '';
+  formatearFecha(fecha: Date | string): string {
+    const fechaObj = new Date(fecha);
+    return fechaObj.toLocaleDateString('es-PE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   }
 
-  formatDateForInput(date: Date): string {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  getEstadoClasses(estado: string): string {
+    const baseClasses = 'inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold shadow-sm';
+
+    switch (estado) {
+      case 'PUNTUAL':
+        return `${baseClasses} bg-green-100 text-green-800 border border-green-200`;
+      case 'TARDANZA':
+        return `${baseClasses} bg-red-100 text-red-800 border border-red-200`;
+      default:
+        return `${baseClasses} bg-gray-100 text-gray-800 border border-gray-200`;
+    }
+  }
+  getRowClasses(asistencia: Asistencia, isEven: boolean): string {
+    let classes = isEven ? 'bg-gray-50/30' : 'bg-white';
+
+    if (asistencia.estado_asistencia === 'TARDANZA') {
+      classes += ' hover:from-red-50 hover:to-pink-50 border-l-4 border-red-300';
+    } else if (asistencia.estado_asistencia === 'PUNTUAL') {
+      classes += ' hover:from-green-50 hover:to-emerald-50 border-l-4 border-green-300';
+    } else {
+      classes += ' hover:from-blue-50 hover:to-indigo-50';
+    }
+
+    return classes;
+  }
+  getPageButtonClasses(pagina: number): string {
+    if (this.paginaActual === pagina) {
+      return 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-2 border-blue-600';
+    }
+    return 'bg-white border-2 border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700';
+  }
+
+  getPuntualesCount(): number {
+    return this.asistenciasFiltradas.filter(a => a.estado_asistencia === 'PUNTUAL').length;
+  }
+
+  getTardanzasCount(): number {
+    return this.asistenciasFiltradas.filter(a => a.estado_asistencia === 'TARDANZA').length;
+  }
+  // Agregar estos métodos para el modal mejorado
+
+  getAsistenciasPuntualesModal(): number {
+    if (!this.alumnoDetalle?.asistencias) return 0;
+    return this.alumnoDetalle.asistencias.filter(a => a.estado_asistencia === 'PUNTUAL').length;
+  }
+
+  getTardanzasModal(): number {
+    if (!this.alumnoDetalle?.asistencias) return 0;
+    return this.alumnoDetalle.asistencias.filter(a => a.estado_asistencia === 'TARDANZA').length;
+  }
+
+  getPorcentajePuntualidad(): number {
+    if (!this.alumnoDetalle?.asistencias || this.alumnoDetalle.asistencias.length === 0) return 0;
+    const puntuales = this.getAsistenciasPuntualesModal();
+    return Math.round((puntuales / this.alumnoDetalle.asistencias.length) * 100);
+  }
+
+  getModalRowClasses(asistencia: Asistencia, isEven: boolean): string {
+    let classes = isEven ? 'bg-gray-50/50' : 'bg-white';
+
+    if (asistencia.estado_asistencia === 'TARDANZA') {
+      classes += ' hover:from-red-50 hover:to-pink-50 border-l-4 border-red-300';
+    } else if (asistencia.estado_asistencia === 'PUNTUAL') {
+      classes += ' hover:from-green-50 hover:to-emerald-50 border-l-4 border-green-300';
+    } else {
+      classes += ' hover:from-blue-50 hover:to-indigo-50';
+    }
+
+    return classes;
+  }
+
+  // Si quieres añadir navegación con ESC para cerrar el modal
+  @HostListener('keydown.escape')
+  cerrarModalConEscape() {
+    if (this.mostrarModalDetalle) {
+      this.cerrarModalDetalle();
+    }
+  }
+
+  // Opcional: Agregar navegación con teclado
+  @HostListener('keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    if (event.target && (event.target as HTMLElement).tagName === 'INPUT') {
+      return; // No interferir con inputs
+    }
+
+    switch (event.key) {
+      case 'ArrowLeft':
+        event.preventDefault();
+        this.irAPaginaAnterior();
+        break;
+      case 'ArrowRight':
+        event.preventDefault();
+        this.irAPaginaSiguiente();
+        break;
+      case 'Home':
+        event.preventDefault();
+        this.irAPrimeraPagina();
+        break;
+      case 'End':
+        event.preventDefault();
+        this.irAUltimaPagina();
+        break;
+    }
+  }
+
+  getEstadoClassesImproved(estado: string): string {
+    const baseClasses = 'inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold shadow-sm border-2';
+
+    switch (estado) {
+      case 'PUNTUAL':
+        return `${baseClasses} bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-200 shadow-green-100`;
+      case 'TARDANZA':
+        return `${baseClasses} bg-gradient-to-r from-red-100 to-pink-100 text-red-800 border-red-200 shadow-red-100`;
+      default:
+        return `${baseClasses} bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 border-gray-200`;
+    }
+  }
+
+  trackByAsistencia(index: number, asistencia: Asistencia): string {
+    return asistencia.id_asistencia;
+  }
+  // Agregar estos métodos a tu componente
+  getAsistenciasPuntuales(): number {
+    if (!this.alumnoDetalle?.asistencias) return 0;
+    return this.alumnoDetalle.asistencias.filter(a => a.estado_asistencia === 'PUNTUAL').length;
+  }
+
+  getTardanzas(): number {
+    if (!this.alumnoDetalle?.asistencias) return 0;
+    return this.alumnoDetalle.asistencias.filter(a => a.estado_asistencia === 'TARDANZA').length;
+  }
+  getItemsShown(): number {
+    return Math.min(this.paginaActual * this.itemsPorPagina, this.asistenciasFiltradas.length);
   }
 }
