@@ -1,0 +1,288 @@
+<div class="container mx-auto px-4 py-8 max-w-7xl">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Eliminar Apoderado</h1>
+    <p class="text-gray-600">Selecciona un apoderado para eliminarlo del sistema</p>
+    <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+      <div class="flex items-start">
+        <i class="fas fa-exclamation-triangle text-yellow-600 mr-2 mt-0.5"></i>
+        <div class="text-sm text-yellow-800">
+          <strong>Advertencia:</strong> Al eliminar un apoderado, todos sus estudiantes asignados quedarán sin apoderado. Esta acción no se puede deshacer.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros y búsqueda -->
+  <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">Buscar Apoderado</h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
+        <div class="relative">
+          <input
+            type="text"
+            [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event)"
+            placeholder="Buscar por nombre, apellido o DNI..."
+            class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+          <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de relación</label>
+        <select
+          [ngModel]="filterTipoRelacion()"
+          (ngModelChange)="filterTipoRelacion.set($event)"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+          <option value="">Todos los tipos</option>
+          <option value="PADRE">Padre</option>
+          <option value="MADRE">Madre</option>
+          <option value="ABUELO">Abuelo</option>
+          <option value="ABUELA">Abuela</option>
+          <option value="TIO">Tío</option>
+          <option value="TIA">Tía</option>
+          <option value="TUTOR">Tutor</option>
+          <option value="OTRO">Otro</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Estado de estudiantes</label>
+        <select
+          [ngModel]="filterEstudiantesStatus()"
+          (ngModelChange)="filterEstudiantesStatus.set($event)"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+          <option value="">Todos</option>
+          <option value="con-estudiantes">Con estudiantes asignados</option>
+          <option value="sin-estudiantes">Sin estudiantes asignados</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="text-sm text-gray-600">
+      @if (filteredApoderados().length > 0) {
+        Mostrando {{ filteredApoderados().length }} apoderado(s)
+      } @else {
+        No se encontraron apoderados
+      }
+    </div>
+  </div>
+
+  <!-- Lista de Apoderados -->
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h2 class="text-xl font-semibold text-gray-800 mb-6">Lista de Apoderados</h2>
+
+    @if (filteredApoderados().length > 0) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (apoderado of filteredApoderados(); track apoderado.id_apoderado) {
+          <div class="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-all duration-200">
+            <!-- Header del apoderado -->
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold text-gray-900 mb-1">
+                  {{ apoderado.nombre }} {{ apoderado.apellido || '' }}
+                </h3>
+                <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                  {{ apoderado.tipo_relacion }}
+                </span>
+              </div>
+              @if (apoderado.pupilos && apoderado.pupilos.length > 0) {
+                <div class="text-right">
+                  <span class="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                    <i class="fas fa-users mr-1"></i>
+                    {{ apoderado.pupilos.length }} estudiante(s)
+                  </span>
+                </div>
+              } @else {
+                <div class="text-right">
+                  <span class="inline-block bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs font-medium">
+                    Sin estudiantes
+                  </span>
+                </div>
+              }
+            </div>
+
+            <!-- Información del apoderado -->
+            <div class="space-y-2 mb-4 text-sm text-gray-600">
+              <div class="flex items-center">
+                <i class="fas fa-id-card w-4 text-gray-400 mr-2"></i>
+                <span>DNI: {{ apoderado.dni || 'No registrado' }}</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-phone w-4 text-gray-400 mr-2"></i>
+                <span>{{ apoderado.telefono || 'Sin teléfono' }}</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-envelope w-4 text-gray-400 mr-2"></i>
+                <span>{{ apoderado.email || 'Sin email' }}</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-calendar w-4 text-gray-400 mr-2"></i>
+                <span>Registrado: {{ formatDate(apoderado.fecha_creacion) }}</span>
+              </div>
+            </div>
+
+            <!-- Lista de estudiantes asignados -->
+            @if (apoderado.pupilos && apoderado.pupilos.length > 0) {
+              <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <h4 class="text-sm font-medium text-yellow-800 mb-2">
+                  <i class="fas fa-exclamation-triangle mr-1"></i>
+                  Estudiantes que quedarán sin apoderado:
+                </h4>
+                <ul class="text-sm text-yellow-700 space-y-1">
+                  @for (pupilo of apoderado.pupilos; track pupilo.id_alumno) {
+                    <li class="flex items-center">
+                      <i class="fas fa-user text-xs mr-2"></i>
+                      {{ pupilo.nombre }} {{ pupilo.apellido }} ({{ pupilo.codigo }})
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+
+            <!-- Estado activo -->
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center">
+                <i class="fas fa-circle text-xs mr-2" 
+                   [class]="apoderado.activo ? 'text-green-500' : 'text-red-500'"></i>
+                <span class="text-sm font-medium" 
+                      [class]="apoderado.activo ? 'text-green-700' : 'text-red-700'">
+                  {{ apoderado.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Botón de eliminar -->
+            <button
+              (click)="confirmDelete(apoderado)"
+              [disabled]="isLoading()"
+              class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              <i class="fas fa-trash mr-2"></i>
+              Eliminar Apoderado
+            </button>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="text-center py-12">
+        <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
+        <p class="text-gray-500 text-lg">No se encontraron apoderados</p>
+        <p class="text-gray-400 text-sm">Intenta ajustar los filtros de búsqueda</p>
+      </div>
+    }
+  </div>
+
+  <!-- Modal de confirmación -->
+  @if (apoderadoToDelete()) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 max-w-lg w-full mx-4">
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mr-4">
+            <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">Confirmar eliminación</h3>
+            <p class="text-sm text-gray-600">Esta acción no se puede deshacer</p>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <p class="text-gray-700 mb-4">
+            ¿Estás seguro de que deseas eliminar al apoderado 
+            <strong>{{ apoderadoToDelete()!.nombre }} {{ apoderadoToDelete()!.apellido || '' }}</strong>?
+          </p>
+
+          @if (apoderadoToDelete()!.pupilos && apoderadoToDelete()!.pupilos!.length > 0) {
+            <div class="p-4 bg-red-50 border border-red-200 rounded-md">
+              <p class="text-red-800 font-medium mb-2">
+                <i class="fas fa-exclamation-triangle mr-1"></i>
+                Proceso de eliminación (2 pasos):
+              </p>
+              <ol class="text-red-700 text-sm space-y-1 mb-3">
+                <li>1. Se desasignarán {{ apoderadoToDelete()!.pupilos!.length }} estudiante(s)</li>
+                <li>2. Se eliminará el apoderado del sistema</li>
+              </ol>
+              <p class="text-red-800 font-medium mb-2">Estudiantes que quedarán sin apoderado:</p>
+              <ul class="text-red-700 text-sm space-y-1 max-h-32 overflow-y-auto">
+                @for (pupilo of apoderadoToDelete()!.pupilos; track pupilo.id_alumno) {
+                  <li>• {{ pupilo.nombre }} {{ pupilo.apellido }} ({{ pupilo.codigo }})</li>
+                }
+              </ul>
+            </div>
+          } @else {
+            <div class="p-4 bg-blue-50 border border-blue-200 rounded-md">
+              <p class="text-blue-800 font-medium">
+                <i class="fas fa-info-circle mr-1"></i>
+                Este apoderado no tiene estudiantes asignados, se eliminará directamente.
+              </p>
+            </div>
+          }
+
+          <div class="mt-4 p-3 bg-gray-50 rounded-md">
+            <p class="text-sm text-gray-600">
+              <strong>Información del apoderado:</strong>
+            </p>
+            <ul class="text-sm text-gray-600 mt-2 space-y-1">
+              <li>• DNI: {{ apoderadoToDelete()!.dni || 'No registrado' }}</li>
+              <li>• Teléfono: {{ apoderadoToDelete()!.telefono || 'No registrado' }}</li>
+              <li>• Email: {{ apoderadoToDelete()!.email || 'No registrado' }}</li>
+              <li>• Tipo: {{ apoderadoToDelete()!.tipo_relacion }}</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="flex space-x-3">
+          <button
+            (click)="cancelDelete()"
+            [disabled]="isLoading()"
+            class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50">
+            Cancelar
+          </button>
+          <button
+            (click)="executeDelete()"
+            [disabled]="isLoading()"
+            class="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50">
+            @if (isLoading()) {
+              <i class="fas fa-spinner fa-spin mr-2"></i>
+            }
+            Eliminar definitivamente
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
+      <div class="bg-white rounded-lg p-6 flex items-center">
+        <i class="fas fa-spinner fa-spin text-red-600 mr-3"></i>
+        <div>
+          <div class="font-medium">Eliminando apoderado...</div>
+          @if (apoderadoToDelete() && apoderadoToDelete()!.pupilos && apoderadoToDelete()!.pupilos!.length > 0) {
+            <div class="text-sm text-gray-600 mt-1">Paso 1/2: Desasignando estudiantes</div>
+          } @else {
+            <div class="text-sm text-gray-600 mt-1">Eliminando registro</div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Success Message -->
+  @if (showSuccessMessage()) {
+    <div class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+      <i class="fas fa-check-circle mr-2"></i>
+      Apoderado eliminado exitosamente
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (errorMessage()) {
+    <div class="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+      <i class="fas fa-exclamation-circle mr-2"></i>
+      {{ errorMessage() }}
+    </div>
+  }
+</div>

@@ -13,7 +13,7 @@ import { filter } from 'rxjs';
 })
 export class SidebarItemComponent implements OnInit {
   @Input() item!: SidebarItem;
-  showChildren = false;
+  showChildren = true; // Inicia expandido
 
   constructor(private router: Router) {}
 
@@ -22,6 +22,7 @@ export class SidebarItemComponent implements OnInit {
       this.checkIfAnyChildIsActive();
     });
 
+    // Solo verificar si hay un child activo, pero no cambiar el estado inicial
     this.checkIfAnyChildIsActive();
   }
 
@@ -33,8 +34,14 @@ export class SidebarItemComponent implements OnInit {
     if (!this.item.children) return;
 
     const currentUrl = this.router.url;
-    this.showChildren = this.item.children.some(child => 
+    const hasActiveChild = this.item.children.some(child => 
       !!child.link && currentUrl.startsWith(child.link)
     );
+    
+    // Solo expandir si hay un child activo, pero no colapsar si no lo hay
+    if (hasActiveChild) {
+      this.showChildren = true;
+    }
+    // No hacer nada si no hay child activo (mantener el estado actual)
   }
 }

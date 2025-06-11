@@ -64,7 +64,7 @@ export class FormContainerComponent {
         const { message, user } = response;
         this.userStore.setUser(user);
         this.alertsService.success(message);
-        this.route.navigate(['/home']);
+        this.route.navigate(['/home/welcome']);
       },
       error: (err) => {
         this.alertsService.error(err.error?.message || 'Error de autenticación');

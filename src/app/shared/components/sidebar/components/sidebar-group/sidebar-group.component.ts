@@ -10,4 +10,11 @@ import { SidebarItemComponent } from '../sidebar-item/sidebar-item.component';
 })
 export class SidebarGroupComponent {
   @Input() group!: SidebarGroup;
+  
+  // Siempre expandido por defecto
+  isExpanded = true;
+
+  toggleExpanded() {
+    this.isExpanded = !this.isExpanded;
+  }
 }

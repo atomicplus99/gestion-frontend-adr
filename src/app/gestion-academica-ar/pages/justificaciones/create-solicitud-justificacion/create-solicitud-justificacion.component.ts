@@ -72,7 +72,7 @@ export class SolicitudJustificacionComponent implements OnInit {
   }
 
   // ID del auxiliar autenticado - CAMBIAR POR EL VALOR REAL
-  private readonly ID_AUXILIAR_AUTENTICADO = '00786dfc-b751-4d0c-994e-a201986e3873';
+  private readonly ID_AUXILIAR_AUTENTICADO = '37419ff9-9ce8-4b1a-bdc6-2ed28ae8cc0b';
 
   constructor(
     private fb: FormBuilder,

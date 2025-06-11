@@ -1,602 +1,437 @@
-// main-welcome.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, inject, computed, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { MotivationalMessageComponent } from '../components/message-motivationals/message-motivationals.component';
-import { ViewOnlyCalendarComponent } from '../components/calendar/calendar.component';
+import { HttpClient } from '@angular/common/http';
 import { UserStoreService } from '../../../../auth/store/user.store';
 import { environment } from '../../../../../environments/environment';
 
-interface QuickStat {
-    label: string;
-    value: string | number;
-    color: string;
+
+
+interface WeatherData {
+  location: {
+    name: string;
+    country: string;
+  };
+  current: {
+    temp_c: number;
+    condition: {
+      text: string;
+      icon: string;
+    };
+    humidity: number;
+    wind_kph: number;
+  };
 }
 
-interface QuickLink {
+interface QuoteData {
+  text: string;
+  author: string;
+}
+
+interface NewsItem {
+  title: string;
+  description: string;
+  url: string;
+  urlToImage: string;
+  publishedAt: string;
+  source: {
     name: string;
-    icon: string;
-    route: string;
+  };
+}
+
+interface CryptoPrice {
+  id: string;
+  name: string;
+  current_price: number;
+  price_change_percentage_24h: number;
+}
+
+interface CountryInfo {
+  name: {
+    common: string;
+  };
+  population: number;
+  capital: string[];
+  region: string;
+  flags: {
+    png: string;
+  };
+}
+
+interface HolidayInfo {
+  date: string;
+  localName: string;
+  name: string;
+  countryCode: string;
 }
 
 @Component({
-    selector: 'app-main-welcome',
-    standalone: true,
-    imports: [
-        CommonModule,
-        RouterLink,
-        MotivationalMessageComponent,
-        ViewOnlyCalendarComponent,
-    ],
-    template: `
-<div class="main-welcome-container">
-  <!-- Todo el contenido sin espacios sobrantes -->
-  <div class="welcome-section">
-    <h1>Bienvenido al Administrador de <span class="text-blue-500">Alumnos</span></h1>
-    <p>Andres de los Reyes</p>
-  </div>
-  
-  <div class="profile-section">
-
-
-      
-
-    
-
-    <div class="profile-card">
-      <div class="avatar-container">
-        <img [src]="getUserPhoto()" alt="Foto de perfil">
-      </div>
-      <h2>{{ user()?.nombreCompleto || 'Luis García' }}</h2>
-      <p class="username">{{ user()?.username || 'auxiliar1' }}</p>
-      <div class="badge">{{ user()?.role || 'AUXILIAR' }}</div>
-      <p class="user-id">ID: {{ user()?.idUser?.substring(0, 9) || '9e4b1d6a' }}</p>
-    </div>
-  </div>
-  
-  <div class="stats-section">
-    <h2 class="section-title">Estadísticas rápidas</h2>
-    <div class="stats-container">
-      <div *ngFor="let stat of stats" class="stat-card" [style.border-left-color]="stat.color">
-        <div class="stat-value">{{ stat.value }}</div>
-        <div class="stat-label">{{ stat.label }}</div>
-      </div>
-    </div>
-  </div>
-
-  
-  
-  <div class="links-weather-section">
-    <div class="links-container">
-      <h2 class="section-title">Enlaces rápidos</h2>
-      <div class="links-grid">
-        <a *ngFor="let link of links" [routerLink]="[link.route]" class="link-item">
-          <i class="fas fa-{{ link.icon }}"></i>
-          <span>{{ link.name }}</span>
-        </a>
-      </div>
-    </div>
-
-    <div class="weather-container">
-      <h3>Lima, Perú</h3>
-      <p class="date">lunes, 19 de mayo</p>
-      <div class="temp">25°C</div>
-      <div class="condition">Soleado</div>
-  </div>
-    
-    
-  </div>
-  
-  <div class="motivational-section">
-    <app-motivational-message
-      [showRefreshButton]="false"
-      [autoRefreshInterval]="3600000"
-    ></app-motivational-message>
-  </div>
-  
-  <div class="notices-events-section">
-    <div class="notices-container">
-      <h2 class="section-title">Notificaciones recientes</h2>
-      <div class="notices-list">
-        <div class="notice-item" style="border-left-color: #4285F4;">
-          <h3>Nueva asignación</h3>
-          <p>Se ha asignado una nueva tarea en el curso de Matemáticas.</p>
-          <div class="indicator" style="background-color: #4285F4;"></div>
-        </div>
-        <div class="notice-item" style="border-left-color: #ddd;">
-          <h3>Recordatorio de entrega</h3>
-          <p>El plazo para la entrega del proyecto final es mañana.</p>
-          <div class="indicator" style="background-color: #ddd;"></div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="events-container">
-      <h2 class="section-title">Próximos eventos</h2>
-      <div class="events-list">
-        <div class="event-item">
-          <div class="event-date">
-            <span class="day">21</span>
-            <span class="month">MAY</span>
-          </div>
-          <div class="event-info">
-            <h3>Reunión académica</h3>
-            <p>10:00 AM</p>
-          </div>
-        </div>
-        <div class="event-item">
-          <div class="event-date">
-            <span class="day">22</span>
-            <span class="month">MAY</span>
-          </div>
-          <div class="event-info">
-            <h3>Reunión académica</h3>
-            <p>10:00 AM</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="calendar-section">
-    <h2 class="section-title">Calendario de eventos</h2>
-    <div class="calendar-container">
-      <app-view-only-calendar></app-view-only-calendar>
-    </div>
-  </div>
-</div>
-    `,
-    styles: [`
-:host {
-  display: block;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-
-
-.main-welcome-container {
-  width: 100%;
-  height: auto;
-  display: flex;
-  flex-direction: column;
-  background-color: #f5f7fa;
-}
-
-/* Sección de bienvenida */
-.welcome-section {
-  width: 100%;
-  padding: 20px 0;
-  text-align: center;
-  background-color: white;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.welcome-section h1 {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 600;
-}
-
-.welcome-section p {
-  margin: 8px 0 0 0;
-  color: #666;
-  font-size: 16px;
-}
-
-/* Sección de perfil */
-.profile-section {
-  width: 95%;
-  height: 100%;
-  padding: 30px 0;
-  display: flex;
-  justify-content: center;
-  background-color: #f0f4f8;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.profile-card {
-  height: 100%;
-  width: 70%;
-  max-width: 100%;
-  background-color: white;
-  border-radius: 16px;
-  padding: 30px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.avatar-container {
-  width: 120px;
-  height: 120px;
-  padding: 6px;
-  margin-bottom: 20px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #e6f2ff, #f0f8ff);
-  box-shadow: 0 5px 15px rgba(66, 133, 244, 0.15);
-}
-
-.avatar-container img {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid #4285F4;
-}
-
-.profile-card h2 {
-  margin: 0 0 10px 0;
-  font-size: 28px;
-  font-weight: 600;
-  color: #333;
-}
-
-.profile-card .username {
-  margin: 8px 0;
-  font-size: 18px;
-  color: #555;
-}
-
-.profile-card .badge {
-  display: inline-block;
-  padding: 6px 20px;
-  margin: 12px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: white;
-  background-color: #4285F4;
-  border-radius: 30px;
-  letter-spacing: 0.5px;
-}
-
-.profile-card .user-id {
-  margin: 8px 0 0 0;
-  font-size: 15px;
-  color: #888;
-}
-
-/* Sección de estadísticas */
-.stats-section {
-  width: 100%;
-  padding: 20px;
-  background-color: white;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.section-title {
-  margin: 0 0 15px 0;
-  font-size: 18px;
-  font-weight: 500;
-  color: #333;
-}
-
-.stats-container {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-}
-
-.stat-card {
-  background-color: white;
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border-left: 4px solid;
-}
-
-.stat-value {
-  font-size: 28px;
-  font-weight: 600;
-  color: #333;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #666;
-  margin-top: 5px;
-}
-
-/* Sección de enlaces y clima */
-.links-weather-section {
-  width: 100%;
-  padding: 20px;
-  display: grid;
-  grid-template-columns: 3fr 1fr;
-  gap: 15px;
-  background-color: white;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.links-container {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.links-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 10px;
-}
-
-.link-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 12px;
-  border-radius: 8px;
-  text-decoration: none;
-  color: #333;
-  transition: background-color 0.2s;
-}
-
-.link-item:hover {
-  background-color: rgba(66, 133, 244, 0.1);
-}
-
-.link-item i {
-  font-size: 24px;
-  color: #4285F4;
-  margin-bottom: 8px;
-}
-
-.link-item span {
-  font-size: 14px;
-  text-align: center;
-}
-
-.weather-container {
-  background: linear-gradient(135deg, #4facfe, #00f2fe);
-  color: white;
-  border-radius: 8px;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.weather-container h3 {
-  margin: 0 0 5px 0;
-  font-size: 18px;
-  font-weight: 500;
-}
-
-.weather-container .date {
-  font-size: 13px;
-  opacity: 0.9;
-  margin: 0 0 12px 0;
-}
-
-.weather-container .temp {
-  font-size: 40px;
-  font-weight: 600;
-  margin: 8px 0;
-}
-
-.weather-container .condition {
-  font-size: 16px;
-}
-
-/* Sección de mensaje motivacional */
-.motivational-section {
-  width: 100%;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-/* Sección de notificaciones y eventos */
-.notices-events-section {
-  width: 100%;
-  padding: 20px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-  background-color: white;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.notices-container, .events-container {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.notices-list, .events-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.notice-item {
-  position: relative;
-  padding: 12px;
-  border-radius: 8px;
-  background-color: white;
-  border-left: 4px solid;
-}
-
-.notice-item h3 {
-  margin: 0 0 5px 0;
-  font-size: 15px;
-  font-weight: 500;
-}
-
-.notice-item p {
-  margin: 0;
-  font-size: 14px;
-  color: #666;
-}
-
-.notice-item .indicator {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.event-item {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  background-color: white;
-  border-radius: 8px;
-}
-
-.event-date {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 60px;
-  height: 60px;
-  background-color: #4285F4;
-  color: white;
-  border-radius: 8px;
-  margin-right: 12px;
-}
-
-.event-date .day {
-  font-size: 20px;
-  font-weight: bold;
-  line-height: 1;
-}
-
-.event-date .month {
-  font-size: 12px;
-  text-transform: uppercase;
-}
-
-.event-info h3 {
-  margin: 0 0 5px 0;
-  font-size: 15px;
-  font-weight: 500;
-}
-
-.event-info p {
-  margin: 0;
-  font-size: 14px;
-  color: #666;
-}
-
-/* Sección de calendario */
-.calendar-section {
-  width: 100%;
-  padding: 20px;
-  background-color: white;
-}
-
-.calendar-container {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  height: 400px;
-}
-
-/* Estilos responsivos */
-@media (max-width: 992px) {
-  .stats-container {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .links-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  
-  .links-weather-section {
-    grid-template-columns: 1fr;
-  }
-  
-  .weather-container {
-    margin-top: 10px;
-  }
-}
-
-@media (max-width: 768px) {
-  .welcome-section h1 {
-    font-size: 24px;
-  }
-  
-  .profile-card {
-    max-width: 350px;
-    padding: 20px;
-  }
-  
-  .avatar-container {
-    width: 100px;
-    height: 100px;
-  }
-  
-  .profile-card h2 {
-    font-size: 24px;
-  }
-  
-  .profile-card .badge {
-    font-size: 14px;
-    padding: 5px 15px;
-  }
-  
-  .notices-events-section {
-    grid-template-columns: 1fr;
-  }
-  
-  .calendar-container {
-    height: 350px;
-  }
-}
-
-/* Asegurar que no haya márgenes innecesarios en componentes internos */
-app-motivational-message,
-app-view-only-calendar {
-  display: block;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-    `]
+  selector: 'app-welcome',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './main-welcome.component.html'
 })
-export class MainWelcomeComponent implements OnInit {
-    // Datos estáticos
-    stats: QuickStat[] = [
-        { label: 'Asistencia', value: '95%', color: '#4285F4' },
-        { label: 'Tareas pendientes', value: '3', color: '#9C27B0' },
-        { label: 'Cursos activos', value: '5', color: '#4CAF50' },
-        { label: 'Promedio', value: '18.5', color: '#FF9800' }
+export class WelcomeComponent implements OnInit, OnDestroy {
+  @Input() welcomeMessage?: string;
+  
+  private userStore = inject(UserStoreService);
+  private http = inject(HttpClient);
+  
+  // Signals para datos en tiempo real
+  currentUser = this.userStore.user;
+  weather = signal<WeatherData | null>(null);
+  dailyQuote = signal<QuoteData | null>(null);
+  worldNews = signal<NewsItem[]>([]);
+  cryptoPrices = signal<CryptoPrice[]>([]);
+  countryInfo = signal<CountryInfo | null>(null);
+  upcomingHolidays = signal<HolidayInfo[]>([]);
+  
+  // Signals para tiempo y stats en tiempo real
+  currentTime = signal<string>('');
+  currentDate = signal<string>('');
+  sessionTime = signal<string>('0:00');
+  globalTimeZones = signal<{city: string, time: string}[]>([]);
+  
+  private sessionStartTime = Date.now();
+  private timeInterval?: number;
+  
+  // Computed para el nombre a mostrar
+  displayName = computed(() => {
+    const user = this.currentUser();
+    if (!user) return '';
+    return user.nombreCompleto || user.username;
+  });
+
+  ngOnInit() {
+    this.initializeTimeUpdates();
+    this.loadWeatherData();
+    this.loadDailyQuote();
+    this.loadWorldNews();
+    this.loadCryptoPrices();
+    this.loadCountryInfo();
+    this.loadUpcomingHolidays();
+    this.loadGlobalTimes();
+  }
+
+  ngOnDestroy() {
+    if (this.timeInterval) {
+      clearInterval(this.timeInterval);
+    }
+  }
+
+  private initializeTimeUpdates() {
+    this.updateTime();
+    this.timeInterval = window.setInterval(() => {
+      this.updateTime();
+      this.updateSessionTime();
+    }, 1000);
+  }
+
+  private updateTime() {
+    const now = new Date();
+    this.currentTime.set(now.toLocaleTimeString('es-ES', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    }));
+    this.currentDate.set(now.toLocaleDateString('es-ES', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    }));
+  }
+
+  private updateSessionTime() {
+    const elapsed = Date.now() - this.sessionStartTime;
+    const minutes = Math.floor(elapsed / 60000);
+    const seconds = Math.floor((elapsed % 60000) / 1000);
+    this.sessionTime.set(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+  }
+
+  private loadWeatherData() {
+    // WeatherAPI - API gratuita real
+    this.http.get<WeatherData>('https://api.weatherapi.com/v1/current.json?key=demo&q=Lima&aqi=no')
+      .subscribe({
+        next: (data) => this.weather.set(data),
+        error: () => {
+          // Usar una API alternativa gratuita: OpenWeatherMap
+          this.http.get<any>('https://api.openweathermap.org/data/2.5/weather?q=Lima,PE&appid=demo&units=metric')
+            .subscribe({
+              next: (data) => {
+                this.weather.set({
+                  location: { name: data.name, country: data.sys.country },
+                  current: {
+                    temp_c: Math.round(data.main.temp),
+                    condition: { 
+                      text: data.weather[0].description,
+                      icon: `//openweathermap.org/img/w/${data.weather[0].icon}.png`
+                    },
+                    humidity: data.main.humidity,
+                    wind_kph: Math.round(data.wind.speed * 3.6)
+                  }
+                });
+              },
+              error: () => console.log('Weather APIs no disponibles en demo')
+            });
+        }
+      });
+  }
+
+  private loadDailyQuote() {
+    // API de Quotable - completamente gratuita y funcional
+    this.http.get<{content: string, author: string}>('https://api.quotable.io/random?tags=motivational,education,wisdom')
+      .subscribe({
+        next: (data) => this.dailyQuote.set({ text: data.content, author: data.author }),
+        error: () => {
+          // Fallback con frases locales motivacionales
+          const quotes = [
+            { text: 'La educación es el arma más poderosa que puedes usar para cambiar el mundo.', author: 'Nelson Mandela' },
+            { text: 'El éxito es la suma de pequeños esfuerzos repetidos día tras día.', author: 'Robert Collier' },
+            { text: 'No esperes el momento perfecto. Toma el momento y hazlo perfecto.', author: 'Zoey Sayward' }
+          ];
+          this.dailyQuote.set(quotes[Math.floor(Math.random() * quotes.length)]);
+        }
+      });
+  }
+
+ 
+    // NewsAPI - API real de noticias mundiales usando RSS2JSON
+  public loadWorldNews() {
+    // NewsAPI - API real de noticias mundiales usando RSS2JSON
+    this.http.get<any>('https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/mundo/rss.xml')
+      .subscribe({
+        next: (data) => {
+          const articles: NewsItem[] = data.items?.slice(0, 5).map((item: any) => ({
+            title: item.title,
+            description: item.description?.replace(/<[^>]*>/g, '').substring(0, 100) + '...',
+            url: item.link,
+            urlToImage: item.enclosure?.link || '',
+            publishedAt: item.pubDate,
+            source: { name: 'BBC Mundo' }
+          })) || [];
+          this.worldNews.set(articles);
+        },
+        error: () => {
+          // Usar JSONPlaceholder para datos de ejemplo
+          this.http.get<any[]>('https://jsonplaceholder.typicode.com/posts?_limit=5')
+            .subscribe({
+              next: (posts) => {
+                const articles: NewsItem[] = posts.map(post => ({
+                  title: post.title.charAt(0).toUpperCase() + post.title.slice(1),
+                  description: post.body.substring(0, 100) + '...',
+                  url: '#',
+                  urlToImage: '',
+                  publishedAt: new Date().toISOString(),
+                  source: { name: 'Noticias Académicas' }
+                }));
+                this.worldNews.set(articles);
+              },
+              error: () => console.log('News APIs no disponibles')
+            });
+        }
+      });
+  }
+
+  private loadCryptoPrices() {
+    // CoinGecko API - completamente gratuita
+    this.http.get<CryptoPrice[]>('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,cardano&order=market_cap_desc&per_page=3&page=1')
+      .subscribe({
+        next: (data) => this.cryptoPrices.set(data),
+        error: () => console.log('Crypto API no disponible')
+      });
+  }
+
+  private loadCountryInfo() {
+    // REST Countries API - completamente gratuita
+    this.http.get<CountryInfo[]>('https://restcountries.com/v3.1/name/peru')
+      .subscribe({
+        next: (data) => {
+          if (data && data.length > 0) {
+            this.countryInfo.set(data[0]);
+          }
+        },
+        error: () => console.log('Countries API no disponible')
+      });
+  }
+
+  private loadUpcomingHolidays() {
+    // Nager.Date API - días festivos gratuitos
+    const currentYear = new Date().getFullYear();
+    this.http.get<HolidayInfo[]>(`https://date.nager.at/api/v3/PublicHolidays/${currentYear}/PE`)
+      .subscribe({
+        next: (data) => {
+          const now = new Date();
+          const upcoming = data
+            .filter(holiday => new Date(holiday.date) > now)
+            .slice(0, 3);
+          this.upcomingHolidays.set(upcoming);
+        },
+        error: () => console.log('Holidays API no disponible')
+      });
+  }
+
+  private loadGlobalTimes() {
+    // WorldTimeAPI - zonas horarias gratuitas
+    const timeZones = [
+      { city: 'Nueva York', zone: 'America/New_York' },
+      { city: 'Londres', zone: 'Europe/London' },
+      { city: 'Tokio', zone: 'Asia/Tokyo' }
     ];
 
-    links: QuickLink[] = [
-        { name: 'Cursos', icon: 'graduation-cap', route: '/cursos' },
-        { name: 'Tareas', icon: 'tasks', route: '/tareas' },
-        { name: 'Biblioteca', icon: 'book', route: '/biblioteca' },
-        { name: 'Horarios', icon: 'clock', route: '/horarios' },
-        { name: 'Mensajes', icon: 'envelope', route: '/mensajes' },
-        { name: 'Recursos', icon: 'file-alt', route: '/recursos' },
-    ];
+    timeZones.forEach(tz => {
+      this.http.get<any>(`https://worldtimeapi.org/api/timezone/${tz.zone}`)
+        .subscribe({
+          next: (data) => {
+            const time = new Date(data.datetime).toLocaleTimeString('es-ES', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            });
+            const current = this.globalTimeZones();
+            this.globalTimeZones.set([...current, { city: tz.city, time }]);
+          },
+          error: () => console.log(`Time API para ${tz.city} no disponible`)
+        });
+    });
+  }
 
-    constructor(private userStore: UserStoreService) { }
-
-    // Getter para acceder al usuario desde el template
-    get user() {
-        return this.userStore.user;
+  getUserPhoto(): string {
+    const user = this.currentUser();
+    if (user?.photo && user.photo.trim() !== '') {
+      return user.photo;
     }
+    return `${environment.apiUrl}/uploads/profiles/no-image.png`;
+  }
 
-    ngOnInit(): void {
-        console.log('Usuario actual:', this.userStore.user());
-    }
+  onImageError(event: any): void {
+    event.target.src = `${environment.apiUrl}/uploads/profiles/no-image.png`;
+  }
 
-    // Método para obtener la URL de la foto de perfil
-    getUserPhoto(): string {
-        return `${environment.apiUrl}/uploads/profiles/no-image.png`;
+  getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Buenos días';
+    if (hour < 18) return 'Buenas tardes';
+    return 'Buenas noches';
+  }
+
+  getTimeOfDay(): string {
+    const hour = new Date().getHours();
+    if (hour < 6) return 'Madrugada';
+    if (hour < 12) return 'Mañana';
+    if (hour < 18) return 'Tarde';
+    if (hour < 22) return 'Noche';
+    return 'Noche tardía';
+  }
+
+  getPersonalizedMessage(): string {
+    if (this.welcomeMessage) return this.welcomeMessage;
+    
+    const hour = new Date().getHours();
+    const user = this.currentUser();
+    const firstName = user?.nombreCompleto?.split(' ')[0] || user?.username || '';
+    
+    const messages = {
+      morning: [
+        `${firstName}, ¡que tengas un excelente día de aprendizaje! Todo está listo para que alcances tus metas académicas.`,
+        `Es un nuevo día lleno de oportunidades, ${firstName}. Tu progreso académico te está esperando.`,
+        `¡Perfecto momento para comenzar, ${firstName}! Tienes todo lo necesario para un día productivo.`
+      ],
+      afternoon: [
+        `¡Esperamos que tu día esté siendo productivo, ${firstName}! Continúa con el gran trabajo que vienes realizando.`,
+        `La tarde es perfecta para revisar tu progreso, ${firstName}. Sigues avanzando hacia tus objetivos.`,
+        `¡Buen trabajo hasta ahora, ${firstName}! Mantén el momentum para terminar el día con éxito.`
+      ],
+      evening: [
+        `¡Buen trabajo hoy, ${firstName}! Es tiempo de revisar lo logrado y planificar el día de mañana.`,
+        `La noche es ideal para reflexionar sobre tus logros, ${firstName}. Has hecho un gran progreso.`,
+        `${firstName}, tu dedicación es admirable. Aprovecha este momento para organizar tus próximas actividades.`
+      ]
+    };
+
+    let timeMessages;
+    if (hour < 12) timeMessages = messages.morning;
+    else if (hour < 18) timeMessages = messages.afternoon;
+    else timeMessages = messages.evening;
+
+    return timeMessages[Math.floor(Math.random() * timeMessages.length)];
+  }
+
+  getRoleDisplay(role: string): string {
+    const roleMap: { [key: string]: string } = {
+      'admin': 'Administrador',
+      'user': 'Usuario',
+      'student': 'Estudiante',
+      'teacher': 'Profesor',
+      'auxiliary': 'Auxiliar',
+      'moderator': 'Moderador',
+      'editor': 'Editor',
+      'superadmin': 'Super Admin',
+      'manager': 'Manager'
+    };
+    
+    return roleMap[role.toLowerCase()] || role.charAt(0).toUpperCase() + role.slice(1);
+  }
+
+  formatNewsDate(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffHours < 1) return 'Hace menos de 1 hora';
+    if (diffHours < 24) return `Hace ${diffHours} horas`;
+    if (diffDays === 1) return 'Ayer';
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    return date.toLocaleDateString('es-ES');
+  }
+
+  formatHolidayDate(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = date.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Hoy';
+    if (diffDays === 1) return 'Mañana';
+    if (diffDays < 30) return `En ${diffDays} días`;
+    return date.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+  }
+
+  formatPopulation(population: number): string {
+    if (population >= 1000000) {
+      return (population / 1000000).toFixed(1) + 'M';
     }
+    if (population >= 1000) {
+      return (population / 1000).toFixed(0) + 'K';
+    }
+    return population.toString();
+  }
+
+  openNews(url: string): void {
+    if (url && url !== '#') {
+      window.open(url, '_blank');
+    }
+  }
+
+  // Métodos de navegación mejorados
+  onGetStarted(): void {
+    const user = this.currentUser();
+    console.log('Navegando al dashboard principal:', user?.username);
+    // Ejemplo: this.router.navigate(['/dashboard']);
+  }
+
+  onViewCalendar(): void {
+    console.log('Abriendo calendario académico');
+    // Ejemplo: this.router.navigate(['/calendar']);
+  }
+
+  onCheckGrades(): void {
+    console.log('Navegando a calificaciones');
+    // Ejemplo: this.router.navigate(['/grades']);
+  }
+
+  onGetHelp(): void {
+    console.log('Abriendo centro de ayuda');
+    // Ejemplo: this.router.navigate(['/support']);
+    // O abrir chat de soporte
+  }
 }

@@ -1,0 +1,318 @@
+<div class="min-h-screen bg-gray-50 p-6">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">
+          @if (selectedApoderado()) {
+            Editar Apoderado
+          } @else {
+            Buscar y Editar Apoderado
+          }
+        </h1>
+        <p class="text-gray-600">
+          @if (selectedApoderado()) {
+            Modifica la información del apoderado seleccionado
+          } @else {
+            Busca al apoderado que deseas editar por DNI o nombre
+          }
+        </p>
+      </div>
+      <button 
+        (click)="goBack()"
+        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+        ← Volver
+      </button>
+    </div>
+
+    <!-- Mensajes de estado -->
+    @if (successMessage()) {
+      <div class="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded">
+        <div class="flex">
+          <svg class="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          <p class="text-green-700 font-medium">{{ successMessage() }}</p>
+        </div>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="mb-6 bg-red-50 border-l-4 border-red-400 p-4 rounded">
+        <div class="flex">
+          <svg class="w-5 h-5 text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+          </svg>
+          <p class="text-red-700 font-medium">{{ errorMessage() }}</p>
+        </div>
+      </div>
+    }
+
+    <!-- Sección de Búsqueda -->
+    @if (!selectedApoderado()) {
+      <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Buscar Apoderado</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <!-- Buscar por DNI -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Buscar por DNI</label>
+            <input 
+              type="text" 
+              [(ngModel)]="searchDni"
+              placeholder="Ingrese DNI"
+              maxlength="8"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <!-- Buscar por Nombre -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Buscar por Nombre</label>
+            <input 
+              type="text" 
+              [(ngModel)]="searchName"
+              placeholder="Ingrese nombre o apellido"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <!-- Botón de búsqueda -->
+          <div class="flex items-end">
+            <button 
+              (click)="searchApoderados()"
+              [disabled]="searching() || (!searchDni && !searchName)"
+              class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+              @if (searching()) {
+                Buscando...
+              } @else {
+                Buscar
+              }
+            </button>
+          </div>
+        </div>
+
+        <!-- Resultados de búsqueda -->
+        @if (searching()) {
+          <div class="flex items-center justify-center py-8">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <span class="ml-3 text-gray-600">Buscando...</span>
+          </div>
+        }
+
+        @if (searchResults().length > 0 && !searching()) {
+          <div class="border-t pt-4">
+            <h4 class="text-md font-medium text-gray-900 mb-3">
+              Resultados ({{ searchResults().length }})
+            </h4>
+            <div class="space-y-3">
+              @for (apoderado of searchResults(); track apoderado.id_apoderado) {
+                <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h5 class="font-medium text-gray-900">
+                        {{ apoderado.nombre }} {{ apoderado.apellido || '' }}
+                      </h5>
+                      <p class="text-sm text-gray-600">
+                        @if (apoderado.dni) {
+                          DNI: {{ apoderado.dni }} |
+                        }
+                        {{ formatRelation(apoderado.tipo_relacion) }}
+                        <span [class]="apoderado.activo ? 'text-green-600' : 'text-red-600'">
+                          | {{ apoderado.activo ? 'Activo' : 'Inactivo' }}
+                        </span>
+                      </p>
+                    </div>
+                    <button 
+                      (click)="selectApoderado(apoderado)"
+                      class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                      Seleccionar
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        @if (searchExecuted() && searchResults().length === 0 && !searching()) {
+          <div class="text-center py-8">
+            <p class="text-gray-500">No se encontraron apoderados con esos criterios</p>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Formulario de Edición -->
+    @if (selectedApoderado()) {
+      <div class="bg-white rounded-lg shadow p-6">
+        <!-- Apoderado seleccionado -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="font-medium text-blue-900">Editando:</h4>
+              <p class="text-blue-700">
+                {{ selectedApoderado()!.nombre }} {{ selectedApoderado()!.apellido || '' }}
+                @if (selectedApoderado()!.dni) {
+                  - DNI: {{ selectedApoderado()!.dni }}
+                }
+              </p>
+            </div>
+            <button 
+              (click)="clearSelection()"
+              class="text-blue-600 hover:text-blue-800 text-sm">
+              Cambiar apoderado
+            </button>
+          </div>
+        </div>
+
+        <form [formGroup]="apoderadoForm" (ngSubmit)="onSubmit()">
+          
+          <!-- Información Personal -->
+          <div class="mb-8">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Información Personal</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              <!-- Nombre -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre <span class="text-red-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  formControlName="nombre"
+                  placeholder="Ingrese el nombre"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                @if (apoderadoForm.get('nombre')?.invalid && apoderadoForm.get('nombre')?.touched) {
+                  <p class="mt-1 text-sm text-red-600">El nombre es requerido</p>
+                }
+              </div>
+
+              <!-- Apellido -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+                <input 
+                  type="text" 
+                  formControlName="apellido"
+                  placeholder="Ingrese el apellido"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              </div>
+
+              <!-- DNI -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">DNI</label>
+                <input 
+                  type="text" 
+                  formControlName="dni"
+                  placeholder="8 dígitos"
+                  maxlength="8"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                @if (apoderadoForm.get('dni')?.invalid && apoderadoForm.get('dni')?.touched) {
+                  <p class="mt-1 text-sm text-red-600">DNI debe tener exactamente 8 dígitos</p>
+                }
+              </div>
+
+              <!-- Teléfono -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                <input 
+                  type="tel" 
+                  formControlName="telefono"
+                  placeholder="Ingrese el teléfono"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              </div>
+
+              <!-- Email -->
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input 
+                  type="email" 
+                  formControlName="email"
+                  placeholder="correo@ejemplo.com"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                @if (apoderadoForm.get('email')?.invalid && apoderadoForm.get('email')?.touched) {
+                  <p class="mt-1 text-sm text-red-600">Email inválido</p>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Relación con el Estudiante -->
+          <div class="mb-8">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Relación con el Estudiante</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              <!-- Tipo de Relación -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  Tipo de Relación <span class="text-red-500">*</span>
+                </label>
+                <select 
+                  formControlName="tipo_relacion"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">Seleccionar</option>
+                  <option value="PADRE">Padre</option>
+                  <option value="MADRE">Madre</option>
+                  <option value="ABUELO">Abuelo</option>
+                  <option value="ABUELA">Abuela</option>
+                  <option value="TIO">Tío</option>
+                  <option value="TIA">Tía</option>
+                  <option value="TUTOR">Tutor</option>
+                  <option value="OTRO">Otro</option>
+                </select>
+                @if (apoderadoForm.get('tipo_relacion')?.invalid && apoderadoForm.get('tipo_relacion')?.touched) {
+                  <p class="mt-1 text-sm text-red-600">Seleccione un tipo de relación</p>
+                }
+              </div>
+
+              <!-- Especificar Relación -->
+              @if (apoderadoForm.get('tipo_relacion')?.value === 'OTRO') {
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Especificar Relación</label>
+                  <input 
+                    type="text" 
+                    formControlName="relacion_especifica"
+                    placeholder="Especifique la relación"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Estado -->
+          <div class="mb-8">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Estado</h3>
+            <div class="flex items-center">
+              <input 
+                type="checkbox" 
+                formControlName="activo"
+                class="h-4 w-4 text-blue-600 border-gray-300 rounded">
+              <label class="ml-2 text-sm text-gray-700">
+                Apoderado activo
+              </label>
+            </div>
+          </div>
+
+          <!-- Botones -->
+          <div class="flex justify-end space-x-3">
+            <button 
+              type="button"
+              (click)="clearSelection()"
+              class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+              Cancelar
+            </button>
+            <button 
+              type="submit"
+              [disabled]="apoderadoForm.invalid || submitting()"
+              class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+              @if (submitting()) {
+                Actualizando...
+              } @else {
+                Actualizar Apoderado
+              }
+            </button>
+          </div>
+
+        </form>
+      </div>
+    }
+  </div>
+</div>

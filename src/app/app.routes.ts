@@ -4,7 +4,6 @@ import { MainPageComponent } from './gestion-academica-ar/pages/main/mainPage.co
 import { authGuard } from './auth/guards/auth.guard';
 import { redirectedGuard } from './auth/guards/redirected.guard';
 import { RedirectedPlaceholderComponent } from './common/utils/placeholder/redirected-placeholder/redirected-placeholder.component';
-import { ManualRegisterComponent } from './gestion-academica-ar/pages/register/manualRegister/manualRegister.component';
 
 export const routes: Routes = [
 
@@ -23,7 +22,7 @@ export const routes: Routes = [
 
             {
                 path: 'welcome',
-                loadComponent: () => import('./gestion-academica-ar/pages/welcome/main-welcome/main-welcome.component').then(m => m.MainWelcomeComponent),
+                loadComponent: () => import('./gestion-academica-ar/pages/welcome/main-welcome/main-welcome.component').then(m => m.WelcomeComponent),
 
             },
             {
@@ -31,11 +30,11 @@ export const routes: Routes = [
                 children: [
                     {
                         path: 'manual',
-                        loadComponent: () => import('./gestion-academica-ar/pages/register/manualRegister/manualRegister.component').then(m => m.ManualRegisterComponent),
+                        loadComponent: () => import('./gestion-academica-ar/pages/register/register-alumno-manual/components/main/manual-register.component').then(m => m.ManualRegisterAlumnoComponent),
                     },
                     {
                         path: 'excel',
-                        loadComponent: () => import('./gestion-academica-ar/pages/register/excel/excel.component').then(m => m.ExcelComponent),
+                        loadComponent: () => import('./gestion-academica-ar/pages/register/register-alumnos-excel/components/main/excel.component').then(m => m.ExcelComponent),
                     },
                     {
                         path: 'actualizar-alumno',
@@ -59,6 +58,28 @@ export const routes: Routes = [
                     {
                         path: '', redirectTo: 'manual', pathMatch: 'full',
                     }
+                ]
+            },
+            {
+                path: 'apoderado',
+                children: [
+                    {
+                        path: 'register-apoderado',
+                        loadComponent: () => import('./gestion-academica-ar/pages/apoderados/create-apoderado/create-apoderado.component').then(m => m.ApoderadoCreateFormComponent),
+                    },
+                    {
+                        path: 'edit-apoderado',
+                        loadComponent: () => import('./gestion-academica-ar/pages/apoderados/edit-apoderado/edit-apoderado.component').then(m => m.ApoderadoSearchAndEditComponent),
+                    },
+                    {
+                        path: 'asign-apoderado',
+                        loadComponent: () => import('./gestion-academica-ar/pages/apoderados/asigne-alumno/asigne-alumno.component').then(m => m.AssignStudentsComponent),
+                    },
+                    {
+                        path: 'delete-apoderado',
+                        loadComponent: () => import('./gestion-academica-ar/pages/apoderados/delete-apoderado/delete-apoderado.component').then(m => m.DeleteApoderadoComponent),
+                    },
+                   
                 ]
             },
             {
@@ -106,7 +127,7 @@ export const routes: Routes = [
             },
             {
                 path: '',
-                redirectTo: 'registrar',
+                redirectTo: 'welcome',
                 pathMatch: 'full'
             }
         ]

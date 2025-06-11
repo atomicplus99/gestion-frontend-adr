@@ -1,29 +1,47 @@
-<aside class="fixed hidden z-20 h-full top-0 left-0 pt-16 lg:flex flex-shrink-0 flex-col w-64 transition-width duration-75" aria-label="Sidebar">
-
-  <div class="relative flex-1 flex flex-col min-h-0 border-r border-gray-200 bg-white">
-    <div class="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
-      <div class="flex-1 px-3 bg-white divide-y space-y-1">
-
-        <!-- ✅ Perfil resumido arriba -->
-        <shared-profile></shared-profile>
-        
-        <span class="inline-block mb-3.5"></span>
-
-        <!-- 🔍 Buscador -->
+<aside class="fixed hidden z-20 h-full top-0 left-0 pt-28 lg:flex flex-shrink-0 flex-col w-72 bg-white border-r border-gray-200 shadow-lg" aria-label="Sidebar">
+  <div class="h-full flex flex-col p-0.5">
+    
+    <!-- Header Section más compacto -->
+    <div class="flex-shrink-0 p-3 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+      <shared-profile></shared-profile>
+      <div class="mt-2">
         <shared-sidebar-search></shared-sidebar-search>
-
-        <!-- 📁 Grupos -->
-        <ng-container *ngFor="let group of sidebarGroups">
-          <!-- Recorres los items de cada grupo -->
-          <ng-container *ngFor="let item of group.items">
-            <ng-container *ngIf="canActivate(item)">
-              <shared-sidebar-group [group]="{ items: [item] }"></shared-sidebar-group>
-            </ng-container>
-          </ng-container>
-        </ng-container>
-
       </div>
     </div>
+    
+    <!-- Navigation Content con scroll oculto -->
+    <div class="flex-1 min-h-0 overflow-hidden">
+      <div class="h-full overflow-y-auto py-2 px-2 -mr-4 pr-8 scrollbar-none">
+        <nav class="space-y-1">
+          <ng-container *ngFor="let group of sidebarGroups; let i = index">
+            <ng-container *ngFor="let item of group.items">
+              <ng-container *ngIf="canActivate(item)">
+                <div class="group mb-1">
+                  <shared-sidebar-group [group]="{ items: [item] }"></shared-sidebar-group>
+                </div>
+              </ng-container>
+            </ng-container>
+          </ng-container>
+        </nav>
+      </div>
+    </div>
+    
+    <!-- Footer más compacto -->
+    <div class="flex-shrink-0 p-2 border-t border-gray-100 bg-gray-50">
+      <div class="text-xs text-gray-500 text-center">
+        Andres de los Reyes
+      </div>
+    </div>
+    
   </div>
-
 </aside>
+
+<style>
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+</style>

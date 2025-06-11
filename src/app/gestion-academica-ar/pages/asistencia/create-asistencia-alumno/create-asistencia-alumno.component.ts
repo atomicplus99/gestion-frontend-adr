@@ -85,7 +85,7 @@ export class RegistroAsistenciaComponent implements OnInit, OnDestroy {
   
   // Configuración
   private baseUrl = 'http://localhost:3000/asistencia';
-  private readonly ID_AUXILIAR_DEFAULT = '158c6a01-1701-4c41-b732-d1b83c0a6e7b';
+  private readonly ID_AUXILIAR_DEFAULT = '37419ff9-9ce8-4b1a-bdc6-2ed28ae8cc0b';
   
   constructor(
     private fb: FormBuilder,

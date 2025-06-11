@@ -19,18 +19,27 @@
           </div>
           
           <!-- Estadísticas -->
-          <div class="flex space-x-4">
-            <div class="bg-white/20 backdrop-blur-sm px-4 py-3 rounded-xl border border-white/30 text-center">
-              <p class="text-white text-xl font-bold">{{ estadisticas.total }}</p>
+          <div class="flex space-x-3">
+            <div class="bg-white/20 backdrop-blur-sm px-3 py-2 rounded-xl border border-white/30 text-center">
+              <p class="text-white text-lg font-bold">{{ estadisticas.total }}</p>
               <p class="text-blue-100 text-xs">Total</p>
             </div>
-            <div class="bg-white/20 backdrop-blur-sm px-4 py-3 rounded-xl border border-white/30 text-center">
-              <p class="text-white text-xl font-bold">{{ estadisticas.seleccionados }}</p>
+            <div class="bg-white/20 backdrop-blur-sm px-3 py-2 rounded-xl border border-white/30 text-center">
+              <p class="text-white text-lg font-bold">{{ estadisticas.seleccionados }}</p>
               <p class="text-blue-100 text-xs">Seleccionados</p>
             </div>
-            <div class="bg-white/20 backdrop-blur-sm px-4 py-3 rounded-xl border border-white/30 text-center">
-              <p class="text-white text-xl font-bold">{{ estadisticas.filtrados }}</p>
+            <div class="bg-white/20 backdrop-blur-sm px-3 py-2 rounded-xl border border-white/30 text-center">
+              <p class="text-white text-lg font-bold">{{ estadisticas.filtrados }}</p>
               <p class="text-blue-100 text-xs">Filtrados</p>
+            </div>
+            <!-- Estadísticas por turno -->
+            <div class="bg-yellow-500/20 backdrop-blur-sm px-3 py-2 rounded-xl border border-yellow-300/30 text-center">
+              <p class="text-white text-lg font-bold">{{ estadisticas.manana }}</p>
+              <p class="text-yellow-100 text-xs">Mañana</p>
+            </div>
+            <div class="bg-blue-500/20 backdrop-blur-sm px-3 py-2 rounded-xl border border-blue-300/30 text-center">
+              <p class="text-white text-lg font-bold">{{ estadisticas.tarde }}</p>
+              <p class="text-blue-100 text-xs">Tarde</p>
             </div>
           </div>
         </div>
@@ -97,7 +106,7 @@
           </div>
 
           <!-- Filtro por sección -->
-          <div class="mb-6">
+          <div class="mb-4">
             <label class="block text-sm font-semibold text-gray-700 mb-2">Sección</label>
             <select
               [(ngModel)]="seccionFiltro"
@@ -106,6 +115,21 @@
             >
               <option value="">Todas las secciones</option>
               <option *ngFor="let seccion of secciones" [value]="seccion">{{ seccion }}</option>
+            </select>
+          </div>
+
+          <!-- NUEVO: Filtro por turno -->
+          <div class="mb-6">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Turno</label>
+            <select
+              [(ngModel)]="turnoFiltro"
+              (change)="filtrarAlumnos()"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
+            >
+              <option value="">Todos los turnos</option>
+              <option *ngFor="let turno of turnos" [value]="turno">
+                {{ turno | titlecase }}
+              </option>
             </select>
           </div>
 
@@ -129,13 +153,13 @@
           </div>
         </div>
 
-        <!-- Configuración de Impresión -->
+        <!-- Configuración de Impresión/PDF -->
         <div class="bg-white/80 backdrop-blur-sm shadow-xl rounded-2xl border border-white/20 p-6">
           <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            Configuración
+            Configuración PDF
           </h3>
 
           <!-- Formato de impresión -->
@@ -158,14 +182,14 @@
               [(ngModel)]="tamanoQR"
               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 text-sm"
             >
-              <option value="small">Pequeño</option>
-              <option value="medium">Mediano</option>
-              <option value="large">Grande</option>
+              <option value="small">Pequeño (200px)</option>
+              <option value="medium">Mediano (300px)</option>
+              <option value="large">Grande (400px)</option>
             </select>
           </div>
 
           <!-- Columnas por fila (solo para etiquetas) -->
-          <div class="mb-6" *ngIf="formatoImpresion === 'etiquetas'">
+          <div class="mb-4" *ngIf="formatoImpresion === 'etiquetas'">
             <label class="block text-sm font-semibold text-gray-700 mb-2">Columnas por fila</label>
             <select
               [(ngModel)]="columnasPorFila"
@@ -174,6 +198,29 @@
               <option [value]="2">2 columnas</option>
               <option [value]="3">3 columnas</option>
               <option [value]="4">4 columnas</option>
+            </select>
+          </div>
+
+          <!-- Configuración de página -->
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Orientación</label>
+            <select
+              [(ngModel)]="orientacionPagina"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 text-sm"
+            >
+              <option value="portrait">Vertical</option>
+              <option value="landscape">Horizontal</option>
+            </select>
+          </div>
+
+          <div class="mb-6">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Tamaño de página</label>
+            <select
+              [(ngModel)]="tamanoPagina"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 text-sm"
+            >
+              <option value="a4">A4</option>
+              <option value="letter">Carta</option>
             </select>
           </div>
 
@@ -192,15 +239,15 @@
             </button>
 
             <button
-              (click)="imprimir()"
-              [disabled]="estadisticas.seleccionados === 0 || imprimiendo"
-              class="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl transition-all duration-200 font-medium disabled:cursor-not-allowed flex items-center justify-center"
+              (click)="generarPDF()"
+              [disabled]="estadisticas.seleccionados === 0 || generandoPDF"
+              class="w-full px-4 py-3 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl transition-all duration-200 font-medium disabled:cursor-not-allowed flex items-center justify-center"
             >
-              <svg *ngIf="!imprimiendo" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              <svg *ngIf="!generandoPDF" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <div *ngIf="imprimiendo" class="w-5 h-5 mr-2 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              {{ imprimiendo ? 'Imprimiendo...' : 'Imprimir' }}
+              <div *ngIf="generandoPDF" class="w-5 h-5 mr-2 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              {{ generandoPDF ? 'Generando PDF...' : 'Descargar PDF' }}
             </button>
 
             <button
@@ -295,7 +342,13 @@
                           {{ alumno.nivel }}
                         </span>
                         <span class="text-xs text-gray-500">{{ alumno.grado }}° {{ alumno.seccion }}</span>
-                        <span class="text-xs text-gray-500">{{ alumno.turno.turno }}</span>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ml-2"
+                              [class.bg-yellow-100]="alumno.turno.turno.toLowerCase() === 'mañana'"
+                              [class.text-yellow-800]="alumno.turno.turno.toLowerCase() === 'mañana'"
+                              [class.bg-blue-100]="alumno.turno.turno.toLowerCase() === 'tarde'"
+                              [class.text-blue-800]="alumno.turno.turno.toLowerCase() === 'tarde'">
+                          {{ alumno.turno.turno | titlecase }}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -320,7 +373,7 @@
   <div *ngIf="vistaPrevia" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
       <div class="flex justify-between items-center p-6 border-b border-gray-200">
-        <h3 class="text-xl font-bold text-gray-900">Vista Previa de Impresión</h3>
+        <h3 class="text-xl font-bold text-gray-900">Vista Previa</h3>
         <button
           (click)="cerrarVistaPrevia()"
           class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
@@ -331,144 +384,108 @@
         </button>
       </div>
       
-      <div class="p-6 overflow-y-auto max-h-96" id="preview-content">
-        <!-- Vista previa según formato -->
-        <div [ngSwitch]="formatoImpresion">
-          
-          <!-- Formato Etiquetas -->
-          <div *ngSwitchCase="'etiquetas'" class="grid gap-4" 
-               [ngClass]="{
-                 'grid-cols-2': columnasPorFila === 2,
-                 'grid-cols-3': columnasPorFila === 3,
-                 'grid-cols-4': columnasPorFila === 4
-               }">
-            <div *ngFor="let alumno of alumnosParaImprimir" 
-                 class="border border-gray-300 rounded-lg p-4 text-center bg-white">
-              <img
-                [src]="generarUrlQR(alumno.codigo_qr, tamanoNumericoQR)"
-                [alt]="'QR de ' + alumno.nombre"
-                [class]="claseTamanoQR + ' mx-auto mb-2'"
-                loading="lazy"
-              />
-              <h4 class="font-semibold text-sm text-gray-900">{{ alumno.nombre }} {{ alumno.apellido }}</h4>
-              <p class="text-xs text-gray-600 font-mono">{{ alumno.codigo }}</p>
-              <p class="text-xs text-gray-500">{{ alumno.nivel }} - {{ alumno.grado }}° {{ alumno.seccion }}</p>
-            </div>
-          </div>
-          
-          <!-- Formato Lista -->
-          <div *ngSwitchCase="'lista'" class="space-y-4">
-            <div *ngFor="let alumno of alumnosParaImprimir" 
-                 class="flex items-center p-4 border border-gray-300 rounded-lg bg-white">
-              <img
-                [src]="generarUrlQR(alumno.codigo_qr, 100)"
-                [alt]="'QR de ' + alumno.nombre"
-                class="w-20 h-20 mr-4"
-                loading="lazy"
-              />
-              <div class="flex-1">
-                <h4 class="font-semibold text-gray-900">{{ alumno.nombre }} {{ alumno.apellido }}</h4>
-                <p class="text-sm text-gray-600 font-mono">Código: {{ alumno.codigo }}</p>
-                <p class="text-sm text-gray-600">DNI: {{ alumno.dni_alumno }}</p>
-                <p class="text-sm text-gray-500">{{ alumno.nivel }} - {{ alumno.grado }}° {{ alumno.seccion }}</p>
-                <p class="text-xs text-gray-500 font-mono">QR: {{ alumno.codigo_qr }}</p>
+      <div class="p-6 overflow-y-auto max-h-96">
+        <!-- Contenido para PDF -->
+        <div id="pdf-content" class="bg-white p-4" style="background: white; color: black;">
+          <!-- Vista previa según formato -->
+          <div [ngSwitch]="formatoImpresion">
+            
+            <!-- Formato Etiquetas -->
+            <div *ngSwitchCase="'etiquetas'" [style]="estilosGridPDF">
+              <div *ngFor="let alumno of alumnosParaImprimir" 
+                   class="break-inside-avoid"
+                   style="border: 1px solid #d1d5db; border-radius: 8px; padding: 16px; text-align: center; background: white; margin-bottom: 8px;">
+                <img
+                  [src]="generarUrlQR(alumno.codigo_qr, tamanoNumericoQR)"
+                  [alt]="'QR de ' + alumno.nombre"
+                  [style.width.px]="tamanoNumericoQR"
+                  [style.height.px]="tamanoNumericoQR"
+                  style="margin: 0 auto 8px auto; display: block;"
+                  crossorigin="anonymous"
+                />
+                <h4 style="font-weight: 600; font-size: 14px; color: #111827; margin: 4px 0;">{{ alumno.nombre }} {{ alumno.apellido }}</h4>
+                <p style="font-size: 12px; color: #4b5563; font-family: monospace; margin: 2px 0;">{{ alumno.codigo }}</p>
+                <p style="font-size: 12px; color: #6b7280; margin: 2px 0;">{{ alumno.nivel }} - {{ alumno.grado }}° {{ alumno.seccion }}</p>
+                <p style="font-size: 12px; color: #9ca3af; margin: 4px 0 0 0;">{{ alumno.turno.turno }}</p>
               </div>
             </div>
-          </div>
-          
-          <!-- Formato Individual -->
-          <div *ngSwitchCase="'individual'" class="grid grid-cols-1 gap-8">
-            <div *ngFor="let alumno of alumnosParaImprimir" 
-                 class="text-center p-8 border border-gray-300 rounded-lg bg-white">
-              <img
-                [src]="generarUrlQR(alumno.codigo_qr, 300)"
-                [alt]="'QR de ' + alumno.nombre"
-                class="w-64 h-64 mx-auto mb-4"
-                loading="lazy"
-              />
-              <h4 class="text-xl font-bold text-gray-900 mb-2">{{ alumno.nombre }} {{ alumno.apellido }}</h4>
-              <p class="text-lg text-gray-600 font-mono mb-2">{{ alumno.codigo }}</p>
-              <p class="text-gray-500">{{ alumno.nivel }} - {{ alumno.grado }}° {{ alumno.seccion }}</p>
-              <p class="text-sm text-gray-500 font-mono mt-4">{{ alumno.codigo_qr }}</p>
+            
+            <!-- Formato Lista -->
+            <div *ngSwitchCase="'lista'" style="display: flex; flex-direction: column; gap: 16px;">
+              <div *ngFor="let alumno of alumnosParaImprimir" 
+                   class="break-inside-avoid"
+                   style="display: flex; align-items: center; padding: 16px; border: 1px solid #d1d5db; border-radius: 8px; background: white;">
+                <img
+                  [src]="generarUrlQR(alumno.codigo_qr, 150)"
+                  [alt]="'QR de ' + alumno.nombre"
+                  style="width: 80px; height: 80px; margin-right: 16px;"
+                  crossorigin="anonymous"
+                />
+                <div style="flex: 1;">
+                  <h4 style="font-weight: 600; color: #111827; margin: 0 0 4px 0;">{{ alumno.nombre }} {{ alumno.apellido }}</h4>
+                  <p style="font-size: 14px; color: #4b5563; font-family: monospace; margin: 2px 0;">Código: {{ alumno.codigo }}</p>
+                  <p style="font-size: 14px; color: #4b5563; margin: 2px 0;">DNI: {{ alumno.dni_alumno }}</p>
+                  <p style="font-size: 14px; color: #6b7280; margin: 2px 0;">{{ alumno.nivel }} - {{ alumno.grado }}° {{ alumno.seccion }}</p>
+                  <p style="font-size: 12px; color: #6b7280; margin: 2px 0;">Turno: {{ alumno.turno.turno }}</p>
+                  <p style="font-size: 12px; color: #9ca3af; font-family: monospace; margin: 4px 0 0 0;">QR: {{ alumno.codigo_qr }}</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Formato Individual -->
+            <div *ngSwitchCase="'individual'" style="display: flex; flex-direction: column; gap: 32px;">
+              <div *ngFor="let alumno of alumnosParaImprimir" 
+                   class="break-before-page"
+                   style="text-align: center; padding: 32px; border: 1px solid #d1d5db; border-radius: 8px; background: white;">
+                <img
+                  [src]="generarUrlQR(alumno.codigo_qr, 400)"
+                  [alt]="'QR de ' + alumno.nombre"
+                  style="width: 256px; height: 256px; margin: 0 auto 16px auto; display: block;"
+                  crossorigin="anonymous"
+                />
+                <h4 style="font-size: 20px; font-weight: 700; color: #111827; margin: 0 0 8px 0;">{{ alumno.nombre }} {{ alumno.apellido }}</h4>
+                <p style="font-size: 18px; color: #4b5563; font-family: monospace; margin: 0 0 8px 0;">{{ alumno.codigo }}</p>
+                <p style="color: #6b7280; margin: 0 0 8px 0;">{{ alumno.nivel }} - {{ alumno.grado }}° {{ alumno.seccion }}</p>
+                <p style="font-size: 14px; color: #6b7280; margin: 0 0 16px 0;">Turno: {{ alumno.turno.turno }}</p>
+                <p style="font-size: 14px; color: #9ca3af; font-family: monospace; margin: 0;">{{ alumno.codigo_qr }}</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
       
-      <div class="flex justify-end space-x-4 p-6 border-t border-gray-200">
+      <div class="flex justify-end space-x-4 p-6 border-t border-gray-200 bg-gray-50">
         <button
           (click)="cerrarVistaPrevia()"
-          class="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+          class="px-6 py-2 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 rounded-lg transition-colors font-medium"
         >
-          Cancelar
+          Cerrar
         </button>
         <button
-          (click)="imprimir(); cerrarVistaPrevia()"
-          class="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg transition-all duration-200 font-medium"
+          (click)="generarPDF()"
+          [disabled]="generandoPDF"
+          class="px-6 py-2 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg transition-all duration-200 font-medium disabled:cursor-not-allowed flex items-center"
         >
-          Imprimir
+          <svg *ngIf="!generandoPDF" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <div *ngIf="generandoPDF" class="w-4 h-4 mr-2 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          {{ generandoPDF ? 'Generando...' : 'Descargar PDF' }}
         </button>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Contenido oculto para impresión -->
-<div class="hidden print:block print:fixed print:inset-0 print:bg-white print:text-black" *ngIf="imprimiendo">
-  <div [ngSwitch]="formatoImpresion" class="print:p-4">
-    
-    <!-- Formato Etiquetas para impresión -->
-    <div *ngSwitchCase="'etiquetas'" class="print:grid print:gap-2" 
-         [ngClass]="{
-           'print:grid-cols-2': columnasPorFila === 2,
-           'print:grid-cols-3': columnasPorFila === 3,
-           'print:grid-cols-4': columnasPorFila === 4
-         }">
-      <div *ngFor="let alumno of alumnosParaImprimir" 
-           class="print:border print:border-gray-400 print:rounded print:p-2 print:text-center print:bg-white print:break-inside-avoid">
-        <img
-          [src]="generarUrlQR(alumno.codigo_qr, tamanoNumericoQR)"
-          [alt]="'QR de ' + alumno.nombre"
-          [class]="claseTamanoQR + ' print:mx-auto print:mb-1'"
-        />
-        <h4 class="print:font-bold print:text-xs print:text-black">{{ alumno.nombre }} {{ alumno.apellido }}</h4>
-        <p class="print:text-xs print:text-black">{{ alumno.codigo }}</p>
-        <p class="print:text-xs print:text-black">{{ alumno.nivel }} - {{ alumno.grado }}° {{ alumno.seccion }}</p>
+  <!-- Indicador de progreso para generación de PDF -->
+  <div *ngIf="generandoPDF" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 text-center shadow-2xl">
+      <div class="w-16 h-16 border-4 border-red-200 border-t-red-600 rounded-full animate-spin mx-auto mb-4"></div>
+      <h3 class="text-lg font-bold text-gray-900 mb-2">Generando PDF</h3>
+      <p class="text-gray-600 text-sm mb-4">Preparando {{ estadisticas.seleccionados }} códigos QR...</p>
+      <div class="w-full bg-gray-200 rounded-full h-2">
+        <div class="bg-gradient-to-r from-red-500 to-pink-600 h-2 rounded-full w-1/2 animate-pulse"></div>
       </div>
-    </div>
-    
-    <!-- Formato Lista para impresión -->
-    <div *ngSwitchCase="'lista'" class="print:space-y-2">
-      <div *ngFor="let alumno of alumnosParaImprimir" 
-           class="print:flex print:items-center print:p-2 print:border print:border-gray-400 print:rounded print:bg-white print:break-inside-avoid">
-        <img
-          [src]="generarUrlQR(alumno.codigo_qr, 100)"
-          [alt]="'QR de ' + alumno.nombre"
-          class="print:w-16 print:h-16 print:mr-2"
-        />
-        <div class="print:flex-1">
-          <h4 class="print:font-bold print:text-black">{{ alumno.nombre }} {{ alumno.apellido }}</h4>
-          <p class="print:text-sm print:text-black">Código: {{ alumno.codigo }}</p>
-          <p class="print:text-sm print:text-black">DNI: {{ alumno.dni_alumno }}</p>
-          <p class="print:text-sm print:text-black">{{ alumno.nivel }} - {{ alumno.grado }}° {{ alumno.seccion }}</p>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Formato Individual para impresión -->
-    <div *ngSwitchCase="'individual'">
-      <div *ngFor="let alumno of alumnosParaImprimir" 
-           class="print:text-center print:p-4 print:break-before-page">
-        <img
-          [src]="generarUrlQR(alumno.codigo_qr, 300)"
-          [alt]="'QR de ' + alumno.nombre"
-          class="print:w-48 print:h-48 print:mx-auto print:mb-2"
-        />
-        <h4 class="print:text-lg print:font-bold print:text-black print:mb-1">{{ alumno.nombre }} {{ alumno.apellido }}</h4>
-        <p class="print:text-base print:text-black print:mb-1">{{ alumno.codigo }}</p>
-        <p class="print:text-black">{{ alumno.nivel }} - {{ alumno.grado }}° {{ alumno.seccion }}</p>
-        <p class="print:text-sm print:text-black print:mt-2">{{ alumno.codigo_qr }}</p>
-      </div>
+      <p class="text-xs text-gray-500 mt-2">Por favor, no cierre esta ventana</p>
     </div>
   </div>
 </div>

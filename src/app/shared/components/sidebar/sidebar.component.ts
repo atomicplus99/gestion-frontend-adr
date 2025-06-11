@@ -16,8 +16,8 @@ import { UserStoreService } from '../../../auth/store/user.store';
 export class SidebarComponent {
 
 
-  userRole = computed(() => this.userStore.user()?.role); 
-  
+  userRole = computed(() => this.userStore.user()?.role);
+
 
   constructor(private userStore: UserStoreService) {
 
@@ -30,13 +30,13 @@ export class SidebarComponent {
           icon: 'kanban',
           label: 'Inicio',
           link: 'welcome'
-          
+
         },
         {
           icon: 'layout-dashboard',
-          label: 'Registrar',
+          label: 'Alumnos',
           link: '#',
-          allowedRoles: ['ALUMNO','AUXILIAR'], // 🎯 Roles permitidos
+          allowedRoles: ['ALUMNO', 'AUXILIAR'], // 🎯 Roles permitidos
           children: [
             { label: 'Registro Manual', link: '/home/registrar/manual' },
             { label: 'Desde Excel', link: '/home/registrar/excel' },
@@ -47,11 +47,23 @@ export class SidebarComponent {
           ],
         },
         {
+          icon: 'layout-dashboard',
+          label: 'Apoderados',
+          link: '#',
+          allowedRoles: ['ALUMNO', 'AUXILIAR'], // 🎯 Roles permitidos
+          children: [
+            { label: 'Registro Apoderado', link: '/home/apoderado/register-apoderado' },
+            { label: 'Editar Apoderado', link: '/home/apoderado/edit-apoderado' },
+            { label: 'Asignar Apoderado', link: '/home/apoderado/asign-apoderado' },
+            { label: 'Eliminar Apoderado', link: '/home/apoderado/delete-apoderado' },
+          ],
+        },
+        {
           icon: 'kanban',
           label: 'Asistencia',
           badge: 'Pro',
           external: true,
-          allowedRoles: ['ALUMNO','AUXILIAR'],
+          allowedRoles: ['ALUMNO', 'AUXILIAR'],
           children: [
             { label: 'Asistencia Manual', link: '/home/asistencia/register-manual-alumnos' },
             { label: 'Registrar Ausencia', link: '/home/asistencia/create-ausencia-alumnos' },
@@ -65,7 +77,7 @@ export class SidebarComponent {
           label: 'Justificaciones',
           badge: 'Pro',
           external: true,
-          allowedRoles: ['ALUMNO','AUXILIAR'],
+          allowedRoles: ['ALUMNO', 'AUXILIAR'],
           children: [
             { label: 'Registrar Solicitud', link: '/home/justificaciones/create-solicitud-justificacion' },
             { label: 'Ver Solicitudes', link: '/home/justificaciones/list-solicitudes-justificaciones-alumnos' },
@@ -77,7 +89,7 @@ export class SidebarComponent {
           icon: 'users',
           label: 'Usuarios',
           link: '#',
-          allowedRoles: ['ALUMNO','AUXILIAR'],
+          allowedRoles: ['ALUMNO', 'AUXILIAR'],
           children: [
             { label: 'Lista de usuarios', link: '#' },
             { label: 'Roles y permisos', link: '#' },
@@ -85,7 +97,7 @@ export class SidebarComponent {
         },
         {
           icon: 'log-in',
-          label: 'Sign In',
+          label: 'Cerrar Sesion',
           link: '/login',
           allowedRoles: ['ADMIN', 'AUXILIAR', 'ALUMNO'], // abierto a varios roles
         },
