@@ -74,6 +74,16 @@ export class SidebarComponent {
         },
         {
           icon: 'kanban',
+          label: 'Programacion Automatica',
+          badge: 'Pro',
+          external: true,
+          allowedRoles: ['ALUMNO', 'AUXILIAR'],
+          children: [
+            { label: 'Programar Registros', link: '/home/programming-scheduler/scheduler' },
+          ],
+        },
+        {
+          icon: 'kanban',
           label: 'Justificaciones',
           badge: 'Pro',
           external: true,

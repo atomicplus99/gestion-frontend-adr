@@ -4,6 +4,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { environment } from '../../../../../../environments/environment';
 
 // Interfaces
 export interface VerificarAsistenciaResponse {
@@ -72,7 +73,7 @@ export enum EstadoAsistencia {
   providedIn: 'root'
 })
 export class AsistenciaService {
-  private readonly baseUrl = 'http://localhost:3000/asistencia';
+  private readonly baseUrl = `${environment.apiUrl}/asistencia`
 
   constructor(private http: HttpClient) {}
 

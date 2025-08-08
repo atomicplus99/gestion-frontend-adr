@@ -1,0 +1,358 @@
+<div class="min-h-screen bg-gray-50 p-6">
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center space-x-4 mb-4">
+        <div class="bg-indigo-600 p-3 rounded-lg">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Configuración</h1>
+          <p class="text-gray-600">Registro automatico de ausencias</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <div class="bg-orange-100 p-2 rounded-md mr-3">
+              <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-medium text-gray-900">Turno Mañana</h3>
+              <p class="text-xl font-semibold text-gray-900">{{ formData.turnoManana.hora }}</p>
+            </div>
+          </div>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                [class]="formData.turnoManana.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+            {{ formData.turnoManana.activo ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <div class="bg-blue-100 p-2 rounded-md mr-3">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-medium text-gray-900">Turno Tarde</h3>
+              <p class="text-xl font-semibold text-gray-900">{{ formData.turnoTarde.hora }}</p>
+            </div>
+          </div>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                [class]="formData.turnoTarde.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+            {{ formData.turnoTarde.activo ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <div class="bg-green-100 p-2 rounded-md mr-3">
+              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM8.124 3.79c.246-.124.52-.124.765 0l6.115 3.057A2 2 0 0116 8.562v2.302l-8 4V8.562a2 2 0 011.124-1.715z"></path>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-medium text-gray-900">Notificaciones</h3>
+              <p class="text-xl font-semibold text-gray-900">Telegram</p>
+            </div>
+          </div>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                [class]="formData.notificacionesActivas ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+            {{ formData.notificacionesActivas ? 'Habilitadas' : 'Deshabilitadas' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <div class="bg-purple-100 p-2 rounded-md mr-3">
+              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"></path>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-medium text-gray-900">Zona Horaria</h3>
+              <p class="text-xl font-semibold text-gray-900">America/Lima</p>
+            </div>
+          </div>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+            Lima, Perú
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- Configuración de Horarios -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center mb-6">
+          <div class="bg-gray-100 p-2 rounded-md mr-3">
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+          </div>
+          <h2 class="text-lg font-semibold text-gray-900">Configuración de Horarios</h2>
+        </div>
+
+        <form (ngSubmit)="actualizarConfiguracion()" class="space-y-6">
+          
+          <!-- Turno Mañana -->
+          <div class="border border-gray-200 rounded-lg p-4 bg-orange-50">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center">
+                <div class="bg-orange-100 p-1.5 rounded mr-3">
+                  <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-sm font-medium text-gray-900">Turno Mañana</h3>
+              </div>
+              <label class="inline-flex items-center">
+                <input type="checkbox" 
+                       [(ngModel)]="formData.turnoManana.activo"
+                       name="turnoMananaActivo"
+                       class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                <span class="ml-2 text-sm text-gray-600">Activo</span>
+              </label>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Hora de ejecución</label>
+              <input type="time" 
+                     [(ngModel)]="formData.turnoManana.hora"
+                     name="turnoMananaHora"
+                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+            </div>
+          </div>
+
+          <!-- Turno Tarde -->
+          <div class="border border-gray-200 rounded-lg p-4 bg-blue-50">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center">
+                <div class="bg-blue-100 p-1.5 rounded mr-3">
+                  <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-sm font-medium text-gray-900">Turno Tarde</h3>
+              </div>
+              <label class="inline-flex items-center">
+                <input type="checkbox" 
+                       [(ngModel)]="formData.turnoTarde.activo"
+                       name="turnoTardeActivo"
+                       class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                <span class="ml-2 text-sm text-gray-600">Activo</span>
+              </label>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Hora de ejecución</label>
+              <input type="time" 
+                     [(ngModel)]="formData.turnoTarde.hora"
+                     name="turnoTardeHora"
+                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+            </div>
+          </div>
+
+          <!-- Notificaciones -->
+          <div class="border border-gray-200 rounded-lg p-4 bg-green-50">
+            <div class="flex items-center mb-4">
+              <div class="bg-green-100 p-1.5 rounded mr-3">
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM8.124 3.79c.246-.124.52-.124.765 0l6.115 3.057A2 2 0 0116 8.562v2.302l-8 4V8.562a2 2 0 011.124-1.715z"></path>
+                </svg>
+              </div>
+              <h3 class="text-sm font-medium text-gray-900">Notificaciones</h3>
+            </div>
+            <label class="inline-flex items-center">
+              <input type="checkbox" 
+                     [(ngModel)]="formData.notificacionesActivas"
+                     name="notificacionesActivas"
+                     class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+              <span class="ml-2 text-sm text-gray-700">Enviar notificaciones por Telegram</span>
+            </label>
+          </div>
+
+          <!-- Botones -->
+          <div class="flex space-x-4 pt-4 border-t border-gray-200">
+            <button type="submit" 
+                    [disabled]="cargando()"
+                    class="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              <span *ngIf="!cargando()">Guardar Configuración</span>
+              <span *ngIf="cargando()">Guardando...</span>
+            </button>
+            <button type="button" 
+                    (click)="cargarConfiguracion()"
+                    class="bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">
+              Recargar
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Panel de Control de Ausencias -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center mb-6">
+          <div class="bg-red-100 p-2 rounded-md mr-3">
+            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+          </div>
+          <h2 class="text-lg font-semibold text-gray-900">Control de Registro de Ausencias</h2>
+        </div>
+
+        <div class="space-y-6">
+          
+          <!-- Procesamiento Manual de Ausencias -->
+          <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+            <div class="flex items-center mb-4">
+              <div class="bg-indigo-100 p-1.5 rounded mr-3">
+                <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <h3 class="text-sm font-semibold text-gray-900">Procesamiento Manual de Ausencias</h3>
+            </div>
+            <p class="text-sm text-gray-600 mb-4">Ejecuta el proceso de registro automático de ausencias fuera de horario programado</p>
+            
+            <!-- Advertencia -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg class="h-4 w-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 18.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <p class="text-xs text-yellow-700">Esta acción registrará automáticamente las ausencias de los estudiantes según el turno seleccionado.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <button (click)="ejecutarManual('manana')"
+                      [disabled]="ejecutando()"
+                      class="w-full bg-orange-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+                <span *ngIf="!ejecutando()">Procesar Ausencias - Turno Mañana</span>
+                <span *ngIf="ejecutando()" class="flex items-center">
+                  <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Procesando...
+                </span>
+              </button>
+              
+              <button (click)="ejecutarManual('tarde')"
+                      [disabled]="ejecutando()"
+                      class="w-full bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                </svg>
+                <span *ngIf="!ejecutando()">Procesar Ausencias - Turno Tarde</span>
+                <span *ngIf="ejecutando()" class="flex items-center">
+                  <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Procesando...
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Diagnóstico del Sistema -->
+          <div class="border border-gray-200 rounded-lg p-4">
+            <div class="flex items-center mb-4">
+              <div class="bg-green-100 p-1.5 rounded mr-3">
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <h3 class="text-sm font-semibold text-gray-900">Estado del Sistema de Ausencias</h3>
+            </div>
+            <p class="text-sm text-gray-600 mb-3">Verifica el estado de conexión y funcionamiento del sistema</p>
+            <button (click)="healthCheck()"
+                    class="w-full bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors flex items-center justify-center">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Verificar Estado del Sistema
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="mt-6" *ngIf="mensaje()">
+      <div class="bg-green-50 border border-green-200 rounded-md p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm font-medium text-green-800">
+              {{ mensaje()?.texto }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Confirmación Simple -->
+    <div *ngIf="mostrarConfirmacionModal" class="fixed inset-0 z-50 overflow-y-auto">
+      <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="cerrarConfirmacion()"></div>
+        <div class="bg-white rounded-lg p-6 max-w-md w-full relative shadow-xl">
+          <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+              <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 18.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Confirmar Procesamiento</h3>
+            <p class="text-sm text-gray-500 mb-6">
+              ¿Procesar ausencias para el <strong>{{ turnoSeleccionado === 'manana' ? 'Turno Mañana' : 'Turno Tarde' }}</strong>?
+            </p>
+          </div>
+          <div class="flex space-x-3">
+            <button (click)="cerrarConfirmacion()"
+                    class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-400 transition-colors">
+              Cancelar
+            </button>
+            <button (click)="confirmarProcesamiento()"
+                    [disabled]="ejecutando()"
+                    class="flex-1 bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 disabled:opacity-50 transition-colors">
+              <span *ngIf="!ejecutando()">Confirmar</span>
+              <span *ngIf="ejecutando()">Procesando...</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

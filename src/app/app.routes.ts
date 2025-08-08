@@ -87,7 +87,7 @@ export const routes: Routes = [
                 children: [
                     {
                         path: 'register-manual-alumnos',
-                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/create-asistencia-alumno/create-asistencia-alumno.component').then(m => m.RegistroAsistenciaComponent),
+                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/create-asistencia-alumno/components/main/register-asistencia-manual.component').then(m => m.RegistroAsistenciaComponentManual),
 
                     },
                     {
@@ -105,6 +105,16 @@ export const routes: Routes = [
                     {
                         path: 'create-ausencia-alumnos',
                         loadComponent: () => import('./gestion-academica-ar/pages/asistencia/create-ausencia-alumno/create-ausencia-alumno.component').then(m => m.RegistroAusenciasComponent),
+                    },
+                ]
+            },
+            {
+                path: 'programming-scheduler',
+                children: [
+                    {
+                        path: 'scheduler',
+                        loadComponent: () => import('./gestion-academica-ar/pages/scheduler/components/scheduler-nav.component').then(m => m.SchedulerMainComponent),
+
                     },
                 ]
             },
