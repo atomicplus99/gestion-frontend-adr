@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 
 interface JustificacionResponseDto {
   id_justificacion: string;
@@ -107,7 +108,7 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
     try {
       console.log('Cargando justificaciones pendientes...');
       
-      const response = await this.http.get<JustificacionesResponse>('http://localhost:3000/detalle-justificaciones').toPromise();
+      const response = await this.http.get<JustificacionesResponse>(`${environment.apiUrl}/detalle-justificaciones`).toPromise();
       
       if (response) {
         // Filtrar solo las que están PENDIENTES
@@ -210,7 +211,7 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
       console.log('Payload:', payload);
 
       const response = await this.http.put<ActualizarEstadoResponse>(
-        `http://localhost:3000/detalle-justificaciones/${this.justificacionSeleccionada.id_justificacion}/estado`,
+        `${environment.apiUrl}/detalle-justificaciones/${this.justificacionSeleccionada.id_justificacion}/estado`,
         payload
       ).toPromise();
 
@@ -258,7 +259,7 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
       console.log(`Acción rápida: ${accion} para justificación ${justificacion.id_justificacion}`);
 
       const response = await this.http.put<ActualizarEstadoResponse>(
-        `http://localhost:3000/detalle-justificaciones/${justificacion.id_justificacion}/estado`,
+        `${environment.apiUrl}/detalle-justificaciones/${justificacion.id_justificacion}/estado`,
         payload
       ).toPromise();
 

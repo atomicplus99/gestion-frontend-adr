@@ -11,6 +11,7 @@ import { MatCardModule } from '@angular/material/card';
 import { catchError, delay, finalize, tap } from 'rxjs/operators';
 import { Observable, of, throwError, Subscription } from 'rxjs';
 import { AlertsService } from '../../../../shared/alerts.service';
+import { environment } from '../../../../../environments/environment';
 
 interface Alumno {
   codigo: string;
@@ -172,7 +173,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
     this.errorMensaje.set(null);
     this.loadingMessage = 'Buscando alumno...';
     
-    this.http.get<Alumno>(`http://localhost:3000/alumnos/codigo/${this.codigo}`)
+    this.http.get<Alumno>(`${environment.apiUrl}/alumnos/codigo/${this.codigo}`)
       .pipe(
         delay(500), // Pequeño delay para mostrar la animación de carga
         tap(alumno => {
@@ -248,7 +249,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
       observacion: obs || 'Cambio de estado sin observación'
     };
 
-    this.http.put<Alumno>(`http://localhost:3000/alumnos/estado/${this.codigo}`, payload)
+    this.http.put<Alumno>(`${environment.apiUrl}/alumnos/estado/${this.codigo}`, payload)
       .pipe(
         delay(800), // Pequeño delay para mostrar la animación de guardado
         finalize(() => {

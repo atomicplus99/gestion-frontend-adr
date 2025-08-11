@@ -13,6 +13,7 @@ import { map, startWith, debounceTime, catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { TableStudentComponent } from '../../../../shared/components/table/table-student/table-student.component';
 import { AlertsService } from '../../../../shared/alerts.service';
+import { environment } from '../../../../../environments/environment';
 
 export interface Turno {
   id_turno: string;
@@ -128,7 +129,7 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
     this.cd.markForCheck();
 
     this.subscriptions.add(
-      this.http.get<AlumnoUpdate>(`http://localhost:3000/alumnos/codigo/${codigo}`)
+      this.http.get<AlumnoUpdate>(`${environment.apiUrl}/alumnos/codigo/${codigo}`)
         .pipe(catchError(error => {
           console.error('Error al buscar alumno:', error);
           this.mostrarToast('error', 'No se encontró ningún alumno con ese código');
@@ -157,7 +158,7 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
   actualizarAlumno(updateData: UpdateAlumnoDto) {
     if (!this.selectedCode) return;
     this.subscriptions.add(
-      this.http.put<AlumnoUpdateResponse>(`http://localhost:3000/alumnos/actualizar/${this.selectedCode}`, updateData)
+      this.http.put<AlumnoUpdateResponse>(`${environment.apiUrl}/alumnos/actualizar/${this.selectedCode}`, updateData)
         .pipe(catchError(error => {
           console.error('Error al actualizar alumno:', error);
           this.mostrarToast('error', 'Error al actualizar el alumno');

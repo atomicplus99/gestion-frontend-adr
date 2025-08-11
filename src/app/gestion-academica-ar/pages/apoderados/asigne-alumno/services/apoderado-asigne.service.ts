@@ -2,14 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Apoderado, AssignStudentsRequest } from '../models/AsignarAlumnoApoderado.model';
-
+import { environment } from '../../../../../../environments/environment';
 
 @Injectable({
     providedIn: 'root'
 })
 export class ApoderadoAsignService {
     private http = inject(HttpClient);
-    private baseUrl = 'http://localhost:3000';
+    private baseUrl = environment.apiUrl;
 
     getAllApoderados(): Observable<Apoderado[]> {
         return this.http.get<Apoderado[]>(`${this.baseUrl}/apoderados`);

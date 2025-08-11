@@ -2,8 +2,8 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, map } from 'rxjs';
+import { environment } from '../../../../../../environments/environment';
 
 // ✅ INTERFACES SIMPLIFICADAS
 export interface Alumno {
@@ -79,8 +79,8 @@ export interface AnularAsistenciaResponse {
   providedIn: 'root'
 })
 export class AsistenciaService {
-  private readonly baseUrlAlumnos = 'http://localhost:3000/alumnos';
-  private readonly baseUrlAsistencia = 'http://localhost:3000/asistencia';
+  private readonly baseUrlAlumnos = `${environment.apiUrl}/alumnos`;
+  private readonly baseUrlAsistencia = `${environment.apiUrl}/asistencia`;
 
   constructor(private http: HttpClient) {}
 

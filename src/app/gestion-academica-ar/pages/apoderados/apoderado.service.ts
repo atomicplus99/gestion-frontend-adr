@@ -3,14 +3,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Apoderado, CreateApoderadoDto, UpdateApoderadoDto } from './models/ApoderadoDtos';
-
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApoderadoService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:3000/apoderados';
+  private baseUrl = `${environment.apiUrl}/apoderados`;
 
   // CRUD Básico
   getAll(): Observable<Apoderado[]> {

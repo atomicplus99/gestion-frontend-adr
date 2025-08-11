@@ -15,13 +15,24 @@ export class AuthService {
 
   async isAuthenticated(){
     try {
+      // Verificar si existe el token
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        console.log('No hay token almacenado');
+        return false;
+      }
+
+      // Verificar que el token sea válido haciendo una petición al backend
       await firstValueFrom(
         this.http.get(`${environment.apiUrl}/auth/me`, {
           withCredentials: true,
         })
       );
       return true;
-    } catch {
+    } catch (error) {
+      console.error('Error en autenticación:', error);
+      // Si hay error, limpiar el token inválido
+      localStorage.removeItem('access_token');
       return false;
     }
   }
@@ -48,6 +59,10 @@ export class AuthService {
       return null;
     }
   }
-  
 
+  // Método para limpiar el token al hacer logout
+  clearToken() {
+    localStorage.removeItem('access_token');
+    console.log('Token eliminado');
+  }
 }

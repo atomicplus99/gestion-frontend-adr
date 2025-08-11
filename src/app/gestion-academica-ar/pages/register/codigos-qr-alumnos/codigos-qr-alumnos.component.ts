@@ -14,6 +14,7 @@ import { HttpClient } from '@angular/common/http';
 import { Subscription, debounceTime, of, catchError, forkJoin } from 'rxjs';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { environment } from '../../../../../environments/environment';
 
 interface Turno {
   id_turno: string;
@@ -117,7 +118,7 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
     this.buscando = true;
     this.cd.markForCheck();
 
-    this.http.get<Alumno[]>('http://localhost:3000/alumnos').pipe(
+    this.http.get<Alumno[]>(`${environment.apiUrl}/alumnos`).pipe(
       catchError(error => {
         console.error('Error al cargar alumnos:', error);
         return of([]);
@@ -138,7 +139,7 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
     this.buscando = true;
     this.cd.markForCheck();
 
-    this.http.get<Alumno>(`http://localhost:3000/alumnos/codigo/${codigo}`).pipe(
+    this.http.get<Alumno>(`${environment.apiUrl}/alumnos/codigo/${codigo}`).pipe(
       catchError(error => {
         console.error('Error al buscar alumno:', error);
         return of(null);

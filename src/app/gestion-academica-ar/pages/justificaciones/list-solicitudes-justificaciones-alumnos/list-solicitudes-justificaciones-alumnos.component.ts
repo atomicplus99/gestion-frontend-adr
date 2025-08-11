@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 
 interface JustificacionResponseDto {
   id_justificacion: string;
@@ -116,7 +117,7 @@ export class ListaJustificacionesComponent implements OnInit {
     try {
       console.log('Cargando todas las justificaciones...');
       
-      const response = await this.http.get<JustificacionesResponse>('http://localhost:3000/detalle-justificaciones').toPromise();
+      const response = await this.http.get<JustificacionesResponse>(`${environment.apiUrl}/detalle-justificaciones`).toPromise();
       
       if (response) {
         this.justificaciones = response.data || [];
@@ -152,7 +153,7 @@ export class ListaJustificacionesComponent implements OnInit {
     try {
       console.log(`Buscando alumno con código: ${codigo}`);
       
-      const alumno = await this.http.get<Alumno>(`http://localhost:3000/alumnos/codigo/${codigo}`).toPromise();
+      const alumno = await this.http.get<Alumno>(`${environment.apiUrl}/alumnos/codigo/${codigo}`).toPromise();
       
       if (alumno) {
         this.alumnoEncontrado = alumno;
@@ -184,7 +185,7 @@ export class ListaJustificacionesComponent implements OnInit {
     try {
       console.log(`Cargando justificaciones para alumno: ${id_alumno}`);
       
-      const response = await this.http.get<JustificacionesResponse>(`http://localhost:3000/detalle-justificaciones/alumno/${id_alumno}`).toPromise();
+      const response = await this.http.get<JustificacionesResponse>(`${environment.apiUrl}/detalle-justificaciones/alumno/${id_alumno}`).toPromise();
       
       if (response) {
         this.justificaciones = response.data || [];

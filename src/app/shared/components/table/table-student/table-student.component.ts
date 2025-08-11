@@ -14,6 +14,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AlumnoService } from '../../../../gestion-academica-ar/services/alumno.service';
 import { AlertsService } from '../../../alerts.service';
+import { environment } from '../../../../../environments/environment';
 
 export interface Turno {
   id_turno: string;
@@ -103,7 +104,7 @@ export class TableStudentComponent implements OnChanges, OnInit {
   private cargarTurnos(): void {
     this.cargandoTurnos = true;
     this.cd.markForCheck();
-    this.http.get<Turno[]>('http://localhost:3000/turno').subscribe({
+    this.http.get<Turno[]>(`${environment.apiUrl}/turno`).subscribe({
       next: (turnos) => {
         this.turnosDisponibles = turnos;
         this.cargandoTurnos = false;
@@ -314,7 +315,7 @@ export class TableStudentComponent implements OnChanges, OnInit {
       payload.id_turno = null;
     }
     console.log('Payload a enviar:', payload);
-    this.http.put(`http://localhost:3000/alumnos/actualizar/${this.codigoOriginal}`, payload).subscribe({
+    this.http.put(`${environment.apiUrl}/alumnos/actualizar/${this.codigoOriginal}`, payload).subscribe({
       next: (response: any) => {
         this.alerts.success('El alumno fue actualizado correctamente ✅');
         this.fetchAlumno(this.alumnoEditando!.codigo);

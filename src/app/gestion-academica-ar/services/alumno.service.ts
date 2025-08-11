@@ -3,12 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { Alumno, PersonalAlumno } from '../pages/register/interfaces/alumno.interface';
 import { AlumnoUpdate } from '../pages/register/actualizar-alumno/actualizar-alumno.component';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AlumnoService {
-  private readonly apiUrl = 'http://localhost:3000';
+  private readonly apiUrl = environment.apiUrl;
   
   constructor(private http: HttpClient) {}
 

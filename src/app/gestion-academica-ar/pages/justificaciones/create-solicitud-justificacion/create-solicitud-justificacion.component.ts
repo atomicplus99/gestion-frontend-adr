@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 
 interface Alumno {
   id_alumno: string;
@@ -115,7 +116,7 @@ export class SolicitudJustificacionComponent implements OnInit {
     this.alumnoEncontrado = null;
     this.cdr.detectChanges();
 
-    this.http.get<Alumno>(`http://localhost:3000/alumnos/codigo/${codigo}`)
+    this.http.get<Alumno>(`${environment.apiUrl}/alumnos/codigo/${codigo}`)
       .subscribe({
         next: (alumno) => {
           this.isSearchingAlumno = false;
@@ -344,7 +345,7 @@ export class SolicitudJustificacionComponent implements OnInit {
 
     console.log('Payload a enviar:', payload);
 
-    this.http.post<JustificacionResponse>('http://localhost:3000/detalle-justificaciones', payload)
+    this.http.post<JustificacionResponse>(`${environment.apiUrl}/detalle-justificaciones`, payload)
       .subscribe({
         next: (response) => {
           this.isLoading = false;
