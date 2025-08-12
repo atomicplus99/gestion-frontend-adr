@@ -1,24 +1,27 @@
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { firstValueFrom, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { Observable, firstValueFrom, throwError } from 'rxjs';
 import { UserInfo } from '../interfaces/user-info.interface';
+import { TokenService } from './token.service';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
-  constructor() { }
-
-  private http = inject(HttpClient);
+  constructor(
+    private http: HttpClient,
+    private tokenService: TokenService,
+    private router: Router
+  ) { }
 
   async isAuthenticated(){
     try {
-      // Verificar si existe el token
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        console.log('No hay token almacenado');
+      // Verificar si existe el token y es válido
+      if (!this.tokenService.isTokenValid()) {
+        console.log('❌ Token inválido o expirado');
         return false;
       }
 
@@ -30,39 +33,55 @@ export class AuthService {
       );
       return true;
     } catch (error) {
-      console.error('Error en autenticación:', error);
+      console.error('❌ Error en autenticación:', error);
       // Si hay error, limpiar el token inválido
-      localStorage.removeItem('access_token');
+      this.clearToken();
       return false;
     }
   }
 
   getUserInfo(): Observable<UserInfo> {
-    return this.http.get<UserInfo>(`${environment.apiUrl}/auth/me`, { withCredentials: true });
-  }
-
-  async validarYObtenerUsuario(): Promise<UserInfo | null> {
-    try {
-      const estaAutenticado = await this.isAuthenticated();
-      if (!estaAutenticado) {
-        return null;
-      }
-      const usuario = await firstValueFrom(this.getUserInfo());
-      // Agrega verificación de validación de usuario
-      if (!usuario || !usuario.nombreCompleto) {
-        console.warn('Se recuperó un objeto de usuario inválido:', usuario);
-        return null;
-      }
-      return usuario;
-    } catch (error) {
-      console.error('Error al validar usuario:', error);
-      return null;
+    // Verificar token antes de hacer la petición
+    if (!this.tokenService.isTokenValid()) {
+      console.log('❌ Token inválido, redirigiendo al login...');
+      this.router.navigate(['/login']);
+      return throwError(() => new Error('Token inválido'));
     }
+
+    return this.http.get<UserInfo>(`${environment.apiUrl}/auth/me`, { 
+      withCredentials: true 
+    });
   }
 
   // Método para limpiar el token al hacer logout
   clearToken() {
-    localStorage.removeItem('access_token');
-    console.log('Token eliminado');
+    this.tokenService.clearToken();
+    console.log('✅ Token eliminado del sistema');
+  }
+
+  // Método para obtener información del token actual
+  getTokenInfo() {
+    const token = this.tokenService.getValidToken();
+    if (token) {
+      const payload = this.tokenService.getTokenPayload(token);
+      const timeRemaining = this.tokenService.getTokenTimeRemaining(token);
+      
+      return {
+        payload,
+        timeRemaining,
+        expiresIn: `${timeRemaining} minutos`
+      };
+    }
+    return null;
+  }
+
+  // Método para verificar si el token está próximo a expirar
+  isTokenExpiringSoon(): boolean {
+    const token = this.tokenService.getValidToken();
+    if (token) {
+      const timeRemaining = this.tokenService.getTokenTimeRemaining(token);
+      return timeRemaining < 5; // 5 minutos
+    }
+    return false;
   }
 }

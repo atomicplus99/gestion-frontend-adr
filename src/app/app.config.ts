@@ -12,18 +12,20 @@ import Aura from '@primeng/themes/aura';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { loadingInterceptor } from './shared/loader/interceptors/loader.interceptor';
 import { authInterceptor } from './auth/interceptors/auth.interceptor';
+import { errorInterceptor } from './auth/interceptors/error.interceptor';
 
 // Log para verificar que se esté importando correctamente
 console.log('🔧 App config cargando...');
 console.log('🔧 AuthInterceptor importado:', authInterceptor);
 console.log('🔧 LoadingInterceptor importado:', loadingInterceptor);
+console.log('🔧 ErrorInterceptor importado:', errorInterceptor);
 
 export const appConfig: ApplicationConfig = {
   providers: [
     importProvidersFrom(HttpClientModule, BrowserAnimationsModule),
     provideRouter(routes),
     provideHttpClient(
-      withInterceptors([loadingInterceptor, authInterceptor])
+      withInterceptors([loadingInterceptor, authInterceptor, errorInterceptor])
     ),
     
     // Animaciones (versión async recomendada para PrimeNG)
