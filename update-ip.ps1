@@ -20,14 +20,14 @@ if ($localIP) {
         $content = Get-Content $envFile -Raw
         
         # Reemplazar cualquier URL en el archivo con la nueva IP detectada
-        # Mantiene el protocolo (http/https) y puerto existentes
-        $newContent = $content -replace 'https?://[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]+', "https://${localIP}:30001"
+        # Actualiza IP y puerto a 30000
+        $newContent = $content -replace 'https?://[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]+', "https://${localIP}:30000"
         
         # Escribir el archivo actualizado
         Set-Content -Path $envFile -Value $newContent -Encoding UTF8
         
         Write-Host "Archivo $envFile actualizado con IP: $localIP" -ForegroundColor Green
-        Write-Host "Nueva URL del backend: https://${localIP}:30001" -ForegroundColor Cyan
+        Write-Host "Nueva URL del backend: https://${localIP}:30000" -ForegroundColor Cyan
     } else {
         Write-Host "Archivo $envFile no encontrado" -ForegroundColor Red
     }
