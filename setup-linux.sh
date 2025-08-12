@@ -29,7 +29,13 @@ fi
 
 # Paso 1: Actualizar IP del backend
 echo "📡 Paso 1: Actualizando IP del backend..."
-powershell -ExecutionPolicy Bypass -File update-ip.ps1
+# En Linux, detectar IP automáticamente
+LOCAL_IP=$(hostname -I | awk '{print $1}')
+echo "IP detectada: $LOCAL_IP"
+
+# Actualizar environment.ts con la IP detectada
+sed -i "s|https://[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}:[0-9]\+|https://$LOCAL_IP:30001|g" src/environments/environment.ts
+echo "Archivo environment.ts actualizado con IP: $LOCAL_IP"
 
 # Paso 2: Construir la aplicación
 echo "🔨 Paso 2: Construyendo aplicación Angular..."
@@ -64,7 +70,7 @@ server {
     server_name _;
     
     location / {
-        root /var/www/gestion-academica/dist/gestion-academico-andresdr/browser;
+        root /var/www/gestion-academica/dist/browser;
         try_files $uri $uri/ /index.html;
         
         add_header X-Frame-Options "SAMEORIGIN" always;
@@ -73,14 +79,14 @@ server {
     }
     
     location /auth/ {
-        proxy_pass https://192.168.1.108:30001/auth/;
+        proxy_pass https://$LOCAL_IP:30001/auth/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
     
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        root /var/www/gestion-academica/dist/gestion-academico-andresdr/browser;
+        root /var/www/gestion-academica/dist/browser;
         expires 1y;
     }
     
@@ -134,6 +140,11 @@ if [ $? -eq 0 ]; then
     echo "  sudo systemctl stop nginx      - Detener Nginx"
     echo "  sudo systemctl restart nginx   - Reiniciar Nginx"
     echo "  sudo systemctl status nginx    - Estado de Nginx"
+    echo ""
+    echo "🔍 Para ver procesos Nginx:"
+    echo "  ps aux | grep nginx           - Ver procesos Nginx"
+    echo "  pkill -f nginx                - Detener todos los procesos Nginx"
+    echo "  netstat -tlnp | grep :80      - Ver puerto 80"
     echo ""
     echo "🚀 Nginx se inició automáticamente"
     

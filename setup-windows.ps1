@@ -103,7 +103,7 @@ http {
         }
         
         location /auth/ {
-            proxy_pass https://192.168.1.108:30000/auth/;
+            proxy_pass https://192.168.1.108:30001/auth/;
             proxy_set_header Host `$host;
             proxy_set_header X-Real-IP `$remote_addr;
             proxy_set_header X-Forwarded-For `$proxy_add_x_forwarded_for;
@@ -141,7 +141,7 @@ Set-Content -Path "start-nginx.bat" -Value $startScript -Encoding ASCII
 $stopScript = @"
 @echo off
 cd /d $nginxDir
-nginx.exe -s stop
+taskkill /f /im nginx.exe
 echo Nginx detenido
 pause
 "@
@@ -151,7 +151,7 @@ Set-Content -Path "stop-nginx.bat" -Value $stopScript -Encoding ASCII
 $restartScript = @"
 @echo off
 cd /d $nginxDir
-nginx.exe -s stop
+taskkill /f /im nginx.exe
 timeout /t 2 /nobreak >nul
 start nginx.exe
 echo Nginx reiniciado
