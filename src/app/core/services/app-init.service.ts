@@ -11,13 +11,18 @@ export class AppInitService {
   ) {}
 
   async init(): Promise<void> {
+    console.log('🚀 AppInitService: Iniciando inicialización de app');
     try {
+      console.log('📞 AppInitService: Llamando a getUserInfo()');
       const user = await firstValueFrom(this.authService.getUserInfo());
-      console.log('Usuario recuperado en la inicialización:', user); // Agrega registros
+      console.log('✅ AppInitService: Usuario obtenido:', user);
+      
       this.userStore.setUser(user);
+      console.log('✅ AppInitService: Usuario establecido en store');
     } catch (err) {
-      console.error('Error al recuperar usuario:', err); // Agrega registro de errores
+      console.error('❌ AppInitService: Error al recuperar usuario:', err);
       this.userStore.clearUser();
+      console.log('🧹 AppInitService: Store de usuario limpiado');
     }
   }
 }

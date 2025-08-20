@@ -7,22 +7,34 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const tokenService = inject(TokenService);
   const router = inject(Router);
   
-  console.log('🔍 ===== AUTH INTERCEPTOR EJECUTÁNDOSE =====');
-  console.log('🔍 URL de la petición:', req.url);
-  console.log('🔍 Método HTTP:', req.method);
-  console.log('🔍 Headers actuales:', req.headers);
+  console.log('🔄 AuthInterceptor: Interceptando solicitud');
+  console.log('📍 URL:', req.url);
+  console.log('🔧 Método:', req.method);
   
-  // Obtener el token válido (con validación automática)
-  const token = tokenService.getValidToken();
-  console.log('🔑 Token encontrado en localStorage:', token ? 'SÍ' : 'NO');
+  // Solo agregar token a URLs de la API interna
+  const isInternalAPI = req.url.includes('localhost') || req.url.includes('192.168.1.108');
+  console.log('🏠 Es API interna:', isInternalAPI);
   
-  if (token) {
-    console.log('🔑 Token (primeros 20 caracteres):', token.substring(0, 20) + '...');
+  if (!isInternalAPI) {
+    console.log('🌐 API externa detectada, enviando sin token');
+    return next(req);
+  }
+  
+  // Obtener el token válido SOLO para APIs internas (sin redirección automática)
+  const token = tokenService.getStoredToken();
+  const isTokenValid = token ? !tokenService.isTokenExpired(token) : false;
+  console.log('🎫 Token disponible:', !!token);
+  console.log('🎫 Token válido:', isTokenValid);
+  
+  
+  if (token && isTokenValid) {
+    console.log('🔐 Agregando token a la solicitud');
     
     // Verificar si el token está próximo a expirar
     const timeRemaining = tokenService.getTokenTimeRemaining(token);
+    console.log('⏰ Tiempo restante del token (minutos):', timeRemaining);
     if (timeRemaining < 5) {
-      console.log('⚠️ Token expira en menos de 5 minutos');
+      console.warn('⚠️ Token próximo a expirar');
     }
     
     // Agregar headers de seguridad adicionales
@@ -35,13 +47,16 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       }
     });
     
-    console.log('✅ Headers después de agregar token:', authReq.headers);
-    console.log('🔍 ===== FIN AUTH INTERCEPTOR =====');
+    console.log('✅ Solicitud modificada con headers de autenticación');
     return next(authReq);
   }
   
-  // Si no hay token válido, continuar sin modificar
-  console.log('⚠️ No hay token válido, continuando sin Authorization header');
-  console.log('🔍 ===== FIN AUTH INTERCEPTOR =====');
+  // Si no hay token válido para API interna, continuar sin modificar
+  if (!token) {
+    console.log('❌ No hay token para API interna');
+  } else if (!isTokenValid) {
+    console.log('❌ Token expirado para API interna');
+  }
+  console.log('➡️ Enviando solicitud sin token');
   return next(req);
 };

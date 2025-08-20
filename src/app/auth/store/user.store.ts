@@ -20,7 +20,7 @@ export class UserStoreService {
    */
   async setUser(user: UserInfo): Promise<void> {
     try {
-      console.log('🔄 Estableciendo usuario y obteniendo info auxiliar:', user.idUser);
+
 
       // Intentar obtener información del auxiliar
       const auxiliarInfo = await this.obtenerInfoAuxiliar(user.idUser);
@@ -41,7 +41,7 @@ export class UserStoreService {
         };
         
         this._user.set(userConAuxiliar);
-        console.log('✅ Usuario establecido con permisos de auxiliar:', userConAuxiliar.id_auxiliar);
+
       } else {
         // Usuario sin permisos de auxiliar
         const userSinAuxiliar: UserInfo = {
@@ -50,7 +50,7 @@ export class UserStoreService {
         };
         
         this._user.set(userSinAuxiliar);
-        console.log('✅ Usuario establecido sin permisos de auxiliar');
+
       }
 
     } catch (error) {
@@ -78,13 +78,13 @@ export class UserStoreService {
       );
       
       if (response.success && response.data) {
-        console.log('✅ Auxiliar encontrado:', response.data.id_auxiliar);
+
         return response.data;
       }
       
       return null;
     } catch (error: any) {
-      console.log('ℹ️ Usuario no es auxiliar o no tiene permisos:', error.status);
+      
       
       // Error 403: Sin permisos (rol ALUMNO)
       // Error 404: No tiene auxiliar asociado

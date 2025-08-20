@@ -17,8 +17,10 @@ import { RouterOutlet } from '@angular/router';
   templateUrl: './mainPage.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MainPageComponent {
+export class MainPageComponent implements OnInit {
 
-
+  ngOnInit() {
+    console.log('🏠 MainPageComponent: Componente inicializado');
+  }
 
  }

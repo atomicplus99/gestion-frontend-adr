@@ -75,6 +75,10 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   
   private userStore = inject(UserStoreService);
   private http = inject(HttpClient);
+
+  constructor() {
+    console.log('🎉 WelcomeComponent: Constructor ejecutado');
+  }
   
   // Signals para datos en tiempo real
   currentUser = this.userStore.user;
@@ -102,6 +106,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
+    console.log('🎉 WelcomeComponent: ngOnInit ejecutado');
     this.initializeTimeUpdates();
     this.loadWeatherData();
     this.loadDailyQuote();
@@ -170,7 +175,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
                   }
                 });
               },
-              error: () => console.log('Weather APIs no disponibles en demo')
+              error: () => {}
             });
         }
       });
@@ -225,7 +230,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
                 }));
                 this.worldNews.set(articles);
               },
-              error: () => console.log('News APIs no disponibles')
+              error: () => {}
             });
         }
       });
@@ -236,7 +241,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     this.http.get<CryptoPrice[]>('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,cardano&order=market_cap_desc&per_page=3&page=1')
       .subscribe({
         next: (data) => this.cryptoPrices.set(data),
-        error: () => console.log('Crypto API no disponible')
+        error: () => {}
       });
   }
 
@@ -249,7 +254,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
             this.countryInfo.set(data[0]);
           }
         },
-        error: () => console.log('Countries API no disponible')
+        error: () => {}
       });
   }
 
@@ -265,7 +270,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
             .slice(0, 3);
           this.upcomingHolidays.set(upcoming);
         },
-        error: () => console.log('Holidays API no disponible')
+        error: () => {}
       });
   }
 
@@ -288,7 +293,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
             const current = this.globalTimeZones();
             this.globalTimeZones.set([...current, { city: tz.city, time }]);
           },
-          error: () => console.log(`Time API para ${tz.city} no disponible`)
+          error: () => {}
         });
     });
   }
@@ -415,22 +420,22 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   // Métodos de navegación mejorados
   onGetStarted(): void {
     const user = this.currentUser();
-    console.log('Navegando al dashboard principal:', user?.username);
+    
     // Ejemplo: this.router.navigate(['/dashboard']);
   }
 
   onViewCalendar(): void {
-    console.log('Abriendo calendario académico');
+    
     // Ejemplo: this.router.navigate(['/calendar']);
   }
 
   onCheckGrades(): void {
-    console.log('Navegando a calificaciones');
+    
     // Ejemplo: this.router.navigate(['/grades']);
   }
 
   onGetHelp(): void {
-    console.log('Abriendo centro de ayuda');
+    
     // Ejemplo: this.router.navigate(['/support']);
     // O abrir chat de soporte
   }

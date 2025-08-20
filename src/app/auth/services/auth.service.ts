@@ -21,7 +21,7 @@ export class AuthService {
     try {
       // Verificar si existe el token y es válido
       if (!this.tokenService.isTokenValid()) {
-        console.log('❌ Token inválido o expirado');
+  
         return false;
       }
 
@@ -43,7 +43,7 @@ export class AuthService {
   getUserInfo(): Observable<UserInfo> {
     // Verificar token antes de hacer la petición
     if (!this.tokenService.isTokenValid()) {
-      console.log('❌ Token inválido, redirigiendo al login...');
+
       this.router.navigate(['/login']);
       return throwError(() => new Error('Token inválido'));
     }
@@ -56,7 +56,7 @@ export class AuthService {
   // Método para limpiar el token al hacer logout
   clearToken() {
     this.tokenService.clearToken();
-    console.log('✅ Token eliminado del sistema');
+    
   }
 
   // Método para obtener información del token actual

@@ -122,7 +122,7 @@ export class SolicitudJustificacionComponent implements OnInit {
           this.isSearchingAlumno = false;
           this.alumnoEncontrado = alumno;
           this.cdr.detectChanges();
-          console.log('Alumno encontrado:', alumno);
+  
         },
         error: (error) => {
           this.isSearchingAlumno = false;
@@ -141,7 +141,7 @@ export class SolicitudJustificacionComponent implements OnInit {
 
   onTipoFechaChange() {
     const usandoRango = this.justificacionForm?.get('usar_rango_fechas')?.value || false;
-    console.log('Cambio de tipo de fecha a:', usandoRango ? 'Rango' : 'Individual');
+    
     
     // Limpiar el array de fechas
     this.fechasArray.clear();
@@ -150,11 +150,11 @@ export class SolicitudJustificacionComponent implements OnInit {
       // Modo rango: limpiar fechas individuales y resetear rango
       this.justificacionForm.get('fecha_inicio')?.setValue('');
       this.justificacionForm.get('fecha_fin')?.setValue('');
-      console.log('Modo rango activado - campos reseteados');
+      
     } else {
       // Modo individual: agregar un campo vacío
       this.fechasArray.push(this.fb.control('', Validators.required));
-      console.log('Modo individual activado - campo agregado');
+      
     }
     
     this.cdr.detectChanges();
@@ -164,12 +164,10 @@ export class SolicitudJustificacionComponent implements OnInit {
     const fechaInicio = this.justificacionForm.get('fecha_inicio')?.value;
     const fechaFin = this.justificacionForm.get('fecha_fin')?.value;
     
-    console.log('=== GENERANDO RANGO DE FECHAS ===');
-    console.log('Fecha inicio:', fechaInicio);
-    console.log('Fecha fin:', fechaFin);
+    
     
     if (!fechaInicio || !fechaFin) {
-      console.log('Faltan fechas, saliendo...');
+      
       return;
     }
 
@@ -177,8 +175,7 @@ export class SolicitudJustificacionComponent implements OnInit {
     const inicio = new Date(fechaInicio + 'T12:00:00');
     const fin = new Date(fechaFin + 'T12:00:00');
     
-    console.log('Fecha inicio procesada:', inicio);
-    console.log('Fecha fin procesada:', fin);
+    
 
     if (fin < inicio) {
       this.showAlertMessage('La fecha de fin debe ser posterior a la fecha de inicio', 'error');
@@ -189,7 +186,7 @@ export class SolicitudJustificacionComponent implements OnInit {
     while (this.fechasArray.length !== 0) {
       this.fechasArray.removeAt(0);
     }
-    console.log('FormArray limpiado completamente');
+    
 
     // Generar todas las fechas del rango
     const fechaActual = new Date(inicio);
@@ -203,7 +200,7 @@ export class SolicitudJustificacionComponent implements OnInit {
       const dia = String(fechaActual.getDate()).padStart(2, '0');
       const fechaISO = `${año}-${mes}-${dia}`;
       
-      console.log(`Día ${contador + 1}: Generando fecha:`, fechaISO);
+      
       
       // Agregar al FormArray
       this.fechasArray.push(this.fb.control(fechaISO, Validators.required));
@@ -214,20 +211,16 @@ export class SolicitudJustificacionComponent implements OnInit {
       fechaActual.setDate(fechaActual.getDate() + 1);
     }
 
-    console.log('=== RESUMEN GENERACIÓN ===');
-    console.log('Fechas generadas (ISO):', fechasGeneradas);
-    console.log('FormArray.value:', this.fechasArray.value);
-    console.log('FormArray.length:', this.fechasArray.length);
-    console.log('Total de fechas generadas:', contador);
+    
     
     // Verificar que se agregaron correctamente
     if (this.fechasArray.length !== fechasGeneradas.length) {
       console.error('ERROR: El FormArray no coincide con las fechas generadas');
     } else {
-      console.log('✅ FormArray generado correctamente');
+      
     }
     
-    console.log('=== FIN GENERACIÓN DE RANGO ===');
+    
 
     this.cdr.detectChanges();
   }
@@ -253,8 +246,8 @@ export class SolicitudJustificacionComponent implements OnInit {
       const tieneRango = !!(fechaInicio && fechaFin);
       const tieneFechasGeneradas = this.fechasArray.length > 0;
       
-      console.log('Validación rango - Tiene rango:', tieneRango);
-      console.log('Validación rango - Fechas generadas:', tieneFechasGeneradas, 'Cantidad:', this.fechasArray.length);
+
+      
       
       return tieneRango && tieneFechasGeneradas;
     } else {

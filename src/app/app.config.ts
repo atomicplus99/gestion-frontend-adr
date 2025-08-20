@@ -15,10 +15,7 @@ import { authInterceptor } from './auth/interceptors/auth.interceptor';
 import { errorInterceptor } from './auth/interceptors/error.interceptor';
 
 // Log para verificar que se esté importando correctamente
-console.log('🔧 App config cargando...');
-console.log('🔧 AuthInterceptor importado:', authInterceptor);
-console.log('🔧 LoadingInterceptor importado:', loadingInterceptor);
-console.log('🔧 ErrorInterceptor importado:', errorInterceptor);
+
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -41,14 +38,14 @@ export const appConfig: ApplicationConfig = {
       progressBar: true,
     }),
 
-    // Inicializador de tu app
-    {
-      provide: APP_INITIALIZER,
-      useFactory: (appInitService: AppInitService) => () => appInitService.init(),
-      deps: [AppInitService],
-      multi: true,
-    }
+    // Inicializador de tu app (DESACTIVADO TEMPORALMENTE)
+    // {
+    //   provide: APP_INITIALIZER,
+    //   useFactory: (appInitService: AppInitService) => () => appInitService.init(),
+    //   deps: [AppInitService],
+    //   multi: true,
+    // }
   ]
 };
 
-console.log('🔧 App config configurado con interceptors:', appConfig.providers);
+

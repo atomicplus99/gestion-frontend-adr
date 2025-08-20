@@ -57,20 +57,56 @@ export class FormContainerComponent {
   }
 
   onSubmit() {
+    console.log('🚀 FormContainer: Iniciando submit del formulario');
+    
     const { username, password } = this.formLogin.value;
+    console.log('📝 Datos del formulario extraídos:', { username, passwordLength: password?.length });
+    
+    if (!username || !password) {
+      console.error('❌ Datos faltantes:', { username: !!username, password: !!password });
+      this.alertsService.error('Usuario y contraseña son requeridos');
+      return;
+    }
   
+    console.log('📞 Llamando al LoginService...');
     this.loginService.login(username!, password!).subscribe({
       next: async (response) => {
+        console.log('✅ FormContainer: Login exitoso');
+        console.log('📥 Respuesta completa:', response);
+        
         const { message, user } = response;
+        console.log('👤 Usuario recibido:', user);
+        console.log('💬 Mensaje:', message);
+        
         this.userStore.setUser(user);
-        this.alertsService.success(message);
-        this.route.navigate(['/home/welcome']);
+        this.alertsService.success(message || 'Login exitoso');
+        
+        console.log('🧭 Navegando a /home/welcome');
+        const navigationResult = this.route.navigate(['/home/welcome']);
+        console.log('🔍 Resultado de navegación:', navigationResult);
+        
+        navigationResult.then(success => {
+          console.log('✅ Navegación exitosa:', success);
+          if (!success) {
+            console.error('❌ La navegación falló');
+          }
+        }).catch(error => {
+          console.error('💥 Error en navegación:', error);
+        });
       },
       error: (err) => {
-        this.alertsService.error(err.error?.message || 'Error de autenticación');
+        console.error('❌ FormContainer: Error en el login');
+        console.error('🔥 Error completo:', err);
+        console.error('📄 Status:', err.status);
+        console.error('💬 Message:', err.error?.message);
+        console.error('📊 Error object:', err.error);
+        
+        const errorMessage = err.error?.message || `Error de autenticación (${err.status})`;
+        this.alertsService.error(errorMessage);
       }
     });
   
+    console.log('🔄 Reseteando formulario');
     this.formLogin.reset();
   }
   

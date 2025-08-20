@@ -38,10 +38,19 @@ export class AppComponent implements OnInit{
         event instanceof NavigationError
       ))
       .subscribe(event => {
+        console.log('🧭 Router Event:', event.constructor.name, event);
+        
         if (event instanceof NavigationStart) {
+          console.log('🚀 Navegación iniciada hacia:', (event as NavigationStart).url);
           this.loaderService.show();
-        } else {
-          // NavigationEnd, NavigationCancel, NavigationError
+        } else if (event instanceof NavigationEnd) {
+          console.log('✅ Navegación completada hacia:', (event as NavigationEnd).urlAfterRedirects);
+          setTimeout(() => this.loaderService.hide(), 500);
+        } else if (event instanceof NavigationCancel) {
+          console.log('❌ Navegación cancelada:', (event as NavigationCancel).reason);
+          setTimeout(() => this.loaderService.hide(), 500);
+        } else if (event instanceof NavigationError) {
+          console.log('💥 Error de navegación:', (event as NavigationError).error);
           setTimeout(() => this.loaderService.hide(), 500);
         }
       });

@@ -29,7 +29,7 @@ export class TokenService {
       
       // Si no hay exp, considerar como expirado por seguridad
       if (!expirationTime) {
-        console.log('⚠️ Token no tiene tiempo de expiración, considerando como expirado');
+  
         return true;
       }
       
@@ -38,7 +38,7 @@ export class TokenService {
       const isExpiringSoon = timeUntilExpiry < 300; // 5 minutos
       
       if (isExpiringSoon) {
-        console.log('⚠️ Token expira en:', Math.floor(timeUntilExpiry / 60), 'minutos');
+  
       }
       
       return currentTime >= expirationTime;
@@ -52,18 +52,24 @@ export class TokenService {
    * Verifica si el token actual es válido
    */
   isTokenValid(): boolean {
+    console.log('🔍 isTokenValid: Verificando token...');
     const token = this.getStoredToken();
     
     if (!token) {
+      console.log('❌ isTokenValid: No hay token');
       return false;
     }
     
-    if (this.isTokenExpired(token)) {
-      console.log('❌ Token expirado, limpiando...');
+    const isExpired = this.isTokenExpired(token);
+    console.log('⏰ isTokenValid: Token expirado:', isExpired);
+    
+    if (isExpired) {
+      console.log('🧹 isTokenValid: Limpiando token expirado');
       this.clearToken();
       return false;
     }
     
+    console.log('✅ isTokenValid: Token válido');
     return true;
   }
 
@@ -71,28 +77,38 @@ export class TokenService {
    * Obtiene el token si es válido, sino redirige al login
    */
   getValidToken(): string | null {
-    if (!this.isTokenValid()) {
-      console.log('❌ Token inválido, redirigiendo al login...');
+    console.log('🔍 TokenService: Verificando validez del token');
+    const isValid = this.isTokenValid();
+    console.log('🎫 Token válido:', isValid);
+    
+    if (!isValid) {
+      console.log('❌ TokenService: Token inválido, limpiando y redirigiendo');
+      console.log('🔍 Stack trace de redirección:', new Error().stack);
       this.clearToken();
       this.router.navigate(['/login']);
       return null;
     }
     
-    return this.getStoredToken();
+    const token = this.getStoredToken();
+    console.log('📦 Token obtenido:', !!token);
+    return token;
   }
 
   /**
    * Obtiene el token almacenado (desde cookies o sessionStorage como fallback)
    */
-  private getStoredToken(): string | null {
+  getStoredToken(): string | null {
     // Intentar obtener de cookies primero (más seguro)
     let token = this.cookieService.getCookie(this.TOKEN_KEY);
+    console.log('🍪 Token en cookies:', !!token);
     
     // Si no hay en cookies, intentar sessionStorage como fallback
     if (!token) {
       token = sessionStorage.getItem(this.TOKEN_KEY);
+      console.log('💾 Token en sessionStorage:', !!token);
     }
     
+    console.log('📋 Token final obtenido:', !!token);
     return token;
   }
 
@@ -103,8 +119,7 @@ export class TokenService {
     // NOTA: Para httpOnly cookies, el backend debe establecerlas
     // Por ahora, usamos sessionStorage como fallback
     sessionStorage.setItem(this.TOKEN_KEY, token);
-    console.log('✅ Token almacenado (preparado para httpOnly cookies)');
-    console.log('ℹ️ Para máxima seguridad, el backend debe establecer cookies httpOnly');
+    
   }
 
   /**
@@ -115,7 +130,7 @@ export class TokenService {
     this.cookieService.deleteCookie(this.TOKEN_KEY);
     // Limpiar de sessionStorage como fallback
     sessionStorage.removeItem(this.TOKEN_KEY);
-    console.log('✅ Token eliminado del sistema');
+    
   }
 
   /**

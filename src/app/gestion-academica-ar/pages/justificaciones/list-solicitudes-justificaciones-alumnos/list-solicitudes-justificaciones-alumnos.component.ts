@@ -115,14 +115,14 @@ export class ListaJustificacionesComponent implements OnInit {
     this.errorBusquedaAlumno = '';
     
     try {
-      console.log('Cargando todas las justificaciones...');
+
       
       const response = await this.http.get<JustificacionesResponse>(`${environment.apiUrl}/detalle-justificaciones`).toPromise();
       
       if (response) {
         this.justificaciones = response.data || [];
         this.aplicarFiltros();
-        console.log(`Cargadas ${this.justificaciones.length} justificaciones`);
+
         
         if (this.justificaciones.length === 0) {
           this.showAlertMessage('No se encontraron justificaciones', 'info');
@@ -151,13 +151,13 @@ export class ListaJustificacionesComponent implements OnInit {
     this.alumnoEncontrado = null;
 
     try {
-      console.log(`Buscando alumno con código: ${codigo}`);
+      
       
       const alumno = await this.http.get<Alumno>(`${environment.apiUrl}/alumnos/codigo/${codigo}`).toPromise();
       
       if (alumno) {
         this.alumnoEncontrado = alumno;
-        console.log('Alumno encontrado:', alumno);
+        
         
         // Cargar justificaciones del alumno
         await this.cargarJustificacionesPorAlumno(alumno.id_alumno);
@@ -183,14 +183,14 @@ export class ListaJustificacionesComponent implements OnInit {
     this.isLoading = true;
     
     try {
-      console.log(`Cargando justificaciones para alumno: ${id_alumno}`);
+      
       
       const response = await this.http.get<JustificacionesResponse>(`${environment.apiUrl}/detalle-justificaciones/alumno/${id_alumno}`).toPromise();
       
       if (response) {
         this.justificaciones = response.data || [];
         this.aplicarFiltros();
-        console.log(`Cargadas ${this.justificaciones.length} justificaciones del alumno`);
+        
         
         if (this.justificaciones.length === 0) {
           this.showAlertMessage('El alumno no tiene solicitudes de justificación', 'info');
@@ -243,7 +243,7 @@ export class ListaJustificacionesComponent implements OnInit {
     this.calcularPaginacion();
     this.paginaActual = 1; // Resetear a primera página
     
-    console.log(`Filtros aplicados: ${this.justificaciones.length} -> ${this.justificacionesFiltradas.length}`);
+    
   }
 
   calcularPaginacion() {

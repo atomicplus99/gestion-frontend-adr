@@ -16,20 +16,25 @@ export class AuthGuard implements CanActivate {
   ) { }
 
   canActivate(): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
-    console.log('🔒 AuthGuard ejecutándose...');
+    console.log('🛡️ AuthGuard: Verificando acceso a ruta protegida');
     
     // Verificar si el token es válido
-    if (!this.tokenService.isTokenValid()) {
-      console.log('❌ Token inválido, redirigiendo al login...');
+    const isTokenValid = this.tokenService.isTokenValid();
+    console.log('🎫 Token válido:', isTokenValid);
+    
+    if (!isTokenValid) {
+      console.log('❌ AuthGuard: Token inválido, redirigiendo a login');
       this.authService.clearToken();
       this.router.navigate(['/login']);
       return false;
     }
 
     // Verificar si el token está próximo a expirar
-    const token = localStorage.getItem('access_token');
+    const token = this.tokenService.getValidToken();
+    console.log('🔍 Token obtenido del TokenService:', !!token);
+    
     if (token && this.tokenService.isTokenExpired(token)) {
-      console.log('❌ Token expirado, redirigiendo al login...');
+      console.log('⏰ AuthGuard: Token expirado, redirigiendo a login');
       this.authService.clearToken();
       this.router.navigate(['/login']);
       return false;
@@ -38,13 +43,14 @@ export class AuthGuard implements CanActivate {
     // Verificar si el token está próximo a expirar (advertencia)
     if (token) {
       const timeRemaining = this.tokenService.getTokenTimeRemaining(token);
+      console.log('⏰ Tiempo restante del token:', timeRemaining, 'minutos');
       if (timeRemaining < 5) {
-        console.log('⚠️ Token expira en menos de 5 minutos');
+        console.warn('⚠️ Token próximo a expirar');
         // Aquí podrías implementar renovación automática
       }
     }
 
-    console.log('✅ Token válido, permitiendo acceso...');
+    console.log('✅ AuthGuard: Acceso permitido');
     return true;
   }
 }

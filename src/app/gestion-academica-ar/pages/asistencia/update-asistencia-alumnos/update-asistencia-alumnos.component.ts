@@ -169,14 +169,11 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
     // Forzar actualización del DOM
     this.forzarDeteccionCambios();
 
-    console.log('🔍 Buscando alumno con código:', codigo);
-    console.log('👤 Auxiliar actual:', this.nombreAuxiliarActual, '- ID:', this.idAuxiliarActual);
+    
 
     this.asistenciaService.verificarAsistenciaPorCodigo(codigo).subscribe({
       next: (response) => {
-        console.log('🔍 RESPUESTA COMPLETA:', response);
-        console.log('🔍 ALUMNO DATA:', response.alumno);
-        console.log('🔍 ASISTENCIA DATA:', response.asistencia);
+        
         
         this.alumnoData = response;
         
@@ -185,7 +182,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
           this.prepareUpdateForm(response);
           this.showUpdateForm = true;
           
-          console.log('✅ Formulario de actualización habilitado');
+
         } else {
           // No tiene asistencia - solo mostrar info del alumno
           this.showUpdateForm = false;
@@ -229,7 +226,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
   private prepareUpdateForm(data: VerificarAsistenciaResponse): void {
     if (!data.asistencia) return;
 
-    console.log('📝 Preparando formulario con datos:', data.asistencia);
+    
 
     this.actualizarForm.patchValue({
       hora_de_llegada: data.asistencia.hora_de_llegada,
@@ -291,12 +288,11 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
 
     const codigo = this.alumnoData.alumno.codigo;
 
-    console.log('📤 Enviando actualización:', updateData);
-    console.log('👤 Auxiliar responsable:', this.nombreAuxiliarActual);
+    
 
     this.asistenciaService.actualizarAsistenciaPorCodigo(codigo, updateData).subscribe({
       next: (response) => {
-        console.log('✅ Actualización exitosa:', response);
+        
         
         this.isLoadingUpdate = false;
         
@@ -366,7 +362,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
     this.showUpdateForm = false;
     this.alumnoData = null;
     
-    console.log('🧹 Formularios limpiados');
+    
     this.forzarDeteccionCambios();
     this.forzarDeteccionConDelay(100);
   }
