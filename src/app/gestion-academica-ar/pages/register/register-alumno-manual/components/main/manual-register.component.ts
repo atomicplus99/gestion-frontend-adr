@@ -7,10 +7,10 @@ import { QrGeneratorComponent } from '../qr-generator/qr-generator.component';
 import { FormProgressComponent } from '../form-progress/form-progress.componen';
 import { AlertsService } from '../../../../../../shared/alerts.service';
 import { AlumnoService } from '../../../../../services/alumno.service';
+import { TurnoService } from '../../../../../services/turno.service';
 import { QrService } from '../../services/qr.service';
 import { FormProgress, RegistroAlumnoDto, Turno } from '../../interfaces/AlumnoRegister.interface';
 import { ValidationService } from '../../services/validation.service';
-
 
 
 @Component({
@@ -25,7 +25,7 @@ import { ValidationService } from '../../services/validation.service';
     FormProgressComponent
   ],
   templateUrl: './manual-register.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.Default,
   styles: [`
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
@@ -40,6 +40,7 @@ export class ManualRegisterAlumnoComponent implements OnInit {
   private fb = inject(FormBuilder);
   private alerts = inject(AlertsService);
   private alumnoService = inject(AlumnoService);
+  private turnoService = inject(TurnoService);
   private qrService = inject(QrService);
   private cd = inject(ChangeDetectorRef);
 
@@ -75,13 +76,31 @@ export class ManualRegisterAlumnoComponent implements OnInit {
   }
 
   obtenerTurnos() {
-    this.alumnoService.obtenerTurnos().subscribe({
+    console.log('🔄 [MANUAL-REGISTER] Iniciando obtención de turnos...');
+    this.turnoService.obtenerTurnos().subscribe({
       next: (turnos) => {
+        console.log('✅ [MANUAL-REGISTER] Turnos recibidos del servicio:', turnos);
+        console.log('✅ [MANUAL-REGISTER] Tipo de turnos:', typeof turnos);
+        console.log('✅ [MANUAL-REGISTER] Es array:', Array.isArray(turnos));
+        console.log('✅ [MANUAL-REGISTER] Cantidad de turnos:', turnos?.length || 0);
+        console.log('✅ [MANUAL-REGISTER] Turnos individuales:', turnos);
+        
         this.turnos = turnos;
+        console.log('✅ [MANUAL-REGISTER] Turnos asignados al componente:', this.turnos);
         this.cd.markForCheck();
       },
-      error: () => {
-        this.alerts.error('No se pudo cargar los turnos.');
+      error: (error) => {
+        console.error('❌ [MANUAL-REGISTER] Error al obtener turnos:', error);
+        console.error('❌ [MANUAL-REGISTER] Error completo:', error);
+        
+        // Mostrar mensaje específico según el tipo de error
+        if (error?.status === 0) {
+          this.alerts.error('No se puede conectar al servidor. Verifica tu conexión a internet.');
+        } else if (error?.status === 401) {
+          this.alerts.error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+        } else {
+          this.alerts.error('No se pudo cargar los turnos. Inténtalo más tarde.');
+        }
       }
     });
   }
@@ -125,44 +144,45 @@ export class ManualRegisterAlumnoComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.alumnoForm.invalid || !this.qrGenerado) {
-      this.alumnoForm.markAllAsTouched();
-      this.alerts.error('Completa todos los campos correctamente y genera el código QR.');
-      this.scrollToFirstError();
+    if (!this.alumnoForm.valid || !this.qrGenerado) {
+      this.alerts.error('Por favor completa todos los campos correctamente y genera el código QR.');
       return;
     }
-    
+
     this.isSubmitting = true;
     this.cd.markForCheck();
-  
-    const formValue = this.alumnoForm.value;
-  
+
+    const formData = this.alumnoForm.value;
+    
+    // Mapear los datos del formulario a la interfaz esperada por el backend
     const payload: RegistroAlumnoDto = {
-      dni_alumno: formValue.dni,
-      nombre: formValue.nombre,
-      apellido: formValue.apellido,
-      fecha_nacimiento: formValue.fechaNacimiento,
-      direccion: formValue.direccion,
+      dni_alumno: formData.dni,
+      nombre: formData.nombre,
+      apellido: formData.apellido,
+      fecha_nacimiento: formData.fechaNacimiento,
+      direccion: formData.direccion,
       codigo_qr: this.qrGenerado,
-      codigo: formValue.codigo,
-      turno_id: formValue.turno,
-      nivel: formValue.nivel,
-      grado: parseInt(formValue.grado),
-      seccion: formValue.seccion,
+      codigo: formData.codigo,
+      turno_id: formData.turno,
+      nivel: formData.nivel,
+      grado: parseInt(formData.grado),
+      seccion: formData.seccion
     };
-  
+
+    console.log('🔄 [MANUAL-REGISTER] Enviando payload al backend:', payload);
+
     this.alumnoService.registrarAlumno(payload).subscribe({
-      next: () => {
-        this.alerts.success('Alumno registrado correctamente');
+      next: async (response) => {
+        this.alerts.success('Alumno registrado exitosamente');
         this.resetForm();
-        this.isSubmitting = false;
         this.cd.markForCheck();
       },
       error: (err) => {
-        console.error('Error detallado:', err);
-        const msg = err?.error?.message || 'Error inesperado al registrar el alumno';
-        const details = Array.isArray(msg) ? msg.join(', ') : msg;
-        this.alerts.error(details);
+        console.error('❌ [MANUAL-REGISTER] Error del backend:', err);
+        this.alerts.error('Error al registrar alumno: ' + (err?.error?.message || err?.message || 'Error desconocido'));
+        this.cd.markForCheck();
+      },
+      complete: () => {
         this.isSubmitting = false;
         this.cd.markForCheck();
       }

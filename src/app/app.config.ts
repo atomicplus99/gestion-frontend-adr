@@ -2,33 +2,26 @@ import { ApplicationConfig, APP_INITIALIZER, importProvidersFrom } from '@angula
 import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideToastr } from 'ngx-toastr';
-import { HttpClientModule, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
 
 import { AppInitService } from './core/services/app-init.service';
 
-// PrimeNG
-import Aura from '@primeng/themes/aura';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { loadingInterceptor } from './shared/loader/interceptors/loader.interceptor';
-import { authInterceptor } from './auth/interceptors/auth.interceptor';
 import { errorInterceptor } from './auth/interceptors/error.interceptor';
-
-// Log para verificar que se esté importando correctamente
-
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    importProvidersFrom(HttpClientModule, BrowserAnimationsModule),
+    importProvidersFrom(BrowserAnimationsModule),
     provideRouter(routes),
     provideHttpClient(
-      withInterceptors([loadingInterceptor, authInterceptor, errorInterceptor])
+      withInterceptors([loadingInterceptor, errorInterceptor])
     ),
     
     // Animaciones (versión async recomendada para PrimeNG)
     provideAnimationsAsync(),
     
-
     // Toastr
     provideToastr({
       positionClass: 'toast-top-right',
@@ -38,13 +31,18 @@ export const appConfig: ApplicationConfig = {
       progressBar: true,
     }),
 
-    // Inicializador de tu app (DESACTIVADO TEMPORALMENTE)
-    // {
-    //   provide: APP_INITIALIZER,
-    //   useFactory: (appInitService: AppInitService) => () => appInitService.init(),
-    //   deps: [AppInitService],
-    //   multi: true,
-    // }
+    // Inicializador de la app - RESTAURA LA SESIÓN AL RECARGAR
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (appInitService: AppInitService) => {
+        return () => appInitService.init().catch(() => {
+          // Si falla la inicialización, no bloquear la aplicación
+          return Promise.resolve();
+        });
+      },
+      deps: [AppInitService],
+      multi: true,
+    }
   ]
 };
 

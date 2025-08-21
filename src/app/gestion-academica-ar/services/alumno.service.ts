@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, map, tap, catchError, retry, timeout } from 'rxjs';
 import { Alumno, PersonalAlumno } from '../pages/register/interfaces/alumno.interface';
 import { AlumnoUpdate } from '../pages/register/actualizar-alumno/actualizar-alumno.component';
 import { environment } from '../../../environments/environment';
+import { TokenService } from '../../auth/services/token.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,33 +12,59 @@ import { environment } from '../../../environments/environment';
 export class AlumnoService {
   private readonly apiUrl = environment.apiUrl;
   
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private tokenService: TokenService) {}
 
   obtenerTurnos(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/turno`);
+    console.log('🔄 [ALUMNO-SERVICE] Iniciando petición GET a /turno...');
+    console.log('🔄 [ALUMNO-SERVICE] URL completa:', `${this.apiUrl}/turno`);
+    
+    return this.http.get<any[]>(`${this.apiUrl}/turno`).pipe(
+      timeout(10000), // 10 segundos de timeout
+      retry(2), // Reintentar 2 veces
+      tap(response => {
+        console.log('✅ [ALUMNO-SERVICE] Respuesta exitosa de /turno:', response);
+        console.log('✅ [ALUMNO-SERVICE] Tipo de respuesta:', typeof response);
+        console.log('✅ [ALUMNO-SERVICE] Es array:', Array.isArray(response));
+        console.log('✅ [ALUMNO-SERVICE] Cantidad de turnos:', response?.length || 0);
+      }),
+      catchError(error => {
+        console.error('❌ [ALUMNO-SERVICE] Error al obtener turnos:', error);
+        console.error('❌ [ALUMNO-SERVICE] Status del error:', error?.status);
+        console.error('❌ [ALUMNO-SERVICE] Mensaje del error:', error?.message);
+        console.error('❌ [ALUMNO-SERVICE] Error completo:', error);
+        
+        // Si es error de conectividad, devolver array vacío en lugar de fallar
+        if (error.status === 0) {
+          console.warn('⚠️ [ALUMNO-SERVICE] Error de conectividad, devolviendo array vacío');
+          return [];
+        }
+        
+        console.error('❌ [ALUMNO-SERVICE] Error no es de conectividad, propagando error');
+        throw error;
+      })
+    );
   }
 
   // Método modificado para evitar que la respuesta actualice el UserStore
   registrarAlumno(data: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/alumnos/registrar`, data)
-      .pipe(
-        // Transformamos la respuesta para eliminar cualquier campo que pueda
-        // ser interpretado como información del usuario autenticado
-        map(response => {
-          // Si la respuesta es un objeto y contiene un campo 'user',
-          // creamos una nueva respuesta sin ese campo
-          if (response && typeof response === 'object') {
-            // Destructuramos para extraer 'user' y 'token' y quedarnos con el resto
-            const { user, token, ...safeResponse } = response as any;
-            
-            // Devolvemos solo la parte segura de la respuesta
-            return safeResponse;
-          }
-          
-          // Si no hay un objeto o no hay user/token, devolvemos la respuesta original
-          return response;
-        })
-      );
+    const token = this.tokenService.getStoredToken();
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    });
+    
+    console.log('🔄 [ALUMNO-SERVICE] Registrando alumno en endpoint:', `${this.apiUrl}/alumnos/registrar`);
+    console.log('🔄 [ALUMNO-SERVICE] Datos del alumno:', data);
+    
+    return this.http.post<any>(`${this.apiUrl}/alumnos/registrar`, data, { headers }).pipe(
+      tap(response => {
+        console.log('✅ [ALUMNO-SERVICE] Alumno registrado exitosamente:', response);
+      }),
+      catchError(error => {
+        console.error('❌ [ALUMNO-SERVICE] Error al registrar alumno:', error);
+        throw error;
+      })
+    );
   }
 
   obtenerTodos(): Observable<Alumno[]> {

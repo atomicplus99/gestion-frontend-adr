@@ -192,23 +192,7 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   private configurarSuscripciones(): void {
-    // Suscribirse a cambios en asistencia existente
-    this.registroService.asistenciaExistente$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(asistencia => {
-        console.log('📡 Asistencia subscription cambio:', asistencia);
-        this.tieneAsistencia = !!asistencia;
-        this.forzarDeteccionCambios(); // 🔥 Forzar detección
-      });
-
-    // Suscribirse a cambios en alumno encontrado
-    this.registroService.alumnoEncontrado$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(alumno => {
-        console.log('📡 Alumno subscription cambio:', alumno);
-        this.alumnoEncontrado = alumno;
-        this.forzarDeteccionCambios(); // 🔥 Forzar detección
-      });
+    // Suscripciones configuradas en el servicio
   }
 
   // ========================================
@@ -231,7 +215,7 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   // ========================================
-  // GETTERS PARA EL TEMPLATE + DEBUG
+  // GETTERS PARA EL TEMPLATE
   // ========================================
   get estadoActualTexto(): string {
     if (this.tieneAsistencia) {
@@ -246,27 +230,12 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
     return this.buscarForm.get('codigo')?.value?.length || 0;
   }
 
-  // Método de debug para verificar todos los estados
-  private logEstadosCompletos(): void {
-    console.log('🔍 === ESTADO COMPLETO DEL COMPONENTE ===');
-    console.log('Local - alumnoEncontrado:', this.alumnoEncontrado);
-    console.log('Local - tieneAsistencia:', this.tieneAsistencia);
-    console.log('Local - verificando:', this.verificando);
-    console.log('Servicio - alumnoActual:', this.registroService.alumnoActual);
-    console.log('Servicio - asistenciaActual:', this.registroService.asistenciaActual);
-    console.log('Servicio - fechaActual:', this.registroService.fechaActual);
-    console.log('Form - código:', this.buscarForm.get('codigo')?.value);
-    console.log('Form - válido:', this.buscarForm.valid);
-    console.log('===========================================');
-  }
-
   // ========================================
   // MANEJADORES DE EVENTOS
   // ========================================
   onClickBuscar(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
-    console.log('🖱️ Click en botón buscar - Forzando verificación');
     
     // Forzar detección antes de verificar
     this.forzarDeteccionCambios();
@@ -309,7 +278,6 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
   async verificarAsistencia(): Promise<void> {
     // Prevenir múltiples ejecuciones
     if (this.verificando) {
-      console.log('⚠️ Ya está verificando, saltando...');
       return;
     }
 
@@ -333,19 +301,10 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
       return;
     }
     
-    console.log('🔍 Iniciando verificación para:', codigo);
-    await this.procesarVerificacion(codigo);
-  }
-
-  private async procesarVerificacion(codigo: string): Promise<void> {
-    console.log('🚀 Iniciando procesarVerificacion para:', codigo);
     this.setEstadoVerificacion(true);
     
     try {
-      console.log(`🔍 Verificando código: ${codigo}`);
-      
       const response = await this.registroService.verificarAsistencia(codigo).toPromise();
-      console.log('📦 Respuesta:', response);
       
       // Forzar detección después de recibir respuesta
       this.forzarDeteccionCambios();
@@ -358,9 +317,7 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
       this.forzarDeteccionConDelay(300);
       
     } catch (error: any) {
-      console.error('💥 Error:', error);
       this.registroService.limpiarEstados();
-      this.forzarDeteccionCambios();
       await this.manejarErrorVerificacion(error, codigo);
     } finally {
       this.setEstadoVerificacion(false);
@@ -370,8 +327,6 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
       this.forzarDeteccionConDelay(50);
       this.forzarDeteccionConDelay(150);
       this.forzarDeteccionConDelay(300);
-      
-      console.log('✅ Verificación completada');
     }
   }
 
@@ -421,43 +376,13 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   private async manejarAlumnoEncontrado(response: any): Promise<void> {
-    console.log('👤 Manejando alumno encontrado:', response.alumno?.codigo);
-    
-    // Log del estado antes del cambio
-    this.logEstadosCompletos();
-    
-    // Actualizar estados CON FORZADO MÚLTIPLE
+    // Actualizar estados
     this.registroService.setAsistenciaExistente(null);
     this.registroService.setAlumnoEncontrado(response.alumno);
     
-    // Forzar detección INMEDIATA y múltiple
-    this.cdr.markForCheck(); // Marcar para revisión
+    // Forzar detección
+    this.cdr.markForCheck();
     this.forzarDeteccionCambios();
-    this.forzarDeteccionConDelay(0);
-    this.forzarDeteccionConDelay(10);
-    this.forzarDeteccionConDelay(50);
-    
-    console.log('✅ Alumno listo para registro:', response.alumno);
-    console.log('🔄 Estados actualizados - Forzando detección...');
-    
-    // Verificar que el estado se estableció correctamente
-    setTimeout(() => {
-      // Ahora podemos usar los getters del servicio que son más seguros
-      const alumnoActual = this.registroService.alumnoActual;
-      const asistenciaActual = this.registroService.asistenciaActual;
-      
-      console.log('🔍 Verificación estado alumno:', alumnoActual);
-      console.log('🔍 Verificación estado asistencia:', asistenciaActual);
-      console.log('📊 Estado local componente:', {
-        alumnoEncontrado: this.alumnoEncontrado,
-        tieneAsistencia: this.tieneAsistencia
-      });
-      
-      // Log completo después del cambio
-      this.logEstadosCompletos();
-      
-      this.forzarDeteccionCambios();
-    }, 100);
     
     // Mostrar toast de éxito
     const nombreCompleto = `${response.alumno?.nombre} ${response.alumno?.apellido}`;
@@ -571,5 +496,12 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
       clearTimeout(this.searchTimeout);
       this.searchTimeout = null;
     }
+  }
+
+  private actualizarEstadoLocal() {
+    // Actualizar estado local basado en el servicio
+    this.alumnoEncontrado = this.registroService.alumnoActual !== null;
+    this.tieneAsistencia = this.registroService.asistenciaActual !== null;
+    this.verificando = false;
   }
 }

@@ -114,10 +114,9 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
   }
 
   private setupInitialAuxiliarId(): void {
-    const idAuxiliar = this.userStore.idAuxiliar;
+    const idAuxiliar = this.userStore.idAuxiliar();
     if (idAuxiliar) {
       this.registroForm.patchValue({ id_auxiliar: idAuxiliar });
-      console.log('✅ ID auxiliar establecido:', idAuxiliar);
     }
   }
 
@@ -163,13 +162,13 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
   }
 
   get idAuxiliarActual(): string | null {
-    return this.userStore.idAuxiliar;
+    return this.userStore.idAuxiliar();
   }
 
   get nombreAuxiliarActual(): string {
-    const user = this.userStore.user();
-    if (user?.auxiliarInfo) {
-      return `${user.auxiliarInfo.nombre} ${user.auxiliarInfo.apellido}`;
+    const user = this.userStore.getUserSilently();
+    if (user?.auxiliar) {
+      return `${user.auxiliar.nombre} ${user.auxiliar.apellido}`;
     }
     return 'Cargando...';
   }
@@ -279,14 +278,11 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
     const datosRegistro = this.construirDatosRegistro();
     
     try {
-      console.log('📤 Enviando registro:', datosRegistro);
       const response = await this.registroService.registrarAsistencia(datosRegistro).toPromise();
-      console.log('✅ Registro exitoso:', response);
       
       await this.manejarRegistroExitoso(response, datosRegistro);
       
     } catch (error: any) {
-      console.error('💥 Error al registrar:', error);
       await this.manejarErrorRegistro(error, datosRegistro);
     } finally {
       this.registrando = false;

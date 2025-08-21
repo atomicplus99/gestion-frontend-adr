@@ -67,7 +67,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
   // MÉTODOS DE INICIALIZACIÓN Y PERMISOS
   // ========================================
   private verificarPermisosAuxiliar(): void {
-    if (!this.puedeActualizarAsistencia) {
+    if (!this.puedeActualizarAsistencias) {
       Swal.fire({
         icon: 'error',
         title: 'Sin Permisos',
@@ -94,19 +94,19 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
   // GETTERS PARA AUXILIAR
   // ========================================
   get idAuxiliarActual(): string | null {
-    return this.userStore.idAuxiliar;
+    return this.userStore.idAuxiliar();
   }
 
   get nombreAuxiliarActual(): string {
-    const user = this.userStore.user();
-    if (user?.auxiliarInfo) {
-      return `${user.auxiliarInfo.nombre} ${user.auxiliarInfo.apellido}`;
+    const user = this.userStore.getUserSilently();
+    if (user?.auxiliar) {
+      return `${user.auxiliar.nombre} ${user.auxiliar.apellido}`;
     }
     return 'Auxiliar no identificado';
   }
 
-  get puedeActualizarAsistencia(): boolean {
-    return this.userStore.puedeRegistrarAsistencia && !!this.idAuxiliarActual;
+  get puedeActualizarAsistencias(): boolean {
+    return this.userStore.canRegisterAttendance() && !!this.idAuxiliarActual;
   }
 
   // ========================================
@@ -150,7 +150,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
    */
   onBuscarAlumno(): void {
     // Verificar permisos antes de buscar
-    if (!this.puedeActualizarAsistencia) {
+    if (!this.puedeActualizarAsistencias) {
       this.mostrarErrorSinPermisos();
       return;
     }
@@ -243,7 +243,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
    */
   onActualizarAsistencia(): void {
     // Verificar permisos antes de actualizar
-    if (!this.puedeActualizarAsistencia) {
+    if (!this.puedeActualizarAsistencias) {
       this.mostrarErrorSinPermisos();
       return;
     }
@@ -430,14 +430,14 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
    * Verifica si el formulario de búsqueda es válido
    */
   get isBuscarFormValid(): boolean {
-    return this.buscarForm.valid && this.puedeActualizarAsistencia;
+    return this.buscarForm.valid && this.puedeActualizarAsistencias;
   }
 
   /**
    * Verifica si el formulario de actualización es válido
    */
   get isActualizarFormValid(): boolean {
-    return this.actualizarForm.valid && this.puedeActualizarAsistencia && !!this.idAuxiliarActual;
+    return this.actualizarForm.valid && this.puedeActualizarAsistencias && !!this.idAuxiliarActual;
   }
 
   /**
@@ -453,13 +453,13 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
    * Obtiene el texto del estado de los botones
    */
   get estadoBuscarTexto(): string {
-    if (!this.puedeActualizarAsistencia) return 'Sin permisos de auxiliar';
+    if (!this.puedeActualizarAsistencias) return 'Sin permisos de auxiliar';
     if (this.isLoading) return 'Buscando...';
     return 'Buscar Alumno';
   }
 
   get estadoActualizarTexto(): string {
-    if (!this.puedeActualizarAsistencia) return 'Sin permisos de auxiliar';
+    if (!this.puedeActualizarAsistencias) return 'Sin permisos de auxiliar';
     if (!this.idAuxiliarActual) return 'ID auxiliar no disponible';
     if (this.isLoadingUpdate) return 'Actualizando...';
     return 'Actualizar Asistencia';

@@ -5,14 +5,13 @@ import { FormCheckboxComponent } from "../form-checkbox/form-checkbox.component"
 import { FormButtonComponent } from "../form-button/form-button.component";
 import { AlertsService } from '../../../../shared/alerts.service';
 import { LoginService } from '../../../services/login.service';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { Route, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
-import { firstValueFrom } from 'rxjs';
+
 import { UserInfo } from '../../../interfaces/user-info.interface';
 import { UserStoreService } from '../../../store/user.store';
-import { AppInitService } from '../../../../core/services/app-init.service';
 
 
 
@@ -28,7 +27,6 @@ export class FormContainerComponent {
 
   constructor(
               private userStore: UserStoreService,
-              private appInitService: AppInitService,
               private alertsService: AlertsService, 
               private loginService: LoginService,
               private authService: AuthService,
@@ -57,56 +55,33 @@ export class FormContainerComponent {
   }
 
   onSubmit() {
-    console.log('🚀 FormContainer: Iniciando submit del formulario');
-    
-    const { username, password } = this.formLogin.value;
-    console.log('📝 Datos del formulario extraídos:', { username, passwordLength: password?.length });
-    
-    if (!username || !password) {
-      console.error('❌ Datos faltantes:', { username: !!username, password: !!password });
-      this.alertsService.error('Usuario y contraseña son requeridos');
+    if (this.formLogin.invalid) {
+      this.alertsService.error('Por favor complete todos los campos correctamente');
       return;
     }
+
+    const { username, password } = this.formLogin.value;
+    console.log('🚀 [FORM] Iniciando login desde formulario...');
+    console.log('🚀 [FORM] Username:', username);
   
-    console.log('📞 Llamando al LoginService...');
     this.loginService.login(username!, password!).subscribe({
-      next: async (response) => {
-        console.log('✅ FormContainer: Login exitoso');
-        console.log('📥 Respuesta completa:', response);
-        
-        const { message, user } = response;
-        console.log('👤 Usuario recibido:', user);
-        console.log('💬 Mensaje:', message);
-        
-        this.userStore.setUser(user);
-        this.alertsService.success(message || 'Login exitoso');
-        
-        console.log('🧭 Navegando a /home/welcome');
-        const navigationResult = this.route.navigate(['/home/welcome']);
-        console.log('🔍 Resultado de navegación:', navigationResult);
-        
-        navigationResult.then(success => {
-          console.log('✅ Navegación exitosa:', success);
-          if (!success) {
-            console.error('❌ La navegación falló');
-          }
-        }).catch(error => {
-          console.error('💥 Error en navegación:', error);
-        });
+      next: (response) => {
+        console.log('✅ [FORM] Login exitoso, estableciendo usuario en store...');
+        if (response && response.user) {
+          this.userStore.setUser(response.user);
+          this.alertsService.success(response.message || 'Inicio de sesión exitoso');
+          this.route.navigate(['/home/welcome']);
+        } else {
+          this.alertsService.error('Error en la respuesta del servidor');
+        }
       },
       error: (err) => {
-        console.error('❌ FormContainer: Error en el login');
-        console.error('🔥 Error completo:', err);
-        console.error('📄 Status:', err.status);
-        console.error('💬 Message:', err.error?.message);
-        console.error('📊 Error object:', err.error);
-        
-        const errorMessage = err.error?.message || `Error de autenticación (${err.status})`;
+        console.error('❌ [FORM] Error en login:', err);
+        const errorMessage = err?.error?.message || err?.message || 'Error de autenticación';
         this.alertsService.error(errorMessage);
       }
     });
   
-    console.log('🔄 Reseteando formulario');
     this.formLogin.reset();
   }
   

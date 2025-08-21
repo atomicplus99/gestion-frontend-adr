@@ -1,136 +1,83 @@
-// services/user-store.service.ts - Actualizado
-import { Injectable, signal } from "@angular/core";
-import { UserInfo } from "../interfaces/user-info.interface";
-
-import { firstValueFrom } from "rxjs";
-import { UserAuxiliarResponse } from "../services/responses/AuxiliarResponse.interface";
-import { UserService } from "../services/user.service";
+// services/user-store.service.ts - Actualizado para la nueva API
+import { Injectable, signal, computed } from '@angular/core';
+import { UserInfo } from '../interfaces/user-info.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserStoreService {
-  private _user = signal<UserInfo | null>(null);
+  private readonly STORAGE_KEY = 'currentUser';
+  
+  // Signal privado para el usuario
+  private readonly _user = signal<UserInfo | null>(null);
+  
+  // Signal público de solo lectura
+  readonly user = this._user.asReadonly();
+  
+  // Computed para verificar autenticación
+  readonly isAuthenticated = computed(() => this._user() !== null);
+  
+  // Computed para el rol del usuario
+  readonly userRole = computed(() => this._user()?.role || null);
+  
+  // Computed para verificar si es auxiliar
+  readonly isAuxiliar = computed(() => this.userRole() === 'AUXILIAR');
+  
+  // Computed para obtener ID del auxiliar
+  readonly idAuxiliar = computed(() => this._user()?.auxiliar?.id_auxiliar || null);
+  
+  // Computed para verificar si puede registrar asistencia
+  readonly canRegisterAttendance = computed(() => {
+    const role = this.userRole();
+    return role === 'AUXILIAR' || role === 'ADMIN';
+  });
 
-  constructor(private auxiliarService: UserService) {}
+  constructor() {
+    this.initializeStore();
+  }
 
-  /**
-   * Establece el usuario y obtiene información del auxiliar si aplica
-   * @param user Información básica del usuario
-   */
-  async setUser(user: UserInfo): Promise<void> {
+  private initializeStore(): void {
     try {
-
-
-      // Intentar obtener información del auxiliar
-      const auxiliarInfo = await this.obtenerInfoAuxiliar(user.idUser);
-      
-      if (auxiliarInfo) {
-        // Usuario es auxiliar/admin con acceso
-        const userConAuxiliar: UserInfo = {
-          ...user,
-          id_auxiliar: auxiliarInfo.id_auxiliar,
-          auxiliarInfo: {
-            dni_auxiliar: auxiliarInfo.dni_auxiliar,
-            nombre: auxiliarInfo.nombre,
-            apellido: auxiliarInfo.apellido,
-            correo_electronico: auxiliarInfo.correo_electronico,
-            telefono: auxiliarInfo.telefono
-          },
-          puedeRegistrarAsistencia: true
-        };
-        
-        this._user.set(userConAuxiliar);
-
-      } else {
-        // Usuario sin permisos de auxiliar
-        const userSinAuxiliar: UserInfo = {
-          ...user,
-          puedeRegistrarAsistencia: false
-        };
-        
-        this._user.set(userSinAuxiliar);
-
+      const storedUser = localStorage.getItem(this.STORAGE_KEY);
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        this._user.set(user);
+        console.log('👤 [USERSTORE] Usuario recuperado de localStorage:', user);
       }
-
     } catch (error) {
-      console.error('❌ Error al establecer usuario:', error);
-      
-      // Establecer usuario sin permisos de auxiliar en caso de error
-      const userSinAuxiliar: UserInfo = {
-        ...user,
-        puedeRegistrarAsistencia: false
-      };
-      
-      this._user.set(userSinAuxiliar);
+      console.error('❌ [USERSTORE] Error al recuperar usuario del localStorage:', error);
+      localStorage.removeItem(this.STORAGE_KEY);
     }
   }
 
-  /**
-   * Obtiene información del auxiliar para un usuario
-   * @param idUser ID del usuario
-   * @returns Información del auxiliar o null si no es auxiliar
-   */
-  private async obtenerInfoAuxiliar(idUser: string): Promise<any | null> {
+  private storeUser(user: UserInfo | null): void {
     try {
-      const response = await firstValueFrom(
-        this.auxiliarService.obtenerAuxiliarPorUsuario(idUser)
-      );
-      
-      if (response.success && response.data) {
-
-        return response.data;
+      if (user) {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
+      } else {
+        localStorage.removeItem(this.STORAGE_KEY);
       }
-      
-      return null;
-    } catch (error: any) {
-      
-      
-      // Error 403: Sin permisos (rol ALUMNO)
-      // Error 404: No tiene auxiliar asociado
-      // Ambos casos significan que no puede registrar asistencia
-      return null;
+    } catch (error) {
+      console.error('❌ [USERSTORE] Error al guardar usuario en localStorage:', error);
     }
   }
 
-  /**
-   * Obtiene el usuario actual (readonly)
-   */
-  get user() {
-    return this._user.asReadonly();
+  setUser(user: UserInfo): void {
+    console.log('👤 [USERSTORE] Estableciendo usuario:', user);
+    this._user.set(user);
+    this.storeUser(user);
+    console.log('✅ [USERSTORE] Usuario establecido exitosamente');
   }
 
-  /**
-   * Obtiene el ID del auxiliar actual
-   * @returns ID del auxiliar o null si no es auxiliar
-   */
-  get idAuxiliar(): string | null {
-    return this._user()?.id_auxiliar || null;
-  }
-
-  /**
-   * Verifica si el usuario actual puede registrar asistencia
-   * @returns true si puede registrar asistencia
-   */
-  get puedeRegistrarAsistencia(): boolean {
-    return this._user()?.puedeRegistrarAsistencia || false;
-  }
-
-  /**
-   * Limpia la información del usuario
-   */
   clearUser(): void {
+    console.log('🧹 [USERSTORE] Limpiando usuario del store...');
     this._user.set(null);
+    this.storeUser(null);
+    console.log('✅ [USERSTORE] Usuario limpiado del store');
   }
 
-  /**
-   * Fuerza la actualización de información del auxiliar
-   * Útil si los permisos cambian durante la sesión
-   */
-  async actualizarInfoAuxiliar(): Promise<void> {
-    const usuarioActual = this._user();
-    if (usuarioActual) {
-      await this.setUser(usuarioActual);
-    }
+  // Método para obtener usuario sin logs (para uso interno)
+  getUserSilently(): UserInfo | null {
+    return this._user();
   }
 }

@@ -1,28 +1,27 @@
-import { Injectable } from '@angular/core';
-import { AuthService } from '../../auth/services/auth.service';
-import { UserStoreService } from '../../auth/store/user.store';
-import { firstValueFrom } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { TokenService } from '../../auth/services/token.service';
 
 @Injectable({ providedIn: 'root' })
 export class AppInitService {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly userStore: UserStoreService
-  ) {}
+  private readonly tokenService = inject(TokenService);
 
   async init(): Promise<void> {
-    console.log('🚀 AppInitService: Iniciando inicialización de app');
     try {
-      console.log('📞 AppInitService: Llamando a getUserInfo()');
-      const user = await firstValueFrom(this.authService.getUserInfo());
-      console.log('✅ AppInitService: Usuario obtenido:', user);
+      // Solo verificar si el token existe y es válido localmente
+      const token = this.tokenService.getStoredToken();
+      if (!token) {
+        return;
+      }
       
-      this.userStore.setUser(user);
-      console.log('✅ AppInitService: Usuario establecido en store');
+      // Verificar si el token ha expirado localmente
+      if (this.tokenService.isTokenExpired(token)) {
+        this.tokenService.clearToken();
+        return;
+      }
+      
     } catch (err) {
-      console.error('❌ AppInitService: Error al recuperar usuario:', err);
-      this.userStore.clearUser();
-      console.log('🧹 AppInitService: Store de usuario limpiado');
+      // Si hay algún error durante la inicialización, solo limpiar el token
+      this.tokenService.clearToken();
     }
   }
 }

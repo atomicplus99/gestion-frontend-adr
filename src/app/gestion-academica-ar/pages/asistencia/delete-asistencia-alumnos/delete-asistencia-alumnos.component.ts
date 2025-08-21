@@ -109,19 +109,23 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
   // ========================================
   
   get idAuxiliarActual(): string | null {
-    return this.userStore.idAuxiliar;
+    return this.userStore.idAuxiliar();
   }
 
   get nombreAuxiliarActual(): string {
-    const user = this.userStore.user();
-    if (user?.auxiliarInfo) {
-      return `${user.auxiliarInfo.nombre} ${user.auxiliarInfo.apellido}`;
+    const user = this.userStore.getUserSilently();
+    if (user?.auxiliar) {
+      return `${user.auxiliar.nombre} ${user.auxiliar.apellido}`;
     }
     return 'Auxiliar no identificado';
   }
 
+  get idAuxiliar(): string | null {
+    return this.userStore.idAuxiliar();
+  }
+
   get puedeAnularAsistencias(): boolean {
-    return this.userStore.puedeRegistrarAsistencia && !!this.idAuxiliarActual;
+    return this.userStore.canRegisterAttendance() && !!this.idAuxiliarActual;
   }
 
   // ========================================

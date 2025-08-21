@@ -75,10 +75,6 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   
   private userStore = inject(UserStoreService);
   private http = inject(HttpClient);
-
-  constructor() {
-    console.log('🎉 WelcomeComponent: Constructor ejecutado');
-  }
   
   // Signals para datos en tiempo real
   currentUser = this.userStore.user;
@@ -102,11 +98,17 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   displayName = computed(() => {
     const user = this.currentUser();
     if (!user) return '';
-    return user.nombreCompleto || user.username;
+    
+    if (user.auxiliar) {
+      return `${user.auxiliar.nombre} ${user.auxiliar.apellido}`;
+    } else if (user.alumno) {
+      return `${user.alumno.nombre} ${user.alumno.apellido}`;
+    }
+    
+    return user.username;
   });
 
   ngOnInit() {
-    console.log('🎉 WelcomeComponent: ngOnInit ejecutado');
     this.initializeTimeUpdates();
     this.loadWeatherData();
     this.loadDailyQuote();
@@ -331,7 +333,13 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     
     const hour = new Date().getHours();
     const user = this.currentUser();
-    const firstName = user?.nombreCompleto?.split(' ')[0] || user?.username || '';
+    
+    let firstName = user?.username || '';
+    if (user?.auxiliar) {
+      firstName = user.auxiliar.nombre;
+    } else if (user?.alumno) {
+      firstName = user.alumno.nombre;
+    }
     
     const messages = {
       morning: [
@@ -415,28 +423,5 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     if (url && url !== '#') {
       window.open(url, '_blank');
     }
-  }
-
-  // Métodos de navegación mejorados
-  onGetStarted(): void {
-    const user = this.currentUser();
-    
-    // Ejemplo: this.router.navigate(['/dashboard']);
-  }
-
-  onViewCalendar(): void {
-    
-    // Ejemplo: this.router.navigate(['/calendar']);
-  }
-
-  onCheckGrades(): void {
-    
-    // Ejemplo: this.router.navigate(['/grades']);
-  }
-
-  onGetHelp(): void {
-    
-    // Ejemplo: this.router.navigate(['/support']);
-    // O abrir chat de soporte
   }
 }

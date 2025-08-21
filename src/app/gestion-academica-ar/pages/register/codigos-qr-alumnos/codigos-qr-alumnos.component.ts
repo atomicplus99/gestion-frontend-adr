@@ -276,28 +276,21 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
 
   // Pre-cargar y convertir todas las imágenes QR a Base64
   private async precargarImagenesQRBase64(): Promise<Map<string, string>> {
-    const alumnosImprimir = this.alumnosParaImprimir;
     const imagenesBase64 = new Map<string, string>();
     
-    console.log(`📥 Convirtiendo ${alumnosImprimir.length} imágenes QR a Base64...`);
-    
-    for (let i = 0; i < alumnosImprimir.length; i++) {
-      const alumno = alumnosImprimir[i];
+    for (let i = 0; i < this.alumnosParaImprimir.length; i++) {
+      const alumno = this.alumnosParaImprimir[i];
       try {
         const url = this.generarUrlQR(alumno.codigo_qr, this.tamanoNumericoQR);
-        console.log(`🔄 Procesando ${i + 1}/${alumnosImprimir.length}: ${alumno.codigo}`);
         
         const base64 = await this.urlToBase64(url);
         imagenesBase64.set(alumno.codigo_qr, base64);
         
-        console.log(`✅ QR convertido ${i + 1}/${alumnosImprimir.length}: ${alumno.codigo}`);
       } catch (error) {
-        console.error(`❌ Error convirtiendo QR para ${alumno.codigo}:`, error);
         // Generar un QR de fallback o continuar sin esta imagen
       }
     }
     
-    console.log(`🎉 Conversión completada: ${imagenesBase64.size}/${alumnosImprimir.length} imágenes`);
     return imagenesBase64;
   }
 

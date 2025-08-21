@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { UserStoreService } from '../../../auth/store/user.store';
 import { environment } from '../../../../environments/environment';
 
-
 @Component({
   selector: 'shared-navbar',
   standalone: true,
@@ -23,8 +22,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
   
   private timeInterval?: number;
   
-  // Usuario actual
+  // Usar computed signals del UserStore
   currentUser = this.userStore.user;
+  isAuthenticated = this.userStore.isAuthenticated;
+  userRole = this.userStore.userRole;
 
   ngOnInit() {
     this.updateTime();
@@ -48,11 +49,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   getUserPhoto(): string {
-    const user = this.currentUser();
-    if (user?.photo && user.photo.trim() !== '') {
-      return user.photo;
-    }
-    return `${environment.apiUrl}/uploads/profiles/no-image.png`;
+    const user = this.userStore.getUserSilently();
+    return user?.photo || 'assets/images/default-avatar.png';
   }
 
   onImageError(event: any): void {
@@ -60,32 +58,31 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   getDisplayName(): string {
-    const user = this.currentUser();
+    const user = this.userStore.getUserSilently();
     if (!user) return '';
-    
-    const fullName = user.nombreCompleto || user.username;
-    // Mostrar solo el primer nombre si es muy largo
-    if (fullName && fullName.length > 15) {
-      return fullName.split(' ')[0];
+
+    if (user.auxiliar) {
+      return `${user.auxiliar.nombre} ${user.auxiliar.apellido}`;
+    } else if (user.alumno) {
+      return `${user.alumno.nombre} ${user.alumno.apellido}`;
     }
-    return fullName;
+    
+    return user.username || 'Usuario';
   }
 
   getRoleDisplay(): string {
-    const user = this.currentUser();
-    if (!user) return '';
-    
+    const user = this.userStore.getUserSilently();
+    if (!user || !user.role) return '';
+
     const roleMap: { [key: string]: string } = {
-      'admin': 'Administrador',
-      'user': 'Usuario',
-      'student': 'Estudiante',
-      'teacher': 'Profesor',
-      'auxiliary': 'Auxiliar',
-      'moderator': 'Moderador',
-      'editor': 'Editor'
+      'AUXILIAR': 'Auxiliar',
+      'ADMIN': 'Administrador',
+      'ALUMNO': 'Alumno',
+      'auxiliar': 'Auxiliar',
+      'alumno': 'Alumno'
     };
     
-    return roleMap[user.role.toLowerCase()] || user.role;
+    return roleMap[user.role] || user.role;
   }
 
   getCurrentDate(): string {
@@ -101,10 +98,5 @@ export class NavbarComponent implements OnInit, OnDestroy {
       month: 'short',
       year: 'numeric'
     });
-  }
-
-  getTemperature(): string {
-    // Puedes conectar esto con tu servicio del clima o usar un valor por defecto
-    return '22°C';
   }
 }

@@ -21,7 +21,7 @@
                 <div class="w-24 h-24 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 p-1">
                   <img 
                     [src]="getUserPhoto()" 
-                    [alt]="currentUser()?.nombreCompleto || 'Usuario'"
+                    [alt]="displayName() || 'Usuario'"
                     class="w-full h-full rounded-full object-cover shadow-lg group-hover:scale-105 transition-transform duration-300"
                     (error)="onImageError($event)">
                 </div>

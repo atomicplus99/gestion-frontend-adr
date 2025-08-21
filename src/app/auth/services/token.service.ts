@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { CookieService } from './cookie.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,8 +10,7 @@ export class TokenService {
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
 
   constructor(
-    private router: Router,
-    private cookieService: CookieService
+    private router: Router
   ) { }
 
   /**
@@ -20,172 +18,151 @@ export class TokenService {
    */
   isTokenExpired(token: string): boolean {
     try {
-      // Decodificar el token JWT (solo la parte del payload)
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = this.getTokenPayload(token);
       
-      // Verificar si ha expirado
-      const currentTime = Date.now() / 1000;
-      const expirationTime = payload.exp;
-      
-      // Si no hay exp, considerar como expirado por seguridad
-      if (!expirationTime) {
-  
+      if (!payload || !payload.exp) {
         return true;
       }
       
-      // Verificar si está próximo a expirar (5 minutos antes)
-      const timeUntilExpiry = expirationTime - currentTime;
-      const isExpiringSoon = timeUntilExpiry < 300; // 5 minutos
-      
-      if (isExpiringSoon) {
-  
-      }
-      
-      return currentTime >= expirationTime;
-    } catch (error) {
-      console.error('❌ Error al validar token:', error);
-      return true; // Por seguridad, considerar como expirado si hay error
-    }
-  }
-
-  /**
-   * Verifica si el token actual es válido
-   */
-  isTokenValid(): boolean {
-    console.log('🔍 isTokenValid: Verificando token...');
-    const token = this.getStoredToken();
-    
-    if (!token) {
-      console.log('❌ isTokenValid: No hay token');
-      return false;
-    }
-    
-    const isExpired = this.isTokenExpired(token);
-    console.log('⏰ isTokenValid: Token expirado:', isExpired);
-    
-    if (isExpired) {
-      console.log('🧹 isTokenValid: Limpiando token expirado');
-      this.clearToken();
-      return false;
-    }
-    
-    console.log('✅ isTokenValid: Token válido');
-    return true;
-  }
-
-  /**
-   * Obtiene el token si es válido, sino redirige al login
-   */
-  getValidToken(): string | null {
-    console.log('🔍 TokenService: Verificando validez del token');
-    const isValid = this.isTokenValid();
-    console.log('🎫 Token válido:', isValid);
-    
-    if (!isValid) {
-      console.log('❌ TokenService: Token inválido, limpiando y redirigiendo');
-      console.log('🔍 Stack trace de redirección:', new Error().stack);
-      this.clearToken();
-      this.router.navigate(['/login']);
-      return null;
-    }
-    
-    const token = this.getStoredToken();
-    console.log('📦 Token obtenido:', !!token);
-    return token;
-  }
-
-  /**
-   * Obtiene el token almacenado (desde cookies o sessionStorage como fallback)
-   */
-  getStoredToken(): string | null {
-    // Intentar obtener de cookies primero (más seguro)
-    let token = this.cookieService.getCookie(this.TOKEN_KEY);
-    console.log('🍪 Token en cookies:', !!token);
-    
-    // Si no hay en cookies, intentar sessionStorage como fallback
-    if (!token) {
-      token = sessionStorage.getItem(this.TOKEN_KEY);
-      console.log('💾 Token en sessionStorage:', !!token);
-    }
-    
-    console.log('📋 Token final obtenido:', !!token);
-    return token;
-  }
-
-  /**
-   * Almacena el token (preparado para httpOnly cookies del backend)
-   */
-  storeToken(token: string): void {
-    // NOTA: Para httpOnly cookies, el backend debe establecerlas
-    // Por ahora, usamos sessionStorage como fallback
-    sessionStorage.setItem(this.TOKEN_KEY, token);
-    
-  }
-
-  /**
-   * Limpia el token
-   */
-  clearToken(): void {
-    // Limpiar de cookies
-    this.cookieService.deleteCookie(this.TOKEN_KEY);
-    // Limpiar de sessionStorage como fallback
-    sessionStorage.removeItem(this.TOKEN_KEY);
-    
-  }
-
-  /**
-   * Obtiene información del token (payload)
-   */
-  getTokenPayload(token: string): any {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload;
-    } catch (error) {
-      console.error('❌ Error al decodificar token:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Obtiene el tiempo restante del token en minutos
-   */
-  getTokenTimeRemaining(token: string): number {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
       const currentTime = Date.now() / 1000;
       const expirationTime = payload.exp;
       
-      if (!expirationTime) {
+      return currentTime >= expirationTime;
+      
+    } catch (error) {
+      return true;
+    }
+  }
+
+  /**
+   * Verifica si el token almacenado es válido
+   */
+  isTokenValid(): boolean {
+    const token = this.getStoredToken();
+    if (!token) {
+      return false;
+    }
+    return !this.isTokenExpired(token);
+  }
+
+  /**
+   * Obtiene el payload de un token JWT
+   */
+  getTokenPayload(token: string): any {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join('')
+      );
+
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
+   * Calcula el tiempo restante en minutos antes de que expire el token
+   */
+  getTokenTimeRemaining(token: string): number {
+    try {
+      const payload = this.getTokenPayload(token);
+      
+      if (!payload || !payload.exp) {
         return 0;
       }
-      
-      const timeRemaining = expirationTime - currentTime;
-      return Math.max(0, Math.floor(timeRemaining / 60));
+
+      const currentTime = Date.now() / 1000;
+      const expirationTime = payload.exp;
+      const timeRemaining = (expirationTime - currentTime) / 60; // en minutos
+
+      return Math.max(0, timeRemaining);
     } catch (error) {
       return 0;
     }
   }
 
   /**
-   * Verifica si el sistema está usando cookies httpOnly
+   * Obtiene el token almacenado de localStorage
    */
-  isUsingHttpOnlyCookies(): boolean {
-    // Si hay token en cookies pero no en sessionStorage, probablemente son httpOnly
-    const cookieToken = this.cookieService.getCookie(this.TOKEN_KEY);
-    const storageToken = sessionStorage.getItem(this.TOKEN_KEY);
-    
-    return !!(cookieToken && !storageToken);
+  getStoredToken(): string | null {
+    return localStorage.getItem(this.TOKEN_KEY);
   }
 
   /**
-   * Obtiene información del estado de almacenamiento
+   * Obtiene un token válido (alias para getStoredToken para compatibilidad)
    */
-  getStorageInfo(): any {
-    return {
-      hasCookieToken: !!this.cookieService.getCookie(this.TOKEN_KEY),
-      hasStorageToken: !!sessionStorage.getItem(this.TOKEN_KEY),
-      isUsingHttpOnly: this.isUsingHttpOnlyCookies(),
-      tokenValid: this.isTokenValid()
-    };
+  getValidToken(): string | null {
+    return this.getStoredToken();
+  }
+
+  /**
+   * Almacena el token en localStorage
+   */
+  storeToken(token: string): void {
+    localStorage.setItem(this.TOKEN_KEY, token);
+  }
+
+  /**
+   * Almacena el refresh token en localStorage
+   */
+  storeRefreshToken(refreshToken: string): void {
+    localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
+  }
+
+  /**
+   * Obtiene el refresh token almacenado
+   */
+  getStoredRefreshToken(): string | null {
+    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+  }
+
+  /**
+   * Elimina todos los tokens almacenados
+   */
+  clearToken(): void {
+    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+  }
+
+  /**
+   * Obtiene información del usuario desde el token
+   */
+  getUserFromToken(): any {
+    const token = this.getStoredToken();
+    if (token && this.isTokenValid()) {
+      return this.getTokenPayload(token);
+    }
+    return null;
+  }
+
+  /**
+   * Verifica si el usuario tiene un rol específico
+   */
+  hasRole(role: string): boolean {
+    const userInfo = this.getUserFromToken();
+    return userInfo?.userRole === role || userInfo?.role === role;
+  }
+
+  /**
+   * Obtiene el ID del usuario desde el token
+   */
+  getUserId(): string | null {
+    const userInfo = this.getUserFromToken();
+    return userInfo?.idUser || userInfo?.id || null;
+  }
+
+  /**
+   * Navega al login y limpia tokens
+   */
+  redirectToLogin(): void {
+    this.clearToken();
+    this.router.navigate(['/login']);
   }
 }
