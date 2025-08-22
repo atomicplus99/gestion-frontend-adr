@@ -1,7 +1,7 @@
 // services/registro-asistencia.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, map } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { AlumnoInfoAsistenciaManual, AsistenciaExistenteManual, EstadoInfoManualAsistencia, RegistroAsistenciaRequestManual, RegistroAsistenciaResponseManual, VerificarAsistenciaResponse } from '../models/CreateAsistenciaManual.model';
 
@@ -52,13 +52,29 @@ export class RegistroAsistenciaServiceManual {
   // API calls
   verificarAsistencia(codigo: string, fecha?: string): Observable<VerificarAsistenciaResponse> {
     const fechaVerificar = fecha || this.fechaActual;
-    return this.http.get<VerificarAsistenciaResponse>(
-      `${this.baseUrl}/verificar/${codigo}?fecha=${fechaVerificar}`
+    return this.http.get<any>(`${this.baseUrl}/verificar/${codigo}?fecha=${fechaVerificar}`).pipe(
+      map(response => {
+        // Si la respuesta tiene estructura {success, message, timestamp, data}
+        if (response && typeof response === 'object' && 'data' in response) {
+          return response.data;
+        }
+        // Si la respuesta es directamente el objeto esperado
+        return response;
+      })
     );
   }
 
   registrarAsistencia(datos: RegistroAsistenciaRequestManual): Observable<RegistroAsistenciaResponseManual> {
-    return this.http.post<RegistroAsistenciaResponseManual>(`${this.baseUrl}/manual`, datos);
+    return this.http.post<any>(`${this.baseUrl}/manual`, datos).pipe(
+      map(response => {
+        // Si la respuesta tiene estructura {success, message, timestamp, data}
+        if (response && typeof response === 'object' && 'data' in response) {
+          return response.data;
+        }
+        // Si la respuesta es directamente el objeto esperado
+        return response;
+      })
+    );
   }
 
   // Métodos de utilidad

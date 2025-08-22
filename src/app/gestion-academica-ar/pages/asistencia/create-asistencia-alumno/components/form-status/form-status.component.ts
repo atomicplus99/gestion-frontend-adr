@@ -9,25 +9,12 @@ import { FormValidationService } from '../../services/form-validation.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="mb-6 p-4 bg-gray-50 rounded-xl">
-      <h4 class="text-sm font-bold text-gray-800 mb-3">Estado del Formulario</h4>
-      <div class="grid grid-cols-2 gap-3 text-xs">
-        <div class="flex items-center space-x-2">
-          <div [ngClass]="validationService.getValidationClass(form.get('hora_de_llegada'))"></div>
-          <span class="font-medium">Llegada</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <div [ngClass]="validationService.getValidationClass(form.get('hora_salida'), true)"></div>
-          <span class="font-medium">Salida</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <div [ngClass]="validationService.getValidationClass(form.get('estado_asistencia'))"></div>
-          <span class="font-medium">Estado</span>
-        </div>
-        <div class="flex items-center space-x-2">
-          <div [ngClass]="validationService.getValidationClass(form.get('motivo'))"></div>
-          <span class="font-medium">Motivo</span>
-        </div>
+    <div class="mb-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
+      <div class="flex items-center">
+        <svg class="w-4 h-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span class="text-sm text-blue-700 font-medium">Formulario listo para registro</span>
       </div>
     </div>
   `

@@ -3,7 +3,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../../../environments/environment';
 
 // Interfaces
@@ -63,9 +63,20 @@ export interface ErrorResponse {
   statusCode: number;
 }
 
+// Interfaces para las respuestas del backend
+export interface BackendResponse<T> {
+  success: boolean;
+  message: string;
+  timestamp: string;
+  data: T;
+}
+
 export enum EstadoAsistencia {
   PUNTUAL = 'PUNTUAL',
-  TARDANZA = 'TARDANZA'
+  TARDANZA = 'TARDANZA',
+  AUSENTE = 'AUSENTE',
+  ANULADO = 'ANULADO',
+  JUSTIFICADO = 'JUSTIFICADO'
 }
 
 
@@ -78,13 +89,36 @@ export class AsistenciaService {
   constructor(private http: HttpClient) {}
 
   verificarAsistenciaPorCodigo(codigo: string): Observable<VerificarAsistenciaResponse> {
-    return this.http.get<VerificarAsistenciaResponse>(`${this.baseUrl}/verificar/${codigo}`)
-      .pipe(catchError(this.handleError));
+    return this.http.get<BackendResponse<VerificarAsistenciaResponse>>(`${this.baseUrl}/verificar/${codigo}`)
+      .pipe(
+        map(response => {
+          console.log('🔍 Respuesta completa del backend:', response);
+          if (response && response.success && response.data) {
+            return response.data;
+          }
+          // Si la respuesta no tiene la estructura esperada, devolver objeto vacío
+          return { tiene_asistencia: false, mensaje: 'Respuesta del backend no válida' };
+        }),
+        catchError(this.handleError)
+      );
   }
 
   actualizarAsistenciaPorCodigo(codigo: string, updateData: UpdateAsistenciaRequest): Observable<UpdateAsistenciaResponse> {
-    return this.http.put<UpdateAsistenciaResponse>(`${this.baseUrl}/actualizar/${codigo}`, updateData)
-      .pipe(catchError(this.handleError));
+    console.log('🔧 SERVICIO EJECUTÁNDOSE - actualizarAsistenciaPorCodigo llamado con:', { codigo, updateData });
+    console.log('🌐 URL del servicio:', `${this.baseUrl}/actualizar/${codigo}`);
+    
+    return this.http.put<BackendResponse<UpdateAsistenciaResponse>>(`${this.baseUrl}/actualizar/${codigo}`, updateData)
+      .pipe(
+        map(response => {
+          console.log('🔄 Respuesta completa del backend:', response);
+          if (response && response.success && response.data) {
+            return response.data;
+          }
+          // Si la respuesta no tiene la estructura esperada, devolver objeto vacío
+          return { success: false, mensaje: 'Respuesta del backend no válida' } as UpdateAsistenciaResponse;
+        }),
+        catchError(this.handleError)
+      );
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {

@@ -6,14 +6,14 @@ import { AsistenciaService, EstadoAsistencia, UpdateAsistenciaRequest, Verificar
 import { HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
-import Swal from 'sweetalert2';
 import { UserStoreService } from '../../../../auth/store/user.store';
+import { ConfirmationMessageComponent, ConfirmationMessage } from '../../../../shared/components/confirmation-message/confirmation-message.component';
 
 // Importar el UserStoreService
 // Ajusta la ruta según tu estructura
 
 @Component({
-  imports: [ReactiveFormsModule, FormsModule, HttpClientModule, CommonModule],
+  imports: [ReactiveFormsModule, FormsModule, HttpClientModule, CommonModule, ConfirmationMessageComponent],
   selector: 'app-actualizar-asistencia',
   templateUrl: './update-asistencia-alumnos.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush // Optimización de rendimiento
@@ -35,11 +35,22 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
   // Opciones para select
   estadosAsistencia = [
     { value: EstadoAsistencia.PUNTUAL, label: 'Puntual' },
-    { value: EstadoAsistencia.TARDANZA, label: 'Tardanza' }
+    { value: EstadoAsistencia.TARDANZA, label: 'Tardanza' },
+    { value: EstadoAsistencia.AUSENTE, label: 'Ausente' },
+    { value: EstadoAsistencia.ANULADO, label: 'Anulado' },
+    { value: EstadoAsistencia.JUSTIFICADO, label: 'Justificado' }
   ];
 
   // Subject para manejo de suscripciones
   private destroy$ = new Subject<void>();
+
+  // Mensaje de confirmación personalizado
+  confirmationMessage: ConfirmationMessage = {
+    type: 'info',
+    title: '',
+    message: '',
+    show: false
+  };
 
   constructor(
     private fb: FormBuilder,
@@ -68,13 +79,12 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
   // ========================================
   private verificarPermisosAuxiliar(): void {
     if (!this.puedeActualizarAsistencias) {
-      Swal.fire({
-        icon: 'error',
+      this.confirmationMessage = {
+        type: 'error',
         title: 'Sin Permisos',
-        text: 'No tienes permisos de auxiliar para actualizar asistencias.',
-        confirmButtonText: 'Entendido',
-        confirmButtonColor: '#dc2626'
-      });
+        message: 'No tienes permisos de auxiliar para actualizar asistencias.',
+        show: true
+      };
     }
   }
 
@@ -173,28 +183,35 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
 
     this.asistenciaService.verificarAsistenciaPorCodigo(codigo).subscribe({
       next: (response) => {
-        
+        console.log('✅ Respuesta del backend (verificar):', response);
+        console.log('🔍 Verificando datos:', {
+          tiene_asistencia: response.tiene_asistencia,
+          tiene_asistencia_boolean: !!response.tiene_asistencia,
+          asistencia: response.asistencia,
+          tiene_asistencia_data: !!response.asistencia
+        });
         
         this.alumnoData = response;
         
         if (response.tiene_asistencia && response.asistencia) {
+          console.log('✅ Alumno tiene asistencia, mostrando formulario de actualización');
           // Tiene asistencia - mostrar formulario de actualización
           this.prepareUpdateForm(response);
           this.showUpdateForm = true;
           
 
         } else {
+          console.log('❌ Alumno NO tiene asistencia, mostrando mensaje');
           // No tiene asistencia - solo mostrar info del alumno
           this.showUpdateForm = false;
           
-          // Mostrar mensaje informativo con SweetAlert2
-          Swal.fire({
-            icon: 'info',
+          // Mostrar mensaje informativo personalizado
+          this.confirmationMessage = {
+            type: 'info',
             title: 'Sin Asistencia',
-            text: response.mensaje,
-            confirmButtonText: 'Entendido',
-            confirmButtonColor: '#3085d6'
-          });
+            message: response.mensaje,
+            show: true
+          };
         }
         
         this.isLoading = false;
@@ -204,14 +221,13 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('💥 Error buscando alumno:', error);
         
-        // Mostrar error con SweetAlert2
-        Swal.fire({
-          icon: 'error',
+        // Mostrar error personalizado
+        this.confirmationMessage = {
+          type: 'error',
           title: 'Error',
-          text: error,
-          confirmButtonText: 'Cerrar',
-          confirmButtonColor: '#d33'
-        });
+          message: error,
+          show: true
+        };
         
         this.showUpdateForm = false;
         this.isLoading = false;
@@ -226,13 +242,19 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
   private prepareUpdateForm(data: VerificarAsistenciaResponse): void {
     if (!data.asistencia) return;
 
-    
+    console.log('📋 Preparando formulario con datos:', data.asistencia);
 
     this.actualizarForm.patchValue({
       hora_de_llegada: data.asistencia.hora_de_llegada,
       hora_salida: data.asistencia.hora_salida || '',
       estado_asistencia: data.asistencia.estado_asistencia,
       motivo: ''
+    });
+
+    console.log('✅ Formulario preparado:', {
+      value: this.actualizarForm.value,
+      valid: this.actualizarForm.valid,
+      errors: this.actualizarForm.errors
     });
 
     this.forzarDeteccionCambios();
@@ -242,29 +264,61 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
    * Actualiza la asistencia del alumno
    */
   onActualizarAsistencia(): void {
+    console.log('🚀 Método onActualizarAsistencia ejecutado');
+    console.log('📋 Estado del formulario:', {
+      valid: this.actualizarForm.valid,
+      value: this.actualizarForm.value,
+      errors: this.actualizarForm.errors
+    });
+    console.log('👤 Estado de alumnoData:', {
+      alumnoData: this.alumnoData,
+      tieneAlumno: !!this.alumnoData?.alumno,
+      alumno: this.alumnoData?.alumno,
+      codigo: this.alumnoData?.alumno?.codigo
+    });
+    
     // Verificar permisos antes de actualizar
     if (!this.puedeActualizarAsistencias) {
+      console.warn('⚠️ Sin permisos para actualizar asistencia');
       this.mostrarErrorSinPermisos();
       return;
     }
+    console.log('✅ Permisos verificados correctamente');
 
     if (!this.idAuxiliarActual) {
-      Swal.fire({
-        icon: 'error',
+      this.confirmationMessage = {
+        type: 'error',
         title: 'Error de Auxiliar',
-        text: 'No se pudo obtener el ID del auxiliar. Verifica tu sesión.',
-        confirmButtonText: 'Cerrar',
-        confirmButtonColor: '#d33'
-      });
+        message: 'No se pudo obtener el ID del auxiliar. Verifica tu sesión.',
+        show: true
+      };
       return;
     }
+    console.log('✅ ID del auxiliar verificado correctamente');
 
-    if (this.actualizarForm.invalid || !this.alumnoData?.alumno) {
+    console.log('🔍 Verificando alumnoData:', {
+      alumnoData: this.alumnoData,
+      tieneAlumno: !!this.alumnoData?.alumno,
+      alumno: this.alumnoData?.alumno
+    });
+    
+    // Verificar si tenemos los datos necesarios para actualizar
+    if (this.actualizarForm.invalid) {
+      console.warn('⚠️ Formulario inválido');
       this.markFormGroupTouched(this.actualizarForm);
       return;
     }
 
+    // Verificar si tenemos asistencia para actualizar
+    if (!this.alumnoData?.asistencia) {
+      console.warn('⚠️ No hay datos de asistencia para actualizar');
+      return;
+    }
+
+    console.log('✅ Formulario y datos de asistencia verificados correctamente');
+
     this.isLoadingUpdate = true;
+    console.log('⏳ Estado de carga de actualización activado:', this.isLoadingUpdate);
     this.forzarDeteccionCambios();
 
     const formValues = this.actualizarForm.value;
@@ -286,13 +340,32 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
       updateData.estado_asistencia = formValues.estado_asistencia;
     }
 
-    const codigo = this.alumnoData.alumno.codigo;
+    // Obtener el código del alumno del formulario de búsqueda
+    const codigo = this.buscarForm.get('codigo')?.value?.trim();
+    if (!codigo) {
+      console.error('💥 No se pudo obtener el código del alumno del formulario de búsqueda');
+      return;
+    }
 
-    
+    // Debug: Log antes de hacer la petición de actualización
+    console.log('🔄 Actualizando asistencia para alumno:', codigo);
+    console.log('📝 Datos que se enviarán al backend:', updateData);
+    console.log('🌐 Endpoint que se llamará:', `${this.asistenciaService['baseUrl']}/actualizar/${codigo}`);
+    console.log('👤 ID del auxiliar que realiza la actualización:', this.idAuxiliarActual);
+
+    console.log('🚀 ANTES DE LLAMAR AL SERVICIO - Intentando enviar petición HTTP...');
 
     this.asistenciaService.actualizarAsistenciaPorCodigo(codigo, updateData).subscribe({
       next: (response) => {
-        
+        console.log('✅ SUSCRIPCIÓN NEXT EJECUTADA - Respuesta del backend recibida');
+        // Debug: Log de la respuesta exitosa del backend
+        console.log('✅ Respuesta exitosa del backend (actualizarAsistenciaPorCodigo):', response);
+        console.log('📊 Estructura de la respuesta:', {
+          success: response.success,
+          mensaje: response.mensaje,
+          asistencia_actualizada: response.asistencia_actualizada ? 'SÍ' : 'NO',
+          alumno: response.alumno ? 'SÍ' : 'NO'
+        });
         
         this.isLoadingUpdate = false;
         
@@ -306,40 +379,36 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
 
         this.forzarDeteccionCambios();
 
-        // Mostrar éxito con información del auxiliar
-        Swal.fire({
-          icon: 'success',
+        // Mostrar éxito con mensaje personalizado
+        this.confirmationMessage = {
+          type: 'success',
           title: '¡Actualización Exitosa!',
-          html: `
-            <div style="text-align: left; font-size: 14px;">
-              <p><strong>📝 Mensaje:</strong> ${response.mensaje}</p>
-              <p><strong>👤 Auxiliar:</strong> ${this.nombreAuxiliarActual}</p>
-              <p><strong>🆔 ID Auxiliar:</strong> ${this.idAuxiliarActual}</p>
-              <p><strong>📅 Fecha:</strong> ${new Date().toLocaleString()}</p>
-            </div>
-          `,
-          timer: 5000,
-          timerProgressBar: true,
-          confirmButtonText: 'Continuar',
-          confirmButtonColor: '#10b981'
-        }).then(() => {
-          // Limpiar TODO después de cerrar el alert
-          this.limpiarFormularioCompleto();
-        });
+          message: 'La asistencia se ha actualizado correctamente',
+          show: true
+        };
       },
       error: (error) => {
+        console.log('❌ SUSCRIPCIÓN ERROR EJECUTADA - Error del backend recibido');
+        // Debug: Log detallado del error de actualización
         console.error('💥 Error actualizando asistencia:', error);
+        console.error('📊 Estructura del error:', {
+          status: error.status,
+          statusText: error.statusText,
+          message: error.message,
+          error: error.error
+        });
+        console.error('🌐 URL que falló:', `${this.asistenciaService['baseUrl']}/actualizar/${codigo}`);
+        console.error('📝 Datos que se intentaron enviar:', updateData);
         
         this.isLoadingUpdate = false;
         
-        // Mostrar error con SweetAlert2
-        Swal.fire({
-          icon: 'error',
+        // Mostrar error personalizado
+        this.confirmationMessage = {
+          type: 'error',
           title: 'Error al Actualizar',
-          text: error,
-          confirmButtonText: 'Cerrar',
-          confirmButtonColor: '#d33'
-        });
+          message: error,
+          show: true
+        };
         
         this.forzarDeteccionCambios();
       }
@@ -379,13 +448,24 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
    * Muestra error cuando no hay permisos de auxiliar
    */
   private mostrarErrorSinPermisos(): void {
-    Swal.fire({
-      icon: 'error',
+    this.confirmationMessage = {
+      type: 'error',
       title: 'Sin Permisos de Auxiliar',
-      text: 'Necesitas permisos de auxiliar para realizar esta acción.',
-      confirmButtonText: 'Entendido',
-      confirmButtonColor: '#dc2626'
-    });
+      message: 'Necesitas permisos de auxiliar para realizar esta acción.',
+      show: true
+    };
+  }
+
+  /**
+   * Maneja la confirmación del mensaje de confirmación
+   */
+  onConfirmMessage(): void {
+    this.confirmationMessage.show = false;
+    
+    // Si es un mensaje de éxito, limpiar el formulario
+    if (this.confirmationMessage.type === 'success') {
+      this.limpiarFormularioCompleto();
+    }
   }
 
   /**
@@ -437,7 +517,14 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
    * Verifica si el formulario de actualización es válido
    */
   get isActualizarFormValid(): boolean {
-    return this.actualizarForm.valid && this.puedeActualizarAsistencias && !!this.idAuxiliarActual;
+    const isValid = this.actualizarForm.valid && this.puedeActualizarAsistencias && !!this.idAuxiliarActual;
+    console.log('🔍 Validación del formulario de actualización:', {
+      formValid: this.actualizarForm.valid,
+      puedeActualizar: this.puedeActualizarAsistencias,
+      idAuxiliar: this.idAuxiliarActual,
+      resultado: isValid
+    });
+    return isValid;
   }
 
   /**

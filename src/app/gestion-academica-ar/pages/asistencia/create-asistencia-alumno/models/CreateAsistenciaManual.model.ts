@@ -10,7 +10,10 @@ export interface AlumnoInfoAsistenciaManual {
   codigo: string;
   nombre: string;
   apellido: string;
-  turno: TurnoAsistenciaManual;
+  seccion: string;
+  grado: number;
+  nivel: string;
+  turno?: TurnoAsistenciaManual; // Opcional ya que el backend no lo devuelve en este endpoint
 }
 
 export interface AsistenciaExistenteManual {

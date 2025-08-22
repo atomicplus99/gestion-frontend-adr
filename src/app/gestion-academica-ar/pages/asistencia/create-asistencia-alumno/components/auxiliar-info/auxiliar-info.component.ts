@@ -10,7 +10,6 @@ import { CommonModule } from '@angular/common';
       <p class="text-sm text-green-800">
         <strong>👤 Auxiliar:</strong> {{ nombreAuxiliar }}
       </p>
-      <p class="text-xs text-green-600">ID: {{ idAuxiliar }}</p>
     </div>
   `
 })

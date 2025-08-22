@@ -3,7 +3,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef, AfterViewInit, ChangeD
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import Swal from 'sweetalert2';
+import { ConfirmationMessageComponent, ConfirmationMessage } from '../../../../../../shared/components/confirmation-message/confirmation-message.component';
 
 import { SelectorFechaComponent } from '../selector-fecha/selector-fecha.component';
 import { RegistroAsistenciaServiceManual } from '../../services/register-asistencia.service';
@@ -14,8 +14,8 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
   imports: [CommonModule, ReactiveFormsModule, SelectorFechaComponent],
   changeDetection: ChangeDetectionStrategy.OnPush, // Optimización de rendimiento
   template: `
-    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 h-fit sticky top-6">
-      <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-t-2xl">
+    <div class="bg-white rounded-lg shadow-md border border-blue-200 h-fit sticky top-6">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-lg">
         <div class="flex items-center space-x-3">
           <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -46,14 +46,14 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
                 placeholder="Código del estudiante"
                 autocomplete="off"
                 spellcheck="false"
-                class="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                class="w-full px-4 py-3 text-base border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 [class.border-red-400]="buscarForm.get('codigo')?.invalid && buscarForm.get('codigo')?.touched"
                 [class.border-green-400]="buscarForm.get('codigo')?.valid && buscarForm.get('codigo')?.value?.length >= 8"
                 (input)="onInputChange($event)"
                 (keyup.enter)="verificarAsistencia()"
               />
               <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                <div *ngIf="verificando" class="animate-spin w-5 h-5 text-blue-600">
+                <div *ngIf="verificando" class="animate-spin w-5 h-5 text-gray-600">
                   <svg fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -72,7 +72,7 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
               type="submit"
               [disabled]="verificando || buscarForm.invalid"
               (click)="onClickBuscar($event)"
-              class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200"
+              class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200"
               [class.animate-pulse]="verificando">
               <span *ngIf="verificando" class="flex items-center justify-center">
                 <svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
@@ -81,22 +81,36 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
                 </svg>
                 Buscando...
               </span>
-              <span *ngIf="!verificando">🔍 Buscar Estudiante</span>
+              <span *ngIf="!verificando" class="flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                Buscar Estudiante
+              </span>
             </button>
             
             <!-- Estado del Input -->
-            <div class="text-sm space-y-2">
+            <div class="space-y-2">
               <div *ngIf="getCodigoLength() > 0 && getCodigoLength() < 8" 
-                   class="text-blue-600 bg-blue-50 p-2 rounded-lg border border-blue-200">
-                📝 {{ getCodigoLength() }}/8 caracteres mínimos
+                   class="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <svg class="w-4 h-4 text-blue-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="text-sm text-blue-700 font-medium">{{ getCodigoLength() }}/8 caracteres mínimos</span>
               </div>
               <div *ngIf="buscarForm.get('codigo')?.valid && getCodigoLength() >= 8" 
-                   class="text-green-600 bg-green-50 p-2 rounded-lg border border-green-200">
-                ✅ Código válido - Búsqueda automática activada
+                   class="flex items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                <svg class="w-4 h-4 text-green-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span class="text-sm text-green-700 font-medium">Código válido - Búsqueda automática activada</span>
               </div>
               <div *ngIf="buscarForm.get('codigo')?.invalid && buscarForm.get('codigo')?.touched" 
-                   class="text-red-600 bg-red-50 p-2 rounded-lg border border-red-200">
-                ❌ Código inválido - Solo letras y números
+                   class="flex items-center p-3 bg-red-50 rounded-lg border border-red-200">
+                <svg class="w-4 h-4 text-red-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                <span class="text-sm text-red-700 font-medium">Código inválido - Solo letras y números</span>
               </div>
             </div>
           </div>
@@ -144,6 +158,14 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
   private searchTimeout: any;
   private destroy$ = new Subject<void>();
 
+  // Mensaje de confirmación personalizado
+  confirmationMessage: ConfirmationMessage = {
+    type: 'info',
+    title: '',
+    message: '',
+    show: false
+  };
+
   constructor(
     private fb: FormBuilder,
     private registroService: RegistroAsistenciaServiceManual,
@@ -187,7 +209,6 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
       .pipe(takeUntil(this.destroy$))
       .subscribe(codigo => {
         this.manejarCambioCodigo(codigo);
-        this.forzarDeteccionCambios(); // 🔥 Forzar detección
       });
   }
 
@@ -196,23 +217,9 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   // ========================================
-  // MÉTODOS DE FORZADO DE DETECCIÓN
+  // MÉTODOS DE DETECCIÓN OPTIMIZADOS
   // ========================================
-  private forzarDeteccionCambios(): void {
-    // Forzar detección inmediata
-    this.cdr.detectChanges();
-    
-    // Forzar detección en el siguiente ciclo
-    setTimeout(() => {
-      this.cdr.detectChanges();
-    }, 0);
-  }
-
-  private forzarDeteccionConDelay(delay: number = 100): void {
-    setTimeout(() => {
-      this.cdr.detectChanges();
-    }, delay);
-  }
+  // Nota: Se usa cdr.markForCheck() en lugar de detectChanges() para mejor rendimiento
 
   // ========================================
   // GETTERS PARA EL TEMPLATE
@@ -237,20 +244,15 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
     event.preventDefault();
     event.stopPropagation();
     
-    // Forzar detección antes de verificar
-    this.forzarDeteccionCambios();
-    
-    // Llamar verificación con timeout para asegurar que se ejecute
-    setTimeout(() => {
-      this.verificarAsistencia();
-    }, 10);
+    // Llamar verificación inmediatamente
+    this.verificarAsistencia();
   }
 
   onInputChange(event: any): void {
     const valor = event.target.value?.toUpperCase();
     if (valor !== this.buscarForm.get('codigo')?.value) {
       this.buscarForm.patchValue({ codigo: valor }, { emitEvent: false });
-      this.forzarDeteccionCambios();
+      this.cdr.markForCheck();
     }
   }
 
@@ -260,15 +262,15 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
     
     if (!codigo) {
       this.registroService.limpiarEstados();
-      this.forzarDeteccionCambios();
+      this.cdr.markForCheck();
       return;
     }
     
-    // Auto-buscar cuando el código tenga 8+ caracteres
+    // Auto-buscar cuando el código tenga 8+ caracteres (más rápido)
     if (codigo.length >= 8) {
       this.searchTimeout = setTimeout(() => {
         this.verificarAsistencia();
-      }, 800);
+      }, 300); // Reducido de 800ms a 300ms
     }
   }
 
@@ -281,22 +283,19 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
       return;
     }
 
-    // Forzar detección antes de validar
-    this.forzarDeteccionCambios();
-
     if (this.buscarForm.invalid) {
       await this.mostrarError(
         'Código Inválido', 
-        'Por favor ingrese un código válido (mínimo 5 caracteres, solo letras y números).'
+        'Por favor ingrese un código válido (mínimo 8 caracteres, solo letras y números).'
       );
       return;
     }
     
     const codigo = this.buscarForm.get('codigo')?.value?.trim().toUpperCase();
-    if (!codigo || codigo.length < 5) {
+    if (!codigo || codigo.length < 8) {
       await this.mostrarError(
         'Código Muy Corto',
-        `El código debe tener al menos 5 caracteres. Actual: ${codigo?.length || 0}`
+        `El código debe tener al menos 8 caracteres. Actual: ${codigo?.length || 0}`
       );
       return;
     }
@@ -306,33 +305,24 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
     try {
       const response = await this.registroService.verificarAsistencia(codigo).toPromise();
       
-      // Forzar detección después de recibir respuesta
-      this.forzarDeteccionCambios();
-      
+      // Procesar respuesta inmediatamente
       await this.procesarRespuestaVerificacion(response, codigo);
       
-      // Forzar detección adicional después del procesamiento
-      this.forzarDeteccionCambios();
-      this.forzarDeteccionConDelay(100);
-      this.forzarDeteccionConDelay(300);
+      // Solo una detección forzada después del procesamiento
+      this.cdr.markForCheck();
       
     } catch (error: any) {
       this.registroService.limpiarEstados();
       await this.manejarErrorVerificacion(error, codigo);
     } finally {
       this.setEstadoVerificacion(false);
-      
-      // Forzar detección final múltiples veces
-      this.forzarDeteccionCambios();
-      this.forzarDeteccionConDelay(50);
-      this.forzarDeteccionConDelay(150);
-      this.forzarDeteccionConDelay(300);
+      this.cdr.markForCheck();
     }
   }
 
   private setEstadoVerificacion(verificando: boolean): void {
     this.verificando = verificando;
-    this.forzarDeteccionCambios();
+    this.cdr.markForCheck();
     
     if (verificando) {
       this.registroService.limpiarEstados();
@@ -357,22 +347,15 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
     // Actualizar estados
     this.registroService.setAsistenciaExistente(response.asistencia || null);
     this.registroService.setAlumnoEncontrado(null);
-    this.forzarDeteccionCambios();
     
-    // Mostrar información
-    const estadoInfo = this.registroService.obtenerInfoEstado(response.asistencia?.estado_asistencia || '');
+    // Solo forzar detección una vez
+    this.cdr.markForCheck();
     
-    await this.mostrarError(
-      'Registro Existente',
-      `Este estudiante ya tiene asistencia registrada para ${this.registroService.fechaActual}:\n\n` +
-      `• Hora: ${response.asistencia?.hora_de_llegada}\n` +
-      `• Estado: ${estadoInfo.texto}\n` +
-      `• Fecha: ${new Date(response.asistencia?.fecha || '').toLocaleDateString()}\n\n` +
-      `${estadoInfo.accion}`
-    );
-    
-    // Auto-limpiar con animación
-    this.autoLimpiarFormulario();
+    // NO mostrar alerta - la información ya se muestra en la interfaz
+    // Auto-limpiar formulario después de un breve delay
+    setTimeout(() => {
+      this.autoLimpiarFormulario();
+    }, 2000);
   }
 
   private async manejarAlumnoEncontrado(response: any): Promise<void> {
@@ -380,50 +363,17 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
     this.registroService.setAsistenciaExistente(null);
     this.registroService.setAlumnoEncontrado(response.alumno);
     
-    // Forzar detección
+    // Solo una detección forzada
     this.cdr.markForCheck();
-    this.forzarDeteccionCambios();
     
-    // Mostrar toast de éxito
-    const nombreCompleto = `${response.alumno?.nombre} ${response.alumno?.apellido}`;
-    const turnoInfo = response.alumno?.turno ? 
-      `${response.alumno.turno.turno} (${response.alumno.turno.hora_inicio} - ${response.alumno.turno.hora_fin})` : 
-      'Sin turno';
-    
-    const fechaTexto = this.registroService.esFechaHoy(this.registroService.fechaActual) ? 'hoy' : this.registroService.fechaActual;
-    
-    // Toast de éxito NO await para no bloquear
-    Swal.fire({
-      icon: 'success',
-      title: '¡Estudiante Encontrado!',
-      html: `
-        <div style="text-align: left; font-size: 14px;">
-          <p><strong>👤 Nombre:</strong> ${nombreCompleto}</p>
-          <p><strong>📝 Código:</strong> ${response.alumno?.codigo}</p>
-          <p><strong>🕐 Turno:</strong> ${turnoInfo}</p>
-          <p><strong>📅 Fecha:</strong> ${fechaTexto}</p>
-          <p><strong>✅ Estado:</strong> Sin asistencia registrada</p>
-        </div>
-      `,
-      confirmButtonText: 'Continuar',
-      confirmButtonColor: '#2563eb',
-      timer: 4000,
-      timerProgressBar: true,
-      toast: true,
-      position: 'top-end',
-      showConfirmButton: false
-    });
-    
-    // Forzar detección final después del toast
-    this.forzarDeteccionConDelay(200);
-    this.forzarDeteccionConDelay(500);
+    // NO mostrar toast - la información ya se muestra en la interfaz
+    // La información del estudiante se muestra automáticamente en la columna de información
   }
 
   private autoLimpiarFormulario(): void {
     setTimeout(() => {
       this.buscarForm.patchValue({ codigo: '' });
-      this.forzarDeteccionCambios();
-      this.forzarDeteccionConDelay(100);
+      this.cdr.markForCheck();
     }, 3000);
   }
 
@@ -452,13 +402,19 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   private async mostrarError(titulo: string, mensaje: string): Promise<void> {
-    await Swal.fire({
-      icon: 'error',
+    this.confirmationMessage = {
+      type: 'error',
       title: titulo,
-      text: mensaje,
-      confirmButtonText: 'Entendido',
-      confirmButtonColor: '#dc2626'
-    });
+      message: mensaje,
+      show: true
+    };
+  }
+
+  /**
+   * Maneja la confirmación del mensaje de confirmación
+   */
+  onConfirmMessage(): void {
+    this.confirmationMessage.show = false;
   }
 
   // ========================================
@@ -468,17 +424,16 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
     this.buscarForm.reset();
     this.registroService.resetearTodo();
     this.limpiarTimeouts();
-    this.forzarDeteccionCambios();
+    this.cdr.markForCheck();
     
     // Enfocar después del reset
-    this.forzarDeteccionConDelay(50);
     setTimeout(() => this.enfocarInput(), 100);
   }
 
   buscarOtro(): void {
     this.buscarForm.reset();
     this.registroService.limpiarEstados();
-    this.forzarDeteccionCambios();
+    this.cdr.markForCheck();
     
     setTimeout(() => this.enfocarInput(), 100);
   }

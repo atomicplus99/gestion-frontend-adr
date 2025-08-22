@@ -87,16 +87,42 @@ export class AsistenciaService {
   // ✅ BUSCAR ALUMNO POR CÓDIGO
   buscarAlumnoPorCodigo(codigo: string): Observable<Alumno> {
     console.log(`🔍 Buscando alumno por código: ${codigo}`);
-    return this.http.get<Alumno>(`${this.baseUrlAlumnos}/codigo/${codigo}`);
+    
+    // Definir la interfaz de respuesta del backend
+    interface BackendResponse<T> {
+      success: boolean;
+      message: string;
+      timestamp: string;
+      data: T;
+    }
+    
+    return this.http.get<BackendResponse<Alumno>>(`${this.baseUrlAlumnos}/codigo/${codigo}`)
+      .pipe(
+        map(response => {
+          console.log('🔍 Respuesta completa del backend:', response);
+          return response.data;
+        })
+      );
   }
 
   // ✅ OBTENER ASISTENCIAS DEL DÍA ACTUAL DE UN ALUMNO
   obtenerAsistenciasHoyAlumno(codigo: string): Observable<Asistencia[]> {
     console.log(`📋 Obteniendo asistencias de hoy del alumno: ${codigo}`);
     
-    return this.http.get<AsistenciaConAlumno>(`${this.baseUrlAsistencia}/list/alumno/${codigo}`)
+    // Definir la interfaz de respuesta del backend
+    interface BackendResponse<T> {
+      success: boolean;
+      message: string;
+      timestamp: string;
+      data: T;
+    }
+    
+    return this.http.get<BackendResponse<AsistenciaConAlumno>>(`${this.baseUrlAsistencia}/list/alumno/${codigo}`)
       .pipe(
-        map(data => {
+        map(response => {
+          console.log('📋 Respuesta completa del backend:', response);
+          const data = response.data;
+          
           // Filtrar solo asistencias del día actual
           const hoy = new Date();
           const asistenciasHoy = data.asistencias.filter(asistencia => {
@@ -113,7 +139,22 @@ export class AsistenciaService {
   // ✅ ANULAR ASISTENCIA DEL DÍA ACTUAL (SIN FECHA ESPECÍFICA)
   anularAsistencia(request: AnularAsistenciaRequest): Observable<AnularAsistenciaResponse> {
     console.log('🗑️ Anulando asistencia del día actual:', request);
-    return this.http.patch<AnularAsistenciaResponse>(`${this.baseUrlAsistencia}/anular`, request);
+    
+    // Definir la interfaz de respuesta del backend
+    interface BackendResponse<T> {
+      success: boolean;
+      message: string;
+      timestamp: string;
+      data: T;
+    }
+    
+    return this.http.patch<BackendResponse<AnularAsistenciaResponse>>(`${this.baseUrlAsistencia}/anular`, request)
+      .pipe(
+        map(response => {
+          console.log('🗑️ Respuesta completa del backend:', response);
+          return response.data;
+        })
+      );
   }
 
   // ✅ HELPER: VERIFICAR SI SE PUEDE ANULAR UN ESTADO

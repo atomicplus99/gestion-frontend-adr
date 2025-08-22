@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 
 // Servicios
@@ -20,7 +21,7 @@ import {
   ErrorResponseManualAsistencia, 
   RegistroAsistenciaRequestManual 
 } from '../../models/CreateAsistenciaManual.model';
-import { AuxiliarInfoComponent } from '../auxiliar-info/auxiliar-info.component';
+
 import { FormStatusComponent } from '../form-status/form-status.component';
 import { DateInfoComponent } from '../data-info/data-info.component';
 
@@ -30,7 +31,6 @@ import { DateInfoComponent } from '../data-info/data-info.component';
   imports: [
     CommonModule, 
     ReactiveFormsModule,
-    AuxiliarInfoComponent,
     FormStatusComponent,
     DateInfoComponent
   ],
@@ -124,7 +124,7 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
     this.registroForm.get('hora_de_llegada')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(hora => {
-        if (hora && this.alumnoEncontrado?.turno) {
+        if (hora) {
           this.validarHoraTiempoReal(hora, 'llegada');
         }
       });
@@ -132,7 +132,7 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
     this.registroForm.get('hora_salida')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(hora => {
-        if (hora && this.alumnoEncontrado?.turno) {
+        if (hora) {
           this.validarHoraTiempoReal(hora, 'salida');
         }
       });
@@ -196,20 +196,21 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
   }
 
   private validarHoraTiempoReal(hora: string, tipo: 'llegada' | 'salida'): void {
-    if (!hora || !this.alumnoEncontrado?.turno) return;
+    // TODO: Validación de turno comentada temporalmente - el backend no devuelve info de turno
+    // if (!hora || !this.alumnoEncontrado?.turno) return;
     
-    const turno = this.alumnoEncontrado.turno;
-    const esHoraValida = this.registroService.validarHoraTurno(hora, turno.hora_inicio, turno.hora_fin);
+    // const turno = this.alumnoEncontrado.turno;
+    // const esHoraValida = this.registroService.validarHoraTurno(hora, turno.hora_inicio, turno.hora_fin);
     
-    if (!esHoraValida) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Hora Fuera del Turno',
-        text: `La hora de ${tipo} (${hora}) está fuera del horario del turno ${turno.turno} (${turno.hora_inicio} - ${turno.hora_fin}).`,
-        confirmButtonColor: '#f59e0b',
-        timer: 4000
-      });
-    }
+    // if (!esHoraValida) {
+    //   Swal.fire({
+    //     icon: 'warning',
+    //     title: 'Hora Fuera del Turno',
+    //     text: `La hora de ${tipo} (${hora}) está fuera del horario del turno ${turno.turno} (${turno.hora_inicio} - ${turno.hora_fin}).`,
+    //     confirmButtonColor: '#f59e0b',
+    //     timer: 4000
+    //   });
+    // }
     
     if (tipo === 'salida') {
       this.validarSecuenciaHorarios(hora);
@@ -278,7 +279,7 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
     const datosRegistro = this.construirDatosRegistro();
     
     try {
-      const response = await this.registroService.registrarAsistencia(datosRegistro).toPromise();
+      const response = await firstValueFrom(this.registroService.registrarAsistencia(datosRegistro));
       
       await this.manejarRegistroExitoso(response, datosRegistro);
       

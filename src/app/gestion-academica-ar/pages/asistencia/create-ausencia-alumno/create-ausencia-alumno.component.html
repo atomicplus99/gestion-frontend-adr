@@ -1,202 +1,225 @@
-<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-7xl mx-auto">
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Registro de Ausencias</h1>
-            <p class="text-gray-600">Gestiona las ausencias de forma masiva o individual</p>
-        </div>
-
-        <!-- Botón para limpiar mensajes -->
-        <div class="text-center mb-6" *ngIf="successMasivo || successPersonal || errorMasivo || errorPersonal">
-            <button (click)="clearMessages()"
-                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                    </path>
-                </svg>
-                Limpiar mensajes
-            </button>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-            <!-- Registro Masivo -->
-            <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-                <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
-                    <h2 class="text-xl font-semibold text-white flex items-center">
-                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                            </path>
-                        </svg>
-                        Registro Masivo
-                    </h2>
-                    <p class="text-blue-100 text-sm mt-1">Registra ausencias de todos los alumnos cuyos turnos hayan
-                        terminado</p>
-                </div>
-
-                <form [formGroup]="masivoForm" (ngSubmit)="onRegistroMasivo()" class="p-6">
-                    <div class="mb-6">
-                        <label for="horaPersonalizada" class="block text-sm font-medium text-gray-700 mb-2">
-                            Hora personalizada (opcional)
-                        </label>
-                        <input type="time" id="horaPersonalizada" formControlName="horaPersonalizada" step="1"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        <p class="text-xs text-gray-500 mt-1">Si no especificas una hora, se usará la hora actual del
-                            sistema</p>
-                    </div>
-
-                    <!-- Mensaje de éxito masivo -->
-                    <div *ngIf="successMasivo" class="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
-                        <div class="flex">
-                            <svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                            <p class="text-sm text-green-800">{{ successMasivo }}</p>
-                        </div>
-                    </div>
-
-                    <div *ngIf="duplicadosMasivo.length > 0"
-                        class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                        <div class="flex">
-                            <svg class="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                            <div>
-                                <p class="text-sm font-medium text-yellow-800">Alumnos con registro existente ({{
-                                    duplicadosMasivo.length }})</p>
-                                <ul class="text-sm text-yellow-700 mt-1 list-disc list-inside">
-                                    <li *ngFor="let duplicado of duplicadosMasivo">{{ duplicado }}</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Mensaje de error masivo -->
-                    <div *ngIf="errorMasivo" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-                        <div class="flex">
-                            <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                            <p class="text-sm text-red-800">{{ errorMasivo }}</p>
-                        </div>
-                    </div>
-
-                    <button type="submit" [disabled]="loadingMasivo"
-                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200">
-                        <svg *ngIf="loadingMasivo" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none"
-                            viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                            </circle>
-                            <path class="opacity-75" fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                            </path>
-                        </svg>
-                        {{ loadingMasivo ? 'Registrando...' : 'Registrar Ausencias Masivas' }}
-                    </button>
-                </form>
-            </div>
-
-            <!-- Registro Personal -->
-            <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-                <div class="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
-                    <h2 class="text-xl font-semibold text-white flex items-center">
-                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
-                        Registro Individual
-                    </h2>
-                    <p class="text-green-100 text-sm mt-1">Registra la ausencia de un alumno específico</p>
-                </div>
-
-                <form [formGroup]="personalForm" (ngSubmit)="onRegistroPersonal()" class="p-6">
-                    <div class="mb-4">
-                        <label for="codigo" class="block text-sm font-medium text-gray-700 mb-2">
-                            Código del alumno <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" id="codigo" formControlName="codigo" placeholder="Ej: EST001"
-                            class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500"
-                            [class.border-red-300]="codigoInvalid" [class.border-gray-300]="!codigoInvalid">
-                        <p *ngIf="codigoInvalid" class="text-sm text-red-600 mt-1">
-                            El código del alumno es requerido (mínimo 3 caracteres)
-                        </p>
-                    </div>
-
-                    <div class="mb-6">
-                        <label for="fecha" class="block text-sm font-medium text-gray-700 mb-2">
-                            Fecha (opcional)
-                        </label>
-                        <input type="date" id="fecha" formControlName="fecha"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500">
-                        <p class="text-xs text-gray-500 mt-1">Si no especificas una fecha, se usará la fecha actual</p>
-                    </div>
-
-                    <!-- Mensaje de éxito personal -->
-                    <div *ngIf="successPersonal" class="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
-                        <div class="flex">
-                            <svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                            <p class="text-sm text-green-800">{{ successPersonal }}</p>
-                        </div>
-                    </div>
-
-                    <!-- Mensaje de error personal -->
-                    <div *ngIf="errorPersonal" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-                        <div class="flex">
-                            <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                            <p class="text-sm text-red-800">{{ errorPersonal }}</p>
-                        </div>
-                    </div>
-
-                    <button type="submit" [disabled]="loadingPersonal"
-                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200">
-                        <svg *ngIf="loadingPersonal" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none"
-                            viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                            </circle>
-                            <path class="opacity-75" fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                            </path>
-                        </svg>
-                        {{ loadingPersonal ? 'Registrando...' : 'Registrar Ausencia Individual' }}
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Información adicional -->
-        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <div class="flex">
-                <svg class="w-6 h-6 text-blue-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <div>
-                    <h3 class="text-lg font-medium text-blue-900 mb-2">Información importante</h3>
-                    <ul class="text-sm text-blue-800 space-y-1">
-                        <li>• <strong>Registro masivo:</strong> Solo registra ausencias de alumnos cuyos turnos hayan
-                            terminado y que no tengan asistencia válida del día</li>
-                        <li>• <strong>Registro individual:</strong> Permite registrar la ausencia de un alumno
-                            específico por su código</li>
-                        <li>• Los registros con estado "ANULADO" no se consideran como asistencia válida</li>
-                        <li>• No se puede duplicar ausencias para la misma fecha si ya existe un registro válido</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
+  <div class="max-w-5xl mx-auto">
+    
+    <!-- Header Principal con diseño moderno -->
+    <div class="text-center mb-12">
+      <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl mb-6 shadow-xl">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+        </svg>
+      </div>
+      <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-3">
+        Registro de Ausencias
+      </h1>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        Sistema inteligente para gestionar ausencias de estudiantes de manera eficiente y organizada
+      </p>
     </div>
+
+    <!-- Formulario Principal con diseño elegante -->
+    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
+      
+      <!-- Header del formulario con gradiente moderno -->
+      <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-8 py-6">
+        <div class="flex items-center space-x-4">
+          <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold">Registro Individual</h2>
+            <p class="text-blue-100 text-lg">Ingresa los datos del estudiante para registrar su ausencia</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenido del formulario -->
+      <div class="p-8 bg-gradient-to-br from-gray-50 to-white">
+        <form [formGroup]="personalForm" (ngSubmit)="onRegistroPersonal()" class="space-y-8">
+          
+          <!-- Campo Código con diseño mejorado -->
+          <div class="space-y-3">
+            <label for="codigo" class="block text-lg font-semibold text-gray-800">
+              Código del Estudiante <span class="text-red-500 font-bold">*</span>
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+              </div>
+              <input 
+                type="text" 
+                id="codigo" 
+                formControlName="codigo" 
+                placeholder="Ej: EST001, 1234567890"
+                class="w-full pl-12 pr-4 py-4 text-lg border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                [class.border-red-400]="codigoInvalid" 
+                [class.border-green-400]="!codigoInvalid && personalForm.get('codigo')?.value"
+                [class.bg-red-50]="codigoInvalid"
+                [class.bg-green-50]="!codigoInvalid && personalForm.get('codigo')?.value">
+            </div>
+            
+            <!-- Mensaje de validación mejorado -->
+            <div *ngIf="codigoInvalid" class="flex items-center p-4 bg-red-50 border border-red-200 rounded-xl">
+              <div class="flex-shrink-0">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-red-800">El código del estudiante es requerido (mínimo 3 caracteres)</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Campo Fecha con diseño mejorado -->
+          <div class="space-y-3">
+            <label for="fecha" class="block text-lg font-semibold text-gray-800">
+              Fecha de Ausencia <span class="text-gray-500 font-normal">(Opcional)</span>
+            </label>
+            <div class="flex space-x-3">
+              <div class="relative flex-1">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                <input 
+                  type="date" 
+                  id="fecha" 
+                  formControlName="fecha"
+                  class="w-full pl-12 pr-4 py-4 text-lg border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm">
+              </div>
+              <button 
+                type="button"
+                (click)="actualizarFechaActual()"
+                class="px-6 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                <span>Hoy</span>
+              </button>
+            </div>
+            <p class="text-sm text-gray-600 italic">La fecha se establece automáticamente en la zona horaria de Perú (UTC-5)</p>
+          </div>
+
+          <!-- Mensajes de Estado con diseño mejorado -->
+          <div *ngIf="successPersonal" class="flex items-center p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-200 shadow-lg">
+            <div class="flex-shrink-0">
+              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <p class="text-lg font-semibold text-green-800">{{ successPersonal }}</p>
+            </div>
+          </div>
+
+          <div *ngIf="errorPersonal" class="flex items-center p-6 bg-gradient-to-r from-red-50 to-pink-50 rounded-2xl border border-red-200 shadow-lg">
+            <div class="flex-shrink-0">
+              <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <p class="text-lg font-semibold text-red-800">{{ errorPersonal }}</p>
+            </div>
+          </div>
+
+          <!-- Botones con diseño moderno -->
+          <div class="space-y-4 pt-6 border-t border-gray-200">
+            <button 
+              type="submit" 
+              [disabled]="loadingPersonal || personalForm.invalid"
+              class="w-full px-8 py-4 font-bold text-lg rounded-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+              [class.bg-gradient-to-r]="!loadingPersonal && personalForm.valid"
+              [class.from-blue-600]="!loadingPersonal && personalForm.valid"
+              [class.to-indigo-600]="!loadingPersonal && personalForm.valid"
+              [class.hover:from-blue-700]="!loadingPersonal && personalForm.valid"
+              [class.hover:to-indigo-700]="!loadingPersonal && personalForm.valid"
+              [class.text-white]="!loadingPersonal && personalForm.valid"
+              [class.bg-gray-300]="loadingPersonal || personalForm.invalid"
+              [class.text-gray-500]="loadingPersonal || personalForm.invalid"
+              [class.cursor-not-allowed]="loadingPersonal || personalForm.invalid"
+              [class.shadow-xl]="!loadingPersonal && personalForm.valid">
+              
+              <span *ngIf="loadingPersonal" class="flex items-center justify-center">
+                <svg class="animate-spin w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-lg">Registrando Ausencia...</span>
+              </span>
+              
+              <span *ngIf="!loadingPersonal && personalForm.valid" class="flex items-center justify-center">
+                <svg class="w-6 h-6 mr-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                <span class="text-lg">Registrar Ausencia</span>
+              </span>
+              
+              <span *ngIf="!loadingPersonal && personalForm.invalid" class="flex items-center justify-center">
+                <svg class="w-6 h-6 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+                <span class="text-lg">Complete el código del estudiante</span>
+              </span>
+            </button>
+
+            <!-- Botón Limpiar con diseño moderno -->
+            <button 
+              type="button" 
+              (click)="clearMessages()"
+              *ngIf="successPersonal || errorPersonal"
+              class="w-full px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold text-lg rounded-2xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
+              <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+              Limpiar Mensajes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Información adicional con diseño moderno -->
+    <div class="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-8 shadow-lg">
+      <div class="flex items-start">
+        <div class="flex-shrink-0">
+          <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-xl font-bold text-blue-900 mb-4">Información Importante</h3>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="bg-white/60 rounded-xl p-4 border border-blue-100">
+              <h4 class="font-semibold text-blue-800 mb-2">Registro Individual</h4>
+              <p class="text-sm text-blue-700">Permite registrar la ausencia de un estudiante específico por su código único</p>
+            </div>
+            <div class="bg-white/60 rounded-xl p-4 border border-blue-100">
+              <h4 class="font-semibold text-blue-800 mb-2">Validaciones</h4>
+              <p class="text-sm text-blue-700">Los registros con estado "ANULADO" no se consideran como asistencia válida</p>
+            </div>
+            <div class="bg-white/60 rounded-xl p-4 border border-blue-100">
+              <h4 class="font-semibold text-blue-800 mb-2">Prevención de Duplicados</h4>
+              <p class="text-sm text-blue-700">No se puede duplicar ausencias para la misma fecha si ya existe un registro válido</p>
+            </div>
+            <div class="bg-white/60 rounded-xl p-4 border border-blue-100">
+              <h4 class="font-semibold text-blue-800 mb-2">Fecha Automática</h4>
+              <p class="text-sm text-blue-700">Si no especifica fecha, el sistema usará automáticamente la fecha actual</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

@@ -1,6 +1,6 @@
 <!-- formulario-registro.component.html -->
-<div *ngIf="puedeRegistrar" class="bg-white rounded-2xl shadow-xl border border-gray-100 h-fit sticky top-6">
-  <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-t-2xl">
+<div *ngIf="puedeRegistrar" class="bg-white rounded-lg shadow-md border border-blue-200 h-fit sticky top-6">
+  <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-lg">
     <div class="flex items-center space-x-3">
       <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -16,20 +16,20 @@
 
   <div class="p-6">
     <!-- Estado del Formulario (Componente) -->
-    <app-form-status [form]="registroForm"></app-form-status>
+    <div class="mb-6">
+      <app-form-status [form]="registroForm"></app-form-status>
+    </div>
 
     <!-- Información de Fecha (Componente) -->
-    <app-date-info 
-      [fechaSeleccionada]="fechaSeleccionada"
-      [esFechaHoy]="esFechaHoy"
-      [form]="registroForm">
-    </app-date-info>
+    <div class="mb-6">
+      <app-date-info 
+        [fechaSeleccionada]="fechaSeleccionada"
+        [esFechaHoy]="esFechaHoy"
+        [form]="registroForm">
+      </app-date-info>
+    </div>
 
-    <!-- Información del Auxiliar (Componente) -->
-    <app-auxiliar-info 
-      [idAuxiliar]="idAuxiliarActual"
-      [nombreAuxiliar]="nombreAuxiliarActual">
-    </app-auxiliar-info>
+
 
     <form [formGroup]="registroForm" (ngSubmit)="registrarAsistencia()" class="space-y-6">
 
@@ -40,7 +40,7 @@
             Hora de Llegada <span class="text-red-500">*</span>
           </label>
           <input type="time" formControlName="hora_de_llegada"
-            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             [class.border-red-400]="registroForm.get('hora_de_llegada')?.invalid && registroForm.get('hora_de_llegada')?.touched"
             [class.border-green-400]="registroForm.get('hora_de_llegada')?.valid && registroForm.get('hora_de_llegada')?.value" />
         </div>
@@ -50,7 +50,7 @@
             Hora de Salida <span class="text-gray-500">(Opcional)</span>
           </label>
           <input type="time" formControlName="hora_salida"
-            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             [class.border-red-400]="registroForm.get('hora_salida')?.invalid && registroForm.get('hora_salida')?.touched"
             [class.border-green-400]="registroForm.get('hora_salida')?.valid && registroForm.get('hora_salida')?.value" />
           <p class="text-xs text-gray-500 mt-1">
@@ -67,7 +67,7 @@
         </label>
         <div class="space-y-3">
           <label
-            class="flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all hover:bg-gray-50"
+            class="flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all hover:bg-blue-50"
             [class.border-green-500]="registroForm.get('estado_asistencia')?.value === 'PUNTUAL'"
             [class.bg-green-50]="registroForm.get('estado_asistencia')?.value === 'PUNTUAL'">
             <input type="radio" value="PUNTUAL" formControlName="estado_asistencia"
@@ -79,7 +79,7 @@
           </label>
 
           <label
-            class="flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all hover:bg-gray-50"
+            class="flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all hover:bg-blue-50"
             [class.border-yellow-500]="registroForm.get('estado_asistencia')?.value === 'TARDANZA'"
             [class.bg-yellow-50]="registroForm.get('estado_asistencia')?.value === 'TARDANZA'">
             <input type="radio" value="TARDANZA" formControlName="estado_asistencia"
@@ -91,12 +91,7 @@
           </label>
         </div>
 
-        <!-- Información sobre otros estados -->
-        <div class="mt-3 p-3 bg-gray-50 rounded-lg">
-          <p class="text-xs text-gray-600">
-            <strong>ℹ️ Otros estados:</strong> AUSENTE, ANULADO y JUSTIFICADO se manejan en interfaces específicas
-          </p>
-        </div>
+                 
       </div>
 
       <!-- Motivo -->
@@ -107,7 +102,7 @@
         <div class="relative">
           <textarea formControlName="motivo" rows="4"
             placeholder="Explique el motivo del registro manual (ej: alumno olvidó QR, problema con scanner, etc.)"
-            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
+            class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
             [class.border-red-400]="registroForm.get('motivo')?.invalid && registroForm.get('motivo')?.touched"
             [class.border-green-400]="registroForm.get('motivo')?.valid && registroForm.get('motivo')?.value"></textarea>
           <div class="absolute bottom-2 right-2 text-xs px-2 py-1 rounded" [ngClass]="getCharCountClass()">
@@ -116,46 +111,57 @@
         </div>
       </div>
 
-      <!-- Botones -->
-      <div class="space-y-3 pt-4 border-t border-gray-200">
-        <button type="submit" [disabled]="registrando || registroForm.invalid || !idAuxiliarActual"
-          class="w-full px-6 py-3 font-bold rounded-xl transition-all duration-200"
-          [ngClass]="getSubmitButtonClass()">
-          <span *ngIf="registrando" class="flex items-center justify-center">
-            <svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-              </path>
-            </svg>
-            Registrando...
-          </span>
-          <span *ngIf="!registrando && registroForm.valid && idAuxiliarActual">
-            ✅ Registrar para {{ esFechaHoy ? 'Hoy' : fechaSeleccionada }}
-          </span>
-          <span *ngIf="!registrando && (registroForm.invalid || !idAuxiliarActual)">
-            ⚠️ {{ !idAuxiliarActual ? 'Sin permisos de auxiliar' : 'Complete todos los campos' }}
-          </span>
-        </button>
+             <!-- Botones -->
+       <div class="space-y-3 pt-4 border-t border-gray-200">
+         <button type="submit" [disabled]="registrando || registroForm.invalid || !idAuxiliarActual"
+           class="w-full px-6 py-3 font-bold rounded-xl transition-all duration-200"
+           [ngClass]="getSubmitButtonClass()">
+           <span *ngIf="registrando" class="flex items-center justify-center">
+             <svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
+               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+               <path class="opacity-75" fill="currentColor"
+                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+               </path>
+             </svg>
+             Registrando Asistencia...
+           </span>
+           <span *ngIf="!registrando && registroForm.valid && idAuxiliarActual" class="flex items-center justify-center">
+             <svg class="w-5 h-5 mr-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+             </svg>
+             Registrar para {{ esFechaHoy ? 'Hoy' : fechaSeleccionada }}
+           </span>
+           <span *ngIf="!registrando && (registroForm.invalid || !idAuxiliarActual)" class="flex items-center justify-center">
+             <svg class="w-5 h-5 mr-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+             </svg>
+             {{ !idAuxiliarActual ? 'Sin permisos de auxiliar' : 'Complete todos los campos' }}
+           </span>
+         </button>
 
-        <button type="button" (click)="resetearTodo()"
-          class="w-full px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-200">
-          🔄 Cancelar y Reiniciar
-        </button>
-      </div>
+         <button type="button" (click)="resetearTodo()"
+           class="w-full px-6 py-3 border-2 border-blue-300 text-blue-700 font-semibold rounded-xl hover:bg-blue-50 transition-all duration-200 flex items-center justify-center">
+           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+           </svg>
+           Cancelar y Reiniciar
+         </button>
+       </div>
     </form>
   </div>
 </div>
 
 <!-- Estado cuando no puede registrar -->
 <div *ngIf="!puedeRegistrar" class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center">
-  <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-    </path>
-  </svg>
-  <h3 class="text-lg font-semibold text-gray-600 mb-2">Formulario No Disponible</h3>
-  <p class="text-gray-500">
-    {{ !idAuxiliarActual ? 'No tiene permisos de auxiliar' : 'Busque un estudiante válido para habilitar el registro' }}
-  </p>
+  <div class="flex flex-col items-center">
+    <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+      </path>
+    </svg>
+    <h3 class="text-lg font-semibold text-gray-600 mb-2">Formulario No Disponible</h3>
+    <p class="text-gray-500 text-center max-w-sm">
+      {{ !idAuxiliarActual ? 'No tiene permisos de auxiliar' : 'Busque un estudiante válido para habilitar el registro' }}
+    </p>
+  </div>
 </div>

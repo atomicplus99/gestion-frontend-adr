@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../../../../environments/environment';
 
 export interface Turno {
@@ -48,6 +49,14 @@ export interface AsistenciaConAlumno {
   asistencias: Asistencia[];
 }
 
+// Interfaces para las respuestas del backend
+export interface BackendResponse<T> {
+  success: boolean;
+  message: string;
+  timestamp: string;
+  data: T;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -58,14 +67,41 @@ export class AsistenciaService {
   constructor(private http: HttpClient) {}
 
   getAllAsistencias(): Observable<Asistencia[]> {
-    return this.http.get<Asistencia[]>(`${this.baseUrl}/list`);
+    return this.http.get<BackendResponse<Asistencia[]>>(`${this.baseUrl}/list`).pipe(
+      map(response => {
+        console.log('Respuesta getAllAsistencias:', response);
+        if (response && response.success && response.data) {
+          return response.data;
+        }
+        // Si la respuesta no tiene la estructura esperada, devolver array vacío
+        return [];
+      })
+    );
   }
 
   getAsistenciaPorCodigoAlumno(codigo: string): Observable<AsistenciaConAlumno> {
-    return this.http.get<AsistenciaConAlumno>(`${this.baseUrl}/list/alumno/${codigo}`);
+    return this.http.get<BackendResponse<AsistenciaConAlumno>>(`${this.baseUrl}/list/alumno/${codigo}`).pipe(
+      map(response => {
+        console.log('Respuesta getAsistenciaPorCodigoAlumno:', response);
+        if (response && response.success && response.data) {
+          return response.data;
+        }
+        // Si la respuesta no tiene la estructura esperada, devolver objeto vacío
+        return { alumno: {} as Alumno, asistencias: [] };
+      })
+    );
   }
 
   getAllTurnos(): Observable<Turno[]> {
-    return this.http.get<Turno[]>(this.turnoUrl);
+    return this.http.get<BackendResponse<Turno[]>>(this.turnoUrl).pipe(
+      map(response => {
+        console.log('Respuesta getAllTurnos:', response);
+        if (response && response.success && response.data) {
+          return response.data;
+        }
+        // Si la respuesta no tiene la estructura esperada, devolver array vacío
+        return [];
+      })
+    );
   }
 }

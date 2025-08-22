@@ -346,3 +346,9 @@
         </div> <!-- Cierre bg-white shadow-lg rounded-xl -->
     </div> <!-- Cierre max-w-4xl mx-auto -->
 </div> <!-- Cierre min-h-screen bg-gray-50 -->
+
+<!-- Mensaje de confirmación personalizado -->
+<app-confirmation-message 
+  [message]="confirmationMessage"
+  (confirm)="onConfirmMessage()">
+</app-confirmation-message>
