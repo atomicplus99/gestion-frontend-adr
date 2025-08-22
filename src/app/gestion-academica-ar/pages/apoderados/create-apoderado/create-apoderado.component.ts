@@ -3,7 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CreateApoderadoDto } from '../models/ApoderadoDtos';
+import { CreateApoderadoDto, ApoderadoCreateResponseDto } from '../models/ApoderadoDtos';
 import { ApoderadoService } from '../apoderado.service';
 
 @Component({
@@ -48,9 +48,21 @@ export class ApoderadoCreateFormComponent {
 
  createApoderado(data: CreateApoderadoDto): void {
    this.apoderadoService.create(data).subscribe({
-     next: (apoderado) => {
+     next: (response: ApoderadoCreateResponseDto) => {
        this.submitting.set(false);
-       this.successMessage.set('Apoderado creado exitosamente');
+       
+       // ✅ Usar el mensaje del backend en lugar del hardcodeado
+       if (response && response.message) {
+         this.successMessage.set(response.message);
+       } else {
+         this.successMessage.set('Apoderado creado exitosamente');
+       }
+       
+       // ✅ Limpiar mensaje automáticamente después de 5 segundos
+       setTimeout(() => {
+         this.clearMessages();
+       }, 5000);
+       
        this.resetForm();
      },
      error: (error) => {
@@ -63,7 +75,7 @@ export class ApoderadoCreateFormComponent {
  resetForm(): void {
    this.apoderadoForm.reset();
    this.apoderadoForm.patchValue({ activo: true });
-   this.clearMessages();
+   // ✅ Los mensajes se limpian automáticamente después de 5 segundos
  }
 
  goBack(): void {
@@ -90,7 +102,7 @@ export class ApoderadoCreateFormComponent {
    });
  }
 
- private clearMessages(): void {
+ clearMessages(): void {
    this.successMessage.set('');
    this.errorMessage.set('');
  }

@@ -253,22 +253,7 @@
     </div>
   }
 
-  <!-- Loading State -->
-  @if (isLoading()) {
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
-      <div class="bg-white rounded-lg p-6 flex items-center">
-        <i class="fas fa-spinner fa-spin text-red-600 mr-3"></i>
-        <div>
-          <div class="font-medium">Eliminando apoderado...</div>
-          @if (apoderadoToDelete() && apoderadoToDelete()!.pupilos && apoderadoToDelete()!.pupilos!.length > 0) {
-            <div class="text-sm text-gray-600 mt-1">Paso 1/2: Desasignando estudiantes</div>
-          } @else {
-            <div class="text-sm text-gray-600 mt-1">Eliminando registro</div>
-          }
-        </div>
-      </div>
-    </div>
-  }
+
 
   <!-- Success Message -->
   @if (showSuccessMessage()) {

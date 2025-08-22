@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { ApoderadoAsignService } from '../asigne-alumno/services/apoderado-asigne.service';
 import { Apoderado } from '../asigne-alumno/models/AsignarAlumnoApoderado.model';
 
@@ -34,6 +35,12 @@ export class DeleteApoderadoComponent implements OnInit {
   filteredApoderados = computed(() => {
     let filtered = this.apoderados();
 
+    // ✅ Validación de seguridad
+    if (!filtered || !Array.isArray(filtered)) {
+      console.warn('⚠️ [FILTRO] Apoderados no es un array válido:', filtered);
+      return [];
+    }
+
     // Search filter
     if (this.searchTerm()) {
       const term = this.searchTerm().toLowerCase();
@@ -63,6 +70,11 @@ export class DeleteApoderadoComponent implements OnInit {
       );
     }
 
+    // ✅ Validación adicional antes de ordenar
+    if (!filtered || filtered.length === 0) {
+      return [];
+    }
+
     // Ordenar por nombre
     return filtered.sort((a, b) => a.nombre.localeCompare(b.nombre));
   });
@@ -70,10 +82,12 @@ export class DeleteApoderadoComponent implements OnInit {
   private async loadApoderados() {
     this.isLoading.set(true);
     try {
-      const apoderados = await this.apoderadoService.getAllApoderados().toPromise();
+      const apoderados = await firstValueFrom(this.apoderadoService.getAllApoderados());
       this.apoderados.set(apoderados || []);
     } catch (error) {
+      console.error('Error al cargar apoderados:', error);
       this.showError('Error al cargar los apoderados');
+      this.apoderados.set([]);
     } finally {
       this.isLoading.set(false);
     }
@@ -98,14 +112,14 @@ export class DeleteApoderadoComponent implements OnInit {
         const estudiantesIds = apoderado.pupilos.map(pupilo => pupilo.id_alumno);
         
         // Remover todos los estudiantes del apoderado
-        await this.apoderadoService.removeStudentsFromApoderado(
+        await firstValueFrom(this.apoderadoService.removeStudentsFromApoderado(
           apoderado.id_apoderado,
           { estudiante_ids: estudiantesIds }
-        ).toPromise();
+        ));
       }
 
       // PASO 2: Ahora eliminar el apoderado (ya sin estudiantes asignados)
-      await this.apoderadoService.deleteApoderado(apoderado.id_apoderado).toPromise();
+      await firstValueFrom(this.apoderadoService.deleteApoderado(apoderado.id_apoderado));
 
       this.showSuccess();
       this.apoderadoToDelete.set(null);

@@ -12,7 +12,7 @@ export class AlumnoAsignService {
   private baseUrl = environment.apiUrl;
 
   getAllAlumnos(): Observable<Alumno[]> {
-    return this.http.get<Alumno[]>(`${this.baseUrl}/alumnos`);
+    return this.http.get<Alumno[]>(`${this.baseUrl}/alumnos?includeApoderado=true`);
   }
 
   getAlumnoByCode(codigo: string): Observable<Alumno> {

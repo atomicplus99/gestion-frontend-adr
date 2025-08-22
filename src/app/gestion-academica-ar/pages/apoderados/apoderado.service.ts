@@ -2,7 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Apoderado, CreateApoderadoDto, UpdateApoderadoDto } from './models/ApoderadoDtos';
+import { Apoderado, CreateApoderadoDto, UpdateApoderadoDto, ApoderadoCreateResponseDto, ApoderadoSearchResponseDto } from './models/ApoderadoDtos';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -21,12 +21,12 @@ export class ApoderadoService {
     return this.http.get<Apoderado>(`${this.baseUrl}/${id}`);
   }
 
-  getByDni(dni: string): Observable<Apoderado> {
-    return this.http.get<Apoderado>(`${this.baseUrl}/dni/${dni}`);
+  getByDni(dni: string): Observable<ApoderadoSearchResponseDto> {
+    return this.http.get<ApoderadoSearchResponseDto>(`${this.baseUrl}/dni/${dni}`);
   }
 
-  create(apoderado: CreateApoderadoDto): Observable<Apoderado> {
-    return this.http.post<Apoderado>(this.baseUrl, apoderado);
+  create(apoderado: CreateApoderadoDto): Observable<ApoderadoCreateResponseDto> {
+    return this.http.post<ApoderadoCreateResponseDto>(this.baseUrl, apoderado);
   }
 
   update(id: string, apoderado: UpdateApoderadoDto): Observable<Apoderado> {
