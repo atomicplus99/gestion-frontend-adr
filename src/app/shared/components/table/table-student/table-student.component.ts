@@ -15,38 +15,10 @@ import { FormsModule } from '@angular/forms';
 import { AlumnoService } from '../../../../gestion-academica-ar/services/alumno.service';
 import { AlertsService } from '../../../alerts.service';
 import { environment } from '../../../../../environments/environment';
-
-export interface Turno {
-  id_turno: string;
-  hora_inicio: string;
-  hora_fin: string;
-  hora_limite: string;
-  turno: string;
-}
-
-export interface Usuario {
-  id_user: string;
-  nombre_usuario: string;
-  password_user: string;
-  rol_usuario: string;
-  profile_image: string;
-}
-
-export interface AlumnoUpdate {
-  id_alumno: string;
-  codigo: string;
-  dni_alumno: string;
-  nombre: string;
-  apellido: string;
-  fecha_nacimiento: Date;
-  direccion: string;
-  codigo_qr?: string;
-  nivel: string;
-  grado: number;
-  seccion: string;
-  turno?: Turno;
-  usuario?: Usuario;
-}
+import { 
+  AlumnoUpdateShared, 
+  TurnoShared 
+} from '../../../interfaces/alumno-shared.interface';
 
 @Component({
   selector: 'shared-table-student',
@@ -60,14 +32,14 @@ export class TableStudentComponent implements OnChanges, OnInit {
   @Input() codigoSeleccionado!: string;
   @Input() nivelFiltro: string = '';
   @Output() editandoAlumno = new EventEmitter<boolean>();
-  @Output() alumnoActualizado = new EventEmitter<AlumnoUpdate>();
+  @Output() alumnoActualizado = new EventEmitter<AlumnoUpdateShared>();
 
   displayedColumns: string[] = ['codigo', 'dni_alumno', 'nombre', 'apellido', 'fecha_nacimiento', 'direccion', 'codigo_qr', 'nivel', 'grado', 'seccion', 'turno', 'acciones'];
-  dataSource: AlumnoUpdate[] = [];
-  filteredData: AlumnoUpdate[] = [];
-  paginatedData: AlumnoUpdate[] = [];
-  alumnoEditando: AlumnoUpdate | null = null;
-  alumnoDetalle: AlumnoUpdate | null = null;
+  dataSource: AlumnoUpdateShared[] = [];
+  filteredData: AlumnoUpdateShared[] = [];
+  paginatedData: AlumnoUpdateShared[] = [];
+  alumnoEditando: AlumnoUpdateShared | null = null;
+  alumnoDetalle: AlumnoUpdateShared | null = null;
   secciones: string[] = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
   niveles: string[] = ['Inicial', 'Primaria', 'Secundaria'];
   loading = false;
@@ -75,7 +47,7 @@ export class TableStudentComponent implements OnChanges, OnInit {
   codigoOriginal!: string;
   mostrarTarjetas = false;
   ultimaActualizacion = new Date();
-  turnosDisponibles: Turno[] = [];
+  turnosDisponibles: TurnoShared[] = [];
   cargandoTurnos = false;
   currentPage = 1;
   pageSize = 10;
@@ -93,7 +65,9 @@ export class TableStudentComponent implements OnChanges, OnInit {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['codigoSeleccionado'] && this.codigoSeleccionado) {
+    if (changes['codigoSeleccionado'] && this.codigoSeleccionado && 
+        changes['codigoSeleccionado'].currentValue !== changes['codigoSeleccionado'].previousValue) {
+      console.log('📊 [TABLE-STUDENT] Código seleccionado cambió:', this.codigoSeleccionado);
       this.fetchAlumno(this.codigoSeleccionado);
     }
     if (changes['nivelFiltro']) {
@@ -104,26 +78,40 @@ export class TableStudentComponent implements OnChanges, OnInit {
   private cargarTurnos(): void {
     this.cargandoTurnos = true;
     this.cd.markForCheck();
-    this.http.get<Turno[]>(`${environment.apiUrl}/turno`).subscribe({
-      next: (turnos) => {
-        this.turnosDisponibles = turnos;
+    this.http.get<TurnoShared[]>(`${environment.apiUrl}/turno`).subscribe({
+      next: (response) => {
+        console.log('✅ [TABLE-STUDENT] Respuesta de turnos:', response);
+        
+        // Verificar si la respuesta es un array o un objeto con data
+        if (Array.isArray(response)) {
+          this.turnosDisponibles = response;
+        } else if (response && (response as any).data && Array.isArray((response as any).data)) {
+          this.turnosDisponibles = (response as any).data;
+        } else {
+          console.error('❌ [TABLE-STUDENT] Respuesta de turnos no es un array:', response);
+          this.turnosDisponibles = [];
+          this.alerts.error('Formato de respuesta de turnos inesperado');
+        }
+        
         this.cargandoTurnos = false;
+        console.log('✅ [TABLE-STUDENT] Turnos cargados:', this.turnosDisponibles);
         this.cd.markForCheck();
       },
       error: (error) => {
-        console.error('Error al cargar turnos:', error);
+        console.error('❌ [TABLE-STUDENT] Error al cargar turnos:', error);
         this.alerts.error('No se pudieron cargar los turnos disponibles');
+        this.turnosDisponibles = [];
         this.cargandoTurnos = false;
         this.cd.markForCheck();
       }
     });
   }
 
-  getTurnoById(id_turno: string): Turno | null {
+  getTurnoById(id_turno: string): TurnoShared | null {
     return this.turnosDisponibles.find(turno => turno.id_turno === id_turno) || null;
   }
 
-  formatearHorarioTurno(turno: Turno): string {
+  formatearHorarioTurno(turno: TurnoShared): string {
     if (!turno) return '';
     return `${turno.turno} (${turno.hora_inicio} - ${turno.hora_fin})`;
   }
@@ -142,17 +130,34 @@ export class TableStudentComponent implements OnChanges, OnInit {
   }
 
   private fetchAlumno(codigo: string) {
+    // Evitar llamadas duplicadas
+    if (this.loading) {
+      console.log('⚠️ [TABLE-STUDENT] Ya se está cargando un alumno, ignorando nueva petición');
+      return;
+    }
+    
+    console.log('🔍 [TABLE-STUDENT] Iniciando búsqueda de alumno:', codigo);
     this.loading = true;
     this.cd.markForCheck();
     this.alumnoSvc.getByCodigo(codigo).subscribe({
-      next: alumno => {
-        this.dataSource = [alumno];
-        this.filteredData = [...this.dataSource];
-        this.updatePagination();
-        this.loading = false;
-        this.ultimaActualizacion = new Date();
-        console.log('Alumno cargado:', alumno);
-        this.cd.markForCheck();
+      next: response => {
+        if (response && response.success && response.data) {
+          this.dataSource = [response.data];
+          this.filteredData = [...this.dataSource];
+          this.updatePagination();
+          this.loading = false;
+          this.ultimaActualizacion = new Date();
+          console.log('✅ [TABLE-STUDENT] Alumno cargado exitosamente:', response.data);
+          this.cd.markForCheck();
+        } else {
+          console.error('❌ [TABLE-STUDENT] Respuesta inesperada del backend:', response);
+          this.dataSource = [];
+          this.filteredData = [];
+          this.paginatedData = [];
+          this.loading = false;
+          this.alerts.error('Formato de respuesta inesperado del servidor');
+          this.cd.markForCheck();
+        }
       },
       error: (error) => {
         console.error('Error al obtener alumno:', error);
@@ -219,7 +224,7 @@ export class TableStudentComponent implements OnChanges, OnInit {
     if (!filterValue) {
       this.filteredData = [...this.dataSource];
     } else {
-      this.filteredData = this.dataSource.filter((alumno: AlumnoUpdate) => {
+      this.filteredData = this.dataSource.filter((alumno: AlumnoUpdateShared) => {
         return alumno.codigo.toLowerCase().includes(filterValue) ||
           alumno.nombre.toLowerCase().includes(filterValue) ||
           alumno.apellido.toLowerCase().includes(filterValue) ||
@@ -255,7 +260,7 @@ export class TableStudentComponent implements OnChanges, OnInit {
     this.cd.markForCheck();
   }
 
-  editarAlumno(alumno: AlumnoUpdate): void {
+  editarAlumno(alumno: AlumnoUpdateShared): void {
     this.alumnoEditando = { ...alumno };
     this.codigoOriginal = alumno.codigo;
     this.editandoAlumno.emit(true);
@@ -276,13 +281,14 @@ export class TableStudentComponent implements OnChanges, OnInit {
     if (this.alumnoEditando.apellido.length > 100) return 'El apellido no puede superar los 100 caracteres';
     if (this.alumnoEditando.direccion.length > 100) return 'La dirección no puede superar los 100 caracteres';
     if (!['Inicial', 'Primaria', 'Secundaria'].includes(this.alumnoEditando.nivel)) return 'El nivel debe ser Inicial, Primaria o Secundaria';
-    if (this.alumnoEditando.grado < 1 || this.alumnoEditando.grado > 6) return 'El grado debe estar entre 1 y 6';
+    if (this.alumnoEditando.grado < 1 || this.alumnoEditando.grado > 12) return 'El grado debe estar entre 1 y 12';
     if (this.alumnoEditando.seccion.length !== 1) return 'La sección debe ser un solo carácter';
     if (this.alumnoEditando.codigo_qr && this.alumnoEditando.codigo_qr.length > 100) return 'El código QR no puede superar los 100 caracteres';
     if (this.alumnoEditando.turno) {
       const turnoExiste = this.turnosDisponibles.find(turno => turno.id_turno === this.alumnoEditando!.turno!.id_turno);
       if (!turnoExiste) return 'El turno seleccionado no es válido';
     }
+    
     return null;
   }
 
@@ -300,12 +306,14 @@ export class TableStudentComponent implements OnChanges, OnInit {
       dni_alumno: this.alumnoEditando.dni_alumno,
       nombre: this.alumnoEditando.nombre,
       apellido: this.alumnoEditando.apellido,
-      fecha_nacimiento: new Date(this.alumnoEditando.fecha_nacimiento).toISOString().split('T')[0],
+      fecha_nacimiento: this.alumnoEditando.fecha_nacimiento, // Ya es string, no necesita conversión
       direccion: this.alumnoEditando.direccion,
       nivel: this.alumnoEditando.nivel,
       grado: this.alumnoEditando.grado,
       seccion: this.alumnoEditando.seccion
     };
+    
+    // ✅ RESTAURADOS: El backend SÍ acepta estos campos según la confirmación
     if (this.alumnoEditando.codigo_qr && this.alumnoEditando.codigo_qr.trim()) {
       payload.codigo_qr = this.alumnoEditando.codigo_qr.trim();
     }
@@ -314,7 +322,10 @@ export class TableStudentComponent implements OnChanges, OnInit {
     } else {
       payload.id_turno = null;
     }
-    console.log('Payload a enviar:', payload);
+    console.log('📤 [TABLE-STUDENT] Payload a enviar:', payload);
+    console.log('🌐 [TABLE-STUDENT] URL:', `${environment.apiUrl}/alumnos/actualizar/${this.codigoOriginal}`);
+    console.log('🔧 [TABLE-STUDENT] Código original:', this.codigoOriginal);
+    
     this.http.put(`${environment.apiUrl}/alumnos/actualizar/${this.codigoOriginal}`, payload).subscribe({
       next: (response: any) => {
         this.alerts.success('El alumno fue actualizado correctamente ✅');
@@ -328,20 +339,49 @@ export class TableStudentComponent implements OnChanges, OnInit {
         this.cd.markForCheck();
       },
       error: (err) => {
-        console.error('Error completo del backend:', err);
+        console.error('❌ [TABLE-STUDENT] Error completo del backend:', err);
         this.guardando = false;
-        const mensaje = Array.isArray(err?.error?.message) ? err.error.message.join(', ') : err?.error?.message || err?.message || 'Error desconocido al actualizar';
-        if (mensaje.includes('El código ya está registrado')) {
-          this.alerts.error('Ese código ya pertenece a otro alumno. Intenta con uno diferente.');
-        } else {
-          this.alerts.error(mensaje);
+        
+        let mensaje = 'Error desconocido al actualizar';
+        
+        if (err?.error) {
+          console.log('📋 [TABLE-STUDENT] Error del backend:', err.error);
+          
+          // Manejar diferentes formatos de error del backend
+          if (Array.isArray(err.error.message)) {
+            // Si message es un array (errores de validación múltiples)
+            mensaje = err.error.message.join('\n• ');
+            mensaje = '• ' + mensaje; // Agregar bullet point al inicio
+          } else if (err.error.message) {
+            // Si message es un string
+            mensaje = err.error.message;
+          } else if (err.error.error) {
+            // Si hay un campo error
+            mensaje = err.error.error;
+          }
+        } else if (err?.message) {
+          mensaje = err.message;
         }
+        
+        // Casos especiales
+        if (mensaje.includes('El código ya está registrado') || mensaje.includes('codigo')) {
+          this.alerts.error('❌ Ese código ya pertenece a otro alumno. Intenta con uno diferente.');
+        } else if (err.status === 400) {
+          this.alerts.error(`❌ Error de validación:\n\n${mensaje}`);
+        } else if (err.status === 404) {
+          this.alerts.error('❌ Alumno no encontrado');
+        } else if (err.status >= 500) {
+          this.alerts.error('❌ Error del servidor. Inténtalo más tarde.');
+        } else {
+          this.alerts.error(`❌ Error al actualizar alumno:\n\n${mensaje}`);
+        }
+        
         this.cd.markForCheck();
       }
     });
   }
 
-  verDetalles(alumno: AlumnoUpdate): void {
+  verDetalles(alumno: AlumnoUpdateShared): void {
     this.alumnoDetalle = { ...alumno };
     this.cd.markForCheck();
   }

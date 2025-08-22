@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, map, tap, catchError, retry, timeout } from 'rxjs';
 import { Alumno, PersonalAlumno } from '../pages/register/interfaces/alumno.interface';
-import { AlumnoUpdate } from '../pages/register/actualizar-alumno/actualizar-alumno.component';
+import { AlumnoUpdateShared, AlumnoSearchResponse } from '../../shared/interfaces/alumno-shared.interface';
 import { environment } from '../../../environments/environment';
 import { TokenService } from '../../auth/services/token.service';
 
@@ -75,9 +75,9 @@ export class AlumnoService {
     return this.http.put<Alumno>(`${this.apiUrl}/alumno${id}`, data);
   }
 
-  getByCodigo(codigo: string): Observable<AlumnoUpdate> {
+  getByCodigo(codigo: string): Observable<AlumnoSearchResponse> {
     return this.http
-      .get<AlumnoUpdate>(`${this.apiUrl}/alumnos/codigo/${codigo}`);
+      .get<AlumnoSearchResponse>(`${this.apiUrl}/alumnos/codigo/${codigo}`);
   }
 
   actualizarAlumno(alumno: Alumno): Observable<Alumno> {

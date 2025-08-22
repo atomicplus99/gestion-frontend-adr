@@ -14,57 +14,12 @@ import { HttpClient } from '@angular/common/http';
 import { TableStudentComponent } from '../../../../shared/components/table/table-student/table-student.component';
 import { AlertsService } from '../../../../shared/alerts.service';
 import { environment } from '../../../../../environments/environment';
-
-export interface Turno {
-  id_turno: string;
-  hora_inicio: string;
-  hora_fin: string;
-  hora_limite: string;
-  turno: string;
-}
-
-export interface Usuario {
-  id_user: string;
-  nombre_usuario: string;
-  password_user: string;
-  rol_usuario: string;
-  profile_image: string;
-}
-
-export interface AlumnoUpdate {
-  id_alumno: string;
-  codigo: string;
-  dni_alumno: string;
-  nombre: string;
-  apellido: string;
-  fecha_nacimiento: Date;
-  direccion: string;
-  codigo_qr?: string;
-  nivel: string;
-  grado: number;
-  seccion: string;
-  turno?: Turno;
-  usuario?: Usuario;
-}
-
-interface AlumnoUpdateResponse {
-  alumno: AlumnoUpdate;
-  message: string;
-}
-
-interface UpdateAlumnoDto {
-  codigo: string;
-  dni_alumno: string;
-  nombre: string;
-  apellido: string;
-  fecha_nacimiento: Date;
-  direccion: string;
-  codigo_qr?: string;
-  nivel: string;
-  grado: number;
-  seccion: string;
-  id_turno?: string;
-}
+import { 
+  AlumnoUpdateShared, 
+  AlumnoSearchResponse, 
+  AlumnoUpdateResponse, 
+  UpdateAlumnoDto 
+} from '../../../../shared/interfaces/alumno-shared.interface';
 
 interface HistorialItem {
   codigo: string;
@@ -89,7 +44,7 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
   editando = false;
   selectedCode = '';
   nivelFiltro = '';
-  alumnoEncontrado: AlumnoUpdate | null = null;
+  alumnoEncontrado: AlumnoUpdateShared | null = null;
   buscando = false;
   mostrarSugerencias = false;
   mostrarNotificacion = false;
@@ -108,6 +63,8 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
         this.cd.markForCheck();
       })
     );
+    
+    // No necesitamos suscripción a statusChanges, se maneja en onAlumnoEditando
   }
 
   ngOnDestroy() {
@@ -129,26 +86,27 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
     this.cd.markForCheck();
 
     this.subscriptions.add(
-      this.http.get<AlumnoUpdate>(`${environment.apiUrl}/alumnos/codigo/${codigo}`)
+      this.http.get<AlumnoSearchResponse>(`${environment.apiUrl}/alumnos/codigo/${codigo}`)
         .pipe(catchError(error => {
           console.error('Error al buscar alumno:', error);
           this.mostrarToast('error', 'No se encontró ningún alumno con ese código');
           return of(null);
         }))
-        .subscribe(alumno => {
+        .subscribe(response => {
           this.buscando = false;
-          if (alumno) {
-            this.alumnoEncontrado = alumno;
+          if (response && response.success && response.data) {
+            this.alumnoEncontrado = response.data;
             this.selectedCode = codigo;
-            this.agregarAlHistorial(alumno);
-            let mensaje = `Alumno ${alumno.nombre} ${alumno.apellido} encontrado`;
-            if (alumno.turno) {
-              mensaje += ` - Turno: ${alumno.turno.turno}`;
+            this.agregarAlHistorial(response.data);
+            let mensaje = `Alumno ${response.data.nombre} ${response.data.apellido} encontrado`;
+            if (response.data.turno) {
+              mensaje += ` - Turno: ${response.data.turno.turno}`;
             }
             this.mostrarToast('success', mensaje);
           } else {
             this.alumnoEncontrado = null;
             this.selectedCode = '';
+            this.mostrarToast('error', 'No se encontró ningún alumno con ese código');
           }
           this.cd.markForCheck();
         })
@@ -157,18 +115,25 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
 
   actualizarAlumno(updateData: UpdateAlumnoDto) {
     if (!this.selectedCode) return;
+    
+    console.log('🔄 [ACTUALIZAR-ALUMNO] Enviando datos de actualización:', updateData);
+    
     this.subscriptions.add(
       this.http.put<AlumnoUpdateResponse>(`${environment.apiUrl}/alumnos/actualizar/${this.selectedCode}`, updateData)
         .pipe(catchError(error => {
-          console.error('Error al actualizar alumno:', error);
+          console.error('❌ [ACTUALIZAR-ALUMNO] Error al actualizar alumno:', error);
           this.mostrarToast('error', 'Error al actualizar el alumno');
           return of(null);
         }))
         .subscribe(response => {
-          if (response) {
+          if (response && response.success && response.alumno) {
+            console.log('✅ [ACTUALIZAR-ALUMNO] Alumno actualizado exitosamente:', response);
             this.alumnoEncontrado = response.alumno;
             this.mostrarToast('success', response.message);
             this.cd.markForCheck();
+          } else {
+            console.warn('⚠️ [ACTUALIZAR-ALUMNO] Respuesta inesperada del backend:', response);
+            this.mostrarToast('error', 'Respuesta inesperada del servidor');
           }
         })
     );
@@ -211,25 +176,36 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
     this.cd.markForCheck();
   }
 
-  private agregarAlHistorial(alumno: AlumnoUpdate) {
+  private agregarAlHistorial(alumno: AlumnoUpdateShared) {
+    // Validar que el alumno tenga los campos necesarios
+    if (!alumno || !alumno.codigo || !alumno.nombre || !alumno.apellido) {
+      console.warn('⚠️ [ACTUALIZAR-ALUMNO] Alumno con datos incompletos para historial:', alumno);
+      return;
+    }
+
     const index = this.historialBusquedas.findIndex(i => i.codigo === alumno.codigo);
     if (index !== -1) {
       this.historialBusquedas.splice(index, 1);
     }
+    
     this.historialBusquedas.unshift({
       codigo: alumno.codigo,
       nombre: `${alumno.nombre} ${alumno.apellido}`,
-      nivel: alumno.nivel,
+      nivel: alumno.nivel || 'No definido',
       timestamp: new Date()
     });
+    
     if (this.historialBusquedas.length > 5) {
       this.historialBusquedas = this.historialBusquedas.slice(0, 5);
     }
+    
     try {
       localStorage.setItem('historialAlumnos', JSON.stringify(this.historialBusquedas));
+      console.log('✅ [ACTUALIZAR-ALUMNO] Historial actualizado:', this.historialBusquedas);
     } catch (error) {
-      console.error('Error al guardar historial:', error);
+      console.error('❌ [ACTUALIZAR-ALUMNO] Error al guardar historial:', error);
     }
+    
     this.cd.markForCheck();
   }
 
@@ -242,10 +218,18 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
 
   onAlumnoEditando(state: boolean) {
     this.editando = state;
+    
+    // Habilitar/deshabilitar controles según el estado de edición
+    if (state) {
+      this.searchControl.disable();
+    } else {
+      this.searchControl.enable();
+    }
+    
     this.cd.markForCheck();
   }
 
-  onAlumnoActualizado(alumno: AlumnoUpdate) {
+  onAlumnoActualizado(alumno: AlumnoUpdateShared) {
     this.alumnoEncontrado = alumno;
     let mensaje = `Alumno ${alumno.nombre} ${alumno.apellido} actualizado correctamente`;
     if (alumno.turno) {

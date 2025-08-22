@@ -52,7 +52,6 @@
                   id="codigo-input"
                   type="text"
                   [formControl]="searchControl"
-                  [disabled]="editando"
                   placeholder="00000000000000 (14 dígitos)"
                   maxlength="14"
                   (input)="onCodigoInput($event)"
@@ -64,7 +63,6 @@
                 <button
                   type="button"
                   (click)="onSelectCode()"
-                  [disabled]="editando"
                   [title]="editando ? 'Finalice la edición actual para buscar' : 'Buscar alumno'"
                   class="absolute inset-y-0 right-0 flex items-center pr-4 transition-all duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -100,7 +98,6 @@
               <button 
                 type="button"
                 (click)="limpiarBusqueda()"
-                [disabled]="editando"
                 class="h-12 px-6 py-3 bg-white/20 hover:bg-white/30 disabled:bg-gray-400/20 text-white rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center text-sm font-medium backdrop-blur-sm border border-white/20 hover:border-white/40"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -125,7 +122,6 @@
               *ngFor="let alumno of historialBusquedas" 
               type="button"
               class="text-sm bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full flex items-center transition-all duration-200 hover:-translate-y-1 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm border border-white/20 hover:border-white/40"
-              [disabled]="editando"
               (click)="seleccionarHistorial(alumno.codigo)"
             >
               <div class="bg-white/20 w-2 h-2 rounded-full mr-2"></div>
