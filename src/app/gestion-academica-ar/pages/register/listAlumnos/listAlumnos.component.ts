@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -17,6 +17,7 @@ import { DetalleAlumnoDialogComponent } from '../../../../shared/components/dial
   templateUrl: './listAlumnos.component.html',
   imports: [CommonModule, HttpClientModule, FormsModule, MatDialogModule, MatTooltipModule],
   providers: [AlumnosEstadoService, AlumnosFiltroService],
+  changeDetection: ChangeDetectionStrategy.OnPush, // ✅ Optimización de rendimiento
 })
 export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
   Math = Math;
@@ -43,25 +44,38 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
   private dialog = inject(MatDialog);
   private alumnosService = inject(AlumnosEstadoService);
   private filtroService = inject(AlumnosFiltroService);
+  private cdr = inject(ChangeDetectorRef); // ✅ Para forzar detección de cambios
 
   ngOnInit(): void { this.loadData(); }
   ngOnDestroy(): void { this.destroy$.next(); this.destroy$.complete(); }
 
   loadData(): void {
     this.isLoading = true;
+    console.log('🚀 [LISTA-ALUMNOS] Iniciando carga de datos...');
+    
     this.alumnosService.getAlumnosEstado()
-      .pipe(takeUntil(this.destroy$), finalize(() => this.isLoading = false))
+      .pipe(
+        takeUntil(this.destroy$), 
+        finalize(() => {
+          this.isLoading = false;
+          this.cdr.markForCheck(); // ✅ Forzar detección al finalizar
+        })
+      )
       .subscribe({
         next: (data) => {
+          console.log('✅ [LISTA-ALUMNOS] Datos recibidos:', data.length, 'alumnos');
           this.datosOriginales = data;
           this.actualizarContadores();
           this.filtroEstado = 'ACTIVO';
           this.applyFilter();
+          this.cdr.markForCheck(); // ✅ Forzar detección después de procesar
+          console.log('🎯 [LISTA-ALUMNOS] Datos procesados y filtros aplicados');
         },
         error: (err) => {
-          console.error('Error al cargar datos:', err);
+          console.error('❌ [LISTA-ALUMNOS] Error al cargar datos:', err);
           this.datosOriginales = [];
           this.alumnosFiltrados = [];
+          this.cdr.markForCheck(); // ✅ Forzar detección en caso de error
         }
       });
   }
@@ -74,16 +88,32 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
   }
 
   applyFilter(): void {
+    console.log('🔍 [LISTA-ALUMNOS] Aplicando filtros...');
+    console.log('📊 [LISTA-ALUMNOS] Filtros:', {
+      busqueda: this.filterValue,
+      estado: this.filtroEstado,
+      nivel: this.filtroNivel
+    });
+
     this.alumnosFiltrados = this.filtroService.aplicarFiltros(
       this.datosOriginales,
       { texto: this.filterValue, estado: this.filtroEstado, nivel: this.filtroNivel }
     );
+    
     this.currentPage = 1;
     this.sortData(this.sortColumn, this.sortDirection);
+    
+    console.log('✅ [LISTA-ALUMNOS] Filtros aplicados:', this.alumnosFiltrados.length, 'resultados');
+    this.cdr.markForCheck(); // ✅ Forzar detección después de filtrar
   }
 
   limpiarFiltros(): void {
-    this.filterValue = ''; this.filtroNivel = ''; this.filtroEstado = 'ACTIVO'; this.applyFilter();
+    console.log('🧹 [LISTA-ALUMNOS] Limpiando filtros...');
+    this.filterValue = ''; 
+    this.filtroNivel = ''; 
+    this.filtroEstado = 'ACTIVO'; 
+    this.applyFilter();
+    this.cdr.markForCheck(); // ✅ Forzar detección después de limpiar
   }
 
   openDetalle(row: AlumnoEstado): void {
@@ -92,7 +122,10 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
     });
   }
 
-  refreshData(): void { this.loadData(); }
+  refreshData(): void { 
+    console.log('🔄 [LISTA-ALUMNOS] Refrescando datos...');
+    this.loadData(); 
+  }
 
   sortData(column: string, direction?: 'asc' | 'desc'): void {
     if (direction) {
@@ -106,9 +139,13 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
       }
     }
     
+    console.log('📊 [LISTA-ALUMNOS] Ordenando por:', this.sortColumn, this.sortDirection);
+    
     this.alumnosFiltrados = this.filtroService.ordenarAlumnos(
       this.alumnosFiltrados, this.sortColumn, this.sortDirection
     );
+    
+    this.cdr.markForCheck(); // ✅ Forzar detección después de ordenar
   }
 
   getAlumnosPaginados(): AlumnoEstado[] {
@@ -119,16 +156,36 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
   get totalPages(): number { return Math.ceil(this.alumnosFiltrados.length / this.pageSize); }
 
   goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages) this.currentPage = page;
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      console.log('📄 [LISTA-ALUMNOS] Cambiando a página:', page);
+      this.cdr.markForCheck(); // ✅ Forzar detección al cambiar página
+    }
   }
 
   changePageSize(size: number): void {
     const selectElement = event?.target as HTMLSelectElement;
     this.pageSize = size;
     this.currentPage = 1;
+    console.log('📏 [LISTA-ALUMNOS] Cambiando tamaño de página a:', size);
+    this.cdr.markForCheck(); // ✅ Forzar detección al cambiar tamaño
   }
 
-  onFiltroChange(filters: any): void { Object.assign(this, filters); this.applyFilter(); }
+  onFiltroChange(filters: any): void { 
+    console.log('🔄 [LISTA-ALUMNOS] Cambio de filtros recibido:', filters);
+    Object.assign(this, filters); 
+    this.applyFilter(); 
+  }
   
-  onSortChange(event: any): void { this.sortData(event.active, event.direction); }
+  onSortChange(event: any): void { 
+    console.log('🔄 [LISTA-ALUMNOS] Cambio de orden recibido:', event);
+    this.sortData(event.active, event.direction); 
+  }
+
+  // ✅ Método para forzar detección de cambios manualmente
+  forceChangeDetection(): void {
+    console.log('⚡ [LISTA-ALUMNOS] Forzando detección de cambios...');
+    this.cdr.detectChanges(); // ✅ Detección inmediata
+    this.cdr.markForCheck();  // ✅ Marcar para próxima detección
+  }
 }

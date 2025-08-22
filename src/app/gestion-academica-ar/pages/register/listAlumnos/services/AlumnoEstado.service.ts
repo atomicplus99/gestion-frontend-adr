@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, catchError, of } from 'rxjs';
 import { AlumnoEstado } from '../models/AlumnoEstado.model';
 import { environment } from '../../../../../../environments/environment';
 
@@ -13,17 +13,47 @@ export class AlumnosEstadoService {
 
   getAlumnosEstado(): Observable<AlumnoEstado[]> {
     return this.http
-      .get<AlumnoEstado[]>(`${environment.apiUrl}/alumnos/estado`)
+      .get<any>(`${environment.apiUrl}/alumnos/estado`)  // ✅ Cambiado a 'any' para manejar respuesta real
       .pipe(
-        map(data => this.convertirAMayusculas(data)),
-        map(data => {
+        map(response => {
+          console.log('📋 [ALUMNOS-ESTADO] Respuesta del backend:', response);
+          
+          // ✅ Extraer el array de alumnos de la respuesta del backend
+          let alumnos: AlumnoEstado[] = [];
+          
+          if (Array.isArray(response)) {
+            // Si es un array directo
+            alumnos = response;
+          } else if (response && response.data && Array.isArray(response.data)) {
+            // Si es { data: [...] }
+            alumnos = response.data;
+          } else if (response && response.alumnos && Array.isArray(response.alumnos)) {
+            // Si es { alumnos: [...] }
+            alumnos = response.alumnos;
+          } else if (response && response.result && Array.isArray(response.result)) {
+            // Si es { result: [...] }
+            alumnos = response.result;
+          } else {
+            console.error('❌ [ALUMNOS-ESTADO] Formato de respuesta no reconocido:', response);
+            return [];
+          }
+          
+          console.log('✅ [ALUMNOS-ESTADO] Alumnos extraídos:', alumnos.length);
+          return alumnos;
+        }),
+        map(alumnos => this.convertirAMayusculas(alumnos)),
+        map(alumnos => {
           // Normalizar estados
-          data.forEach(alumno => {
+          alumnos.forEach(alumno => {
             if (alumno.estado_actual?.estado) {
               alumno.estado_actual.estado = this.normalizarEstado(alumno.estado_actual.estado);
             }
           });
-          return data;
+          return alumnos;
+        }),
+        catchError(error => {
+          console.error('❌ [ALUMNOS-ESTADO] Error en la petición:', error);
+          return of([]); // ✅ Retornar array vacío en caso de error
         })
       );
   }

@@ -11,7 +11,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Subscription, debounceTime, of, catchError, forkJoin } from 'rxjs';
+import { Subscription, debounceTime, of, catchError, forkJoin, map } from 'rxjs';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { environment } from '../../../../../environments/environment';
@@ -118,16 +118,42 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
     this.buscando = true;
     this.cd.markForCheck();
 
-    this.http.get<Alumno[]>(`${environment.apiUrl}/alumnos`).pipe(
+    this.http.get<any>(`${environment.apiUrl}/alumnos`).pipe(
+      map(response => {
+        console.log('📋 [IMPRIMIR-QR] Respuesta del backend:', response);
+        
+        // ✅ Extraer el array de alumnos de la respuesta del backend
+        let alumnos: Alumno[] = [];
+        
+        if (Array.isArray(response)) {
+          // Si es un array directo
+          alumnos = response;
+        } else if (response && response.data && Array.isArray(response.data)) {
+          // Si es { data: [...] }
+          alumnos = response.data;
+        } else if (response && response.alumnos && Array.isArray(response.alumnos)) {
+          // Si es { alumnos: [...] }
+          alumnos = response.alumnos;
+        } else if (response && response.result && Array.isArray(response.result)) {
+          // Si es { result: [...] }
+          alumnos = response.result;
+        } else {
+          console.error('❌ [IMPRIMIR-QR] Formato de respuesta no reconocido:', response);
+          return [];
+        }
+        
+        console.log('✅ [IMPRIMIR-QR] Alumnos extraídos:', alumnos.length);
+        return alumnos;
+      }),
       catchError(error => {
-        console.error('Error al cargar alumnos:', error);
+        console.error('❌ [IMPRIMIR-QR] Error al cargar alumnos:', error);
         return of([]);
       })
     ).subscribe(alumnos => {
       // Filtrar solo alumnos que tienen codigo_qr
       this.alumnos = alumnos.filter(a => a.codigo_qr && a.codigo_qr.trim() !== '');
       this.buscando = false;
-      console.log(`Cargados ${this.alumnos.length} alumnos con código QR`);
+      console.log(`✅ [IMPRIMIR-QR] Cargados ${this.alumnos.length} alumnos con código QR`);
       this.cd.markForCheck();
     });
   }

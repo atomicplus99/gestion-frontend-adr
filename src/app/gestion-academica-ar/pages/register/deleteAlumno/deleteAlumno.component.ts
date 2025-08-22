@@ -1,5 +1,5 @@
 // deleteAlumno.component.ts
-import { ChangeDetectionStrategy, Component, ElementRef, HostListener, inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, inject, OnInit, OnDestroy, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -8,16 +8,43 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { catchError, delay, finalize, tap } from 'rxjs/operators';
+import { catchError, delay, finalize, tap, map } from 'rxjs/operators';
 import { Observable, of, throwError, Subscription } from 'rxjs';
 import { AlertsService } from '../../../../shared/alerts.service';
 import { environment } from '../../../../../environments/environment';
 
 interface Alumno {
+  id_alumno: string;
   codigo: string;
+  dni_alumno: string;
   nombre: string;
   apellido: string;
-  estado: 'activo' | 'inactivo';
+  fecha_nacimiento: string;
+  direccion: string;
+  codigo_qr?: string;
+  nivel: string;
+  grado: number;
+  seccion: string;
+  turno?: {
+    id_turno: string;
+    hora_inicio: string;
+    hora_fin: string;
+    hora_limite: string;
+    turno: string;
+  };
+  usuario?: {
+    id_user: string;
+    nombre_usuario: string;
+    password_user: string;
+    rol_usuario: string;
+    profile_image: string;
+  };
+  estado_actual?: {
+    estado: string;
+    observacion: string;
+    fecha_actualizacion: string;
+  };
+  estado?: 'activo' | 'inactivo'; // Mantener para compatibilidad
   ultimaActualizacion?: Date;
   ultimaObservacion?: string;
 }
@@ -55,6 +82,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private alerts = inject(AlertsService);
   private el = inject(ElementRef);
+  private cdr = inject(ChangeDetectorRef); // ✅ Para forzar detección de cambios
 
   // Estado del componente
   codigo = '';
@@ -75,6 +103,9 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
   
   // Historial de búsquedas (máximo 5)
   historialBusquedas: HistorialItem[] = [];
+  
+  // ✅ ELIMINADO: Ya no necesitamos caché
+  // El endpoint incluye estado_actual directamente
   
   // Plantillas para observaciones
   plantillasObservacion: PlantillaObservacion[] = [
@@ -123,6 +154,8 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
     // Limpiar event listeners y subscripciones
     document.removeEventListener('keydown', this.keydownListener);
     this.subscriptions.unsubscribe();
+    
+    // ✅ ELIMINADO: Ya no necesitamos limpiar caché
   }
   
   @HostListener('window:beforeunload', ['$event'])
@@ -163,6 +196,9 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
     this.codigo = input.value;
   }
 
+  // ✅ ELIMINADO: Ya no necesitamos buscar estado por separado
+  // El endpoint /alumnos/codigo/{codigo} ahora incluye estado_actual
+
   buscarAlumno(): void {
     if (!this.codigo || this.codigo.length !== 14) {
       this.alerts.error('El código debe tener 10 dígitos');
@@ -173,15 +209,38 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
     this.errorMensaje.set(null);
     this.loadingMessage = 'Buscando alumno...';
     
-    this.http.get<Alumno>(`${environment.apiUrl}/alumnos/codigo/${this.codigo}`)
+    // ✅ AHORA: Solo una llamada HTTP (el endpoint incluye estado_actual)
+    this.http.get<any>(`${environment.apiUrl}/alumnos/codigo/${this.codigo}`)
       .pipe(
-        delay(500), // Pequeño delay para mostrar la animación de carga
-        tap(alumno => {
+        map(response => {
+          console.log('📋 [ESTADO-ALUMNO] Respuesta del backend:', response);
+          
+          // ✅ Extraer el alumno de la respuesta del backend
+          let alumno: Alumno;
+          
+          if (response && response.data) {
+            // Si es { success: true, data: {...} }
+            alumno = response.data;
+          } else if (response && response.id_alumno) {
+            // Si es el alumno directo
+            alumno = response;
+          } else {
+            console.error('❌ [ESTADO-ALUMNO] Formato de respuesta no reconocido:', response);
+            throw new Error('Formato de respuesta inválido');
+          }
+          
+          // ✅ El alumno ya incluye estado_actual desde el backend
+          console.log('✅ [ESTADO-ALUMNO] Estado del alumno:', alumno.estado_actual);
+          
           // Simular campo de última actualización si no existe
           if (!alumno.ultimaActualizacion) {
             alumno.ultimaActualizacion = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000);
           }
+          
+          console.log('✅ [ESTADO-ALUMNO] Alumno procesado completo:', alumno);
+          return alumno;
         }),
+        delay(200), // ✅ Delay reducido para mejor rendimiento
         catchError((error: HttpErrorResponse) => {
           // Mejorar manejo de errores con información específica
           let errorMsg = 'No se pudo encontrar el alumno con el código proporcionado';
@@ -200,8 +259,27 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (alumno) => {
+          console.log('✅ [ESTADO-ALUMNO] Alumno encontrado:', alumno);
           this.alumnoEncontrado.set(alumno);
-          this.estadoSeleccionado.set(alumno.estado || 'activo');
+          
+          // ✅ Usar el estado del backend o establecer por defecto
+          const estadoBackend = alumno.estado_actual?.estado || alumno.estado;
+          console.log('🔍 [ESTADO-ALUMNO] Estado del backend:', {
+            estado_actual: alumno.estado_actual,
+            estado_directo: alumno.estado,
+            estadoBackend: estadoBackend
+          });
+          
+          if (estadoBackend) {
+            // Normalizar el estado (ACTIVO -> activo, INACTIVO -> inactivo)
+            const estadoNormalizado = estadoBackend.toLowerCase() as 'activo' | 'inactivo';
+            console.log('✅ [ESTADO-ALUMNO] Estado normalizado:', estadoNormalizado);
+            this.estadoSeleccionado.set(estadoNormalizado);
+          } else {
+            console.log('⚠️ [ESTADO-ALUMNO] No se encontró estado, usando por defecto: activo');
+            this.estadoSeleccionado.set('activo'); // Estado por defecto
+          }
+          
           this.observacion.set('');
           this.mostrarFormulario.set(true);
           this.errorMensaje.set(null);
@@ -213,12 +291,21 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
             timestamp: new Date()
           });
           
-          setTimeout(() => document.getElementById('estado-select')?.focus(), 100);
+          // ✅ Forzar detección de cambios
+          this.cdr.markForCheck();
+          
+          setTimeout(() => {
+            document.getElementById('estado-select')?.focus();
+            this.cdr.markForCheck(); // ✅ Forzar detección después del timeout
+          }, 100);
+          
           this.alerts.success('Alumno encontrado correctamente');
         },
         error: (error: Error) => {
+          console.error('❌ [ESTADO-ALUMNO] Error al buscar alumno:', error);
           this.mostrarFormulario.set(false);
           this.errorMensaje.set(error.message);
+          this.cdr.markForCheck(); // ✅ Forzar detección en caso de error
           this.alerts.error(error.message);
         }
       });

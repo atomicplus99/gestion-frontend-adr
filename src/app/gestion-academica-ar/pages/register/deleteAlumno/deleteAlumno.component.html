@@ -110,14 +110,14 @@
           <p class="text-sm text-gray-600">Estado Actual:</p>
           <div class="mt-1">
             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
-              [class.bg-green-100]="alumnoEncontrado()?.estado === 'activo'" 
-              [class.text-green-800]="alumnoEncontrado()?.estado === 'activo'"
-              [class.bg-red-100]="alumnoEncontrado()?.estado === 'inactivo'" 
-              [class.text-red-800]="alumnoEncontrado()?.estado === 'inactivo'">
+              [class.bg-green-100]="(alumnoEncontrado()?.estado_actual?.estado || alumnoEncontrado()?.estado) === 'ACTIVO' || (alumnoEncontrado()?.estado_actual?.estado || alumnoEncontrado()?.estado) === 'activo'" 
+              [class.text-green-800]="(alumnoEncontrado()?.estado_actual?.estado || alumnoEncontrado()?.estado) === 'ACTIVO' || (alumnoEncontrado()?.estado_actual?.estado || alumnoEncontrado()?.estado) === 'activo'"
+              [class.bg-red-100]="(alumnoEncontrado()?.estado_actual?.estado || alumnoEncontrado()?.estado) === 'INACTIVO' || (alumnoEncontrado()?.estado_actual?.estado || alumnoEncontrado()?.estado) === 'inactivo'" 
+              [class.text-red-800]="(alumnoEncontrado()?.estado_actual?.estado || alumnoEncontrado()?.estado) === 'INACTIVO' || (alumnoEncontrado()?.estado_actual?.estado || alumnoEncontrado()?.estado) === 'inactivo'">
               <span class="w-2 h-2 mr-1 rounded-full"
-                [class.bg-green-500]="alumnoEncontrado()?.estado === 'activo'"
-                [class.bg-red-500]="alumnoEncontrado()?.estado === 'inactivo'"></span>
-              {{ alumnoEncontrado()?.estado | titlecase }}
+                [class.bg-green-500]="(alumnoEncontrado()?.estado_actual?.estado || alumnoEncontrado()?.estado) === 'ACTIVO' || (alumnoEncontrado()?.estado_actual?.estado || alumnoEncontrado()?.estado) === 'activo'"
+                [class.bg-red-500]="(alumnoEncontrado()?.estado_actual?.estado || alumnoEncontrado()?.estado) === 'INACTIVO' || (alumnoEncontrado()?.estado_actual?.estado || alumnoEncontrado()?.estado) === 'inactivo'"></span>
+              {{ (alumnoEncontrado()?.estado_actual?.estado || alumnoEncontrado()?.estado) | titlecase }}
             </span>
           </div>
         </div>
