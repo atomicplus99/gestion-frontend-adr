@@ -354,3 +354,9 @@
     </div>
   </div>
 </div>
+
+<!-- Mensaje de confirmación personalizado -->
+<app-confirmation-message 
+  [message]="confirmationMessage"
+  (confirm)="onConfirmMessage()">
+</app-confirmation-message>

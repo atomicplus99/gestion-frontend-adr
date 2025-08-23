@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
+import { ConfirmationMessageComponent, ConfirmationMessage } from '../../../../shared/components/confirmation-message/confirmation-message.component';
 
 interface JustificacionResponseDto {
   id_justificacion: string;
@@ -44,16 +45,36 @@ interface Alumno {
 }
 
 interface JustificacionesResponse {
-  statusCode: number;
+  success: boolean;
   message: string;
-  data: JustificacionResponseDto[];
-  total: number;
+  timestamp: string;
+  data: {
+    statusCode: number;
+    message: string;
+    data: JustificacionResponseDto[];
+    total: number;
+    paginacion?: {
+      pagina_actual: number;
+      elementos_por_pagina: number;
+      total_elementos: number;
+      total_paginas: number;
+      tiene_pagina_anterior: boolean;
+      tiene_pagina_siguiente: boolean;
+    };
+  };
+}
+
+interface AlumnoResponse {
+  success: boolean;
+  message: string;
+  timestamp: string;
+  data: Alumno;
 }
 
 @Component({
   selector: 'app-lista-justificaciones',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, HttpClientModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, HttpClientModule, ConfirmationMessageComponent],
   templateUrl: './list-solicitudes-justificaciones-alumnos.component.html',
   styleUrls: ['./list-solicitudes-justificaciones-alumnos.component.css']
 })
@@ -78,10 +99,15 @@ export class ListaJustificacionesComponent implements OnInit {
   totalPaginas = 0;
   
   // UI
-  showAlert = false;
-  alertType: 'success' | 'error' | 'info' = 'info';
-  alertMessage = '';
   justificacionExpandida: string | null = null;
+  
+  // Sistema de mensajes personalizados
+  confirmationMessage: ConfirmationMessage = {
+    type: 'info',
+    title: '',
+    message: '',
+    show: false
+  };
 
   constructor(
     private fb: FormBuilder,
@@ -114,23 +140,60 @@ export class ListaJustificacionesComponent implements OnInit {
     this.alumnoEncontrado = null;
     this.errorBusquedaAlumno = '';
     
+    // Asegurar que siempre sean arrays
+    this.justificaciones = [];
+    this.justificacionesFiltradas = [];
+    
     try {
-
-      
       const response = await this.http.get<JustificacionesResponse>(`${environment.apiUrl}/detalle-justificaciones`).toPromise();
       
-      if (response) {
-        this.justificaciones = response.data || [];
+      console.log('🔍 Respuesta completa del backend:', response);
+      console.log('📊 Datos anidados:', response?.data);
+      console.log('📋 Array de justificaciones:', response?.data?.data);
+      
+      if (response && response.success && response.data && Array.isArray(response.data.data)) {
+        this.justificaciones = response.data.data;
         this.aplicarFiltros();
 
-        
         if (this.justificaciones.length === 0) {
-          this.showAlertMessage('No se encontraron justificaciones', 'info');
+          this.confirmationMessage = {
+            type: 'info',
+            title: 'Sin Resultados',
+            message: 'No se encontraron solicitudes de justificación en el sistema',
+            show: true
+          };
         }
+      } else {
+        this.confirmationMessage = {
+          type: 'error',
+          title: 'Error de Respuesta',
+          message: response?.message || 'Respuesta del backend no válida o formato incorrecto',
+          show: true
+        };
+        // Asegurar que sean arrays vacíos
+        this.justificaciones = [];
+        this.justificacionesFiltradas = [];
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error cargando justificaciones:', error);
-      this.showAlertMessage('Error al cargar las justificaciones', 'error');
+      
+      let errorMessage = 'Error al cargar las justificaciones';
+      if (error.status === 404) {
+        errorMessage = 'Endpoint de justificaciones no encontrado';
+      } else if (error.status === 500) {
+        errorMessage = 'Error interno del servidor';
+      } else if (error.status === 0) {
+        errorMessage = 'No se pudo conectar con el servidor';
+      }
+      
+      this.confirmationMessage = {
+        type: 'error',
+        title: 'Error de Conexión',
+        message: errorMessage,
+        show: true
+      };
+      
+      // Asegurar que sean arrays vacíos
       this.justificaciones = [];
       this.justificacionesFiltradas = [];
     } finally {
@@ -151,26 +214,33 @@ export class ListaJustificacionesComponent implements OnInit {
     this.alumnoEncontrado = null;
 
     try {
+      const response = await this.http.get<AlumnoResponse>(`${environment.apiUrl}/alumnos/codigo/${codigo}`).toPromise();
       
-      
-      const alumno = await this.http.get<Alumno>(`${environment.apiUrl}/alumnos/codigo/${codigo}`).toPromise();
-      
-      if (alumno) {
-        this.alumnoEncontrado = alumno;
-        
+      if (response && response.success) {
+        this.alumnoEncontrado = response.data;
         
         // Cargar justificaciones del alumno
-        await this.cargarJustificacionesPorAlumno(alumno.id_alumno);
+        await this.cargarJustificacionesPorAlumno(response.data.id_alumno);
+      } else {
+        this.errorBusquedaAlumno = response?.message || 'Respuesta del backend no válida';
+        // Asegurar que sean arrays vacíos
+        this.justificaciones = [];
+        this.justificacionesFiltradas = [];
       }
     } catch (error: any) {
       console.error('Error buscando alumno:', error);
       
       if (error.status === 404) {
         this.errorBusquedaAlumno = 'No se encontró un alumno con ese código';
+      } else if (error.status === 500) {
+        this.errorBusquedaAlumno = 'Error interno del servidor';
+      } else if (error.status === 0) {
+        this.errorBusquedaAlumno = 'No se pudo conectar con el servidor';
       } else {
         this.errorBusquedaAlumno = 'Error al buscar el alumno. Intente nuevamente.';
       }
       
+      // Asegurar que sean arrays vacíos
       this.justificaciones = [];
       this.justificacionesFiltradas = [];
     } finally {
@@ -182,23 +252,56 @@ export class ListaJustificacionesComponent implements OnInit {
   async cargarJustificacionesPorAlumno(id_alumno: string) {
     this.isLoading = true;
     
+    // Asegurar que siempre sean arrays
+    this.justificaciones = [];
+    this.justificacionesFiltradas = [];
+    
     try {
-      
-      
       const response = await this.http.get<JustificacionesResponse>(`${environment.apiUrl}/detalle-justificaciones/alumno/${id_alumno}`).toPromise();
       
-      if (response) {
-        this.justificaciones = response.data || [];
+      if (response && response.success && response.data && Array.isArray(response.data.data)) {
+        this.justificaciones = response.data.data;
         this.aplicarFiltros();
         
-        
         if (this.justificaciones.length === 0) {
-          this.showAlertMessage('El alumno no tiene solicitudes de justificación', 'info');
+          this.confirmationMessage = {
+            type: 'info',
+            title: 'Sin Solicitudes',
+            message: 'El alumno no tiene solicitudes de justificación registradas',
+            show: true
+          };
         }
+      } else {
+        this.confirmationMessage = {
+          type: 'error',
+          title: 'Error de Respuesta',
+          message: response?.message || 'Respuesta del backend no válida o formato incorrecto',
+          show: true
+        };
+        // Asegurar que sean arrays vacíos
+        this.justificaciones = [];
+        this.justificacionesFiltradas = [];
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error cargando justificaciones del alumno:', error);
-      this.showAlertMessage('Error al cargar las justificaciones del alumno', 'error');
+      
+      let errorMessage = 'Error al cargar las justificaciones del alumno';
+      if (error.status === 404) {
+        errorMessage = 'No se encontraron justificaciones para este alumno';
+      } else if (error.status === 500) {
+        errorMessage = 'Error interno del servidor';
+      } else if (error.status === 0) {
+        errorMessage = 'No se pudo conectar con el servidor';
+      }
+      
+      this.confirmationMessage = {
+        type: 'error',
+        title: 'Error de Conexión',
+        message: errorMessage,
+        show: true
+      };
+      
+      // Asegurar que sean arrays vacíos
       this.justificaciones = [];
       this.justificacionesFiltradas = [];
     } finally {
@@ -208,42 +311,76 @@ export class ListaJustificacionesComponent implements OnInit {
   }
 
   aplicarFiltros() {
+    // Verificar que this.justificaciones sea un array antes de procesar
+    if (!Array.isArray(this.justificaciones)) {
+      console.warn('this.justificaciones no es un array, inicializando como array vacío');
+      this.justificaciones = [];
+    }
+    
+    // Si no hay justificaciones, inicializar arrays vacíos
+    if (this.justificaciones.length === 0) {
+      this.justificacionesFiltradas = [];
+      this.totalPaginas = 0;
+      this.paginaActual = 1;
+      return;
+    }
+    
     let filtradas = [...this.justificaciones];
     const filtros = this.filtroForm.value;
 
     // Filtro por estado
-    if (filtros.estado) {
+    if (filtros.estado && filtros.estado.trim() !== '') {
       filtradas = filtradas.filter(j => j.estado === filtros.estado);
     }
 
     // Filtro por tipo
-    if (filtros.tipo_justificacion) {
+    if (filtros.tipo_justificacion && filtros.tipo_justificacion.trim() !== '') {
       filtradas = filtradas.filter(j => j.tipo_justificacion === filtros.tipo_justificacion);
     }
 
     // Filtro por fecha desde
-    if (filtros.fecha_desde) {
-      const fechaDesde = new Date(filtros.fecha_desde);
-      filtradas = filtradas.filter(j => {
-        const fechaSolicitud = new Date(j.fecha_solicitud);
-        return fechaSolicitud >= fechaDesde;
-      });
+    if (filtros.fecha_desde && filtros.fecha_desde.trim() !== '') {
+      try {
+        const fechaDesde = new Date(filtros.fecha_desde);
+        if (!isNaN(fechaDesde.getTime())) {
+          filtradas = filtradas.filter(j => {
+            try {
+              const fechaSolicitud = new Date(j.fecha_solicitud);
+              return !isNaN(fechaSolicitud.getTime()) && fechaSolicitud >= fechaDesde;
+            } catch (e) {
+              console.warn('Error procesando fecha de solicitud:', j.fecha_solicitud);
+              return false;
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('Error procesando fecha desde:', filtros.fecha_desde);
+      }
     }
 
     // Filtro por fecha hasta
-    if (filtros.fecha_hasta) {
-      const fechaHasta = new Date(filtros.fecha_hasta);
-      filtradas = filtradas.filter(j => {
-        const fechaSolicitud = new Date(j.fecha_solicitud);
-        return fechaSolicitud <= fechaHasta;
-      });
+    if (filtros.fecha_hasta && filtros.fecha_hasta.trim() !== '') {
+      try {
+        const fechaHasta = new Date(filtros.fecha_hasta);
+        if (!isNaN(fechaHasta.getTime())) {
+          filtradas = filtradas.filter(j => {
+            try {
+              const fechaSolicitud = new Date(j.fecha_solicitud);
+              return !isNaN(fechaSolicitud.getTime()) && fechaSolicitud <= fechaHasta;
+            } catch (e) {
+              console.warn('Error procesando fecha de solicitud:', j.fecha_solicitud);
+              return false;
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('Error procesando fecha hasta:', filtros.fecha_hasta);
+      }
     }
 
     this.justificacionesFiltradas = filtradas;
     this.calcularPaginacion();
     this.paginaActual = 1; // Resetear a primera página
-    
-    
   }
 
   calcularPaginacion() {
@@ -335,21 +472,22 @@ export class ListaJustificacionesComponent implements OnInit {
     }
   }
 
-  showAlertMessage(message: string, type: 'success' | 'error' | 'info') {
-    this.alertMessage = message;
-    this.alertType = type;
-    this.showAlert = true;
-    this.cdr.detectChanges();
-    
-    setTimeout(() => {
-      this.showAlert = false;
-      this.cdr.detectChanges();
-    }, 5000);
+  actualizarLista() {
+    if (this.alumnoEncontrado) {
+      this.cargarJustificacionesPorAlumno(this.alumnoEncontrado.id_alumno);
+    } else {
+      this.cargarTodasJustificaciones();
+    }
   }
 
   exportarCSV() {
     if (this.justificacionesFiltradas.length === 0) {
-      this.showAlertMessage('No hay datos para exportar', 'info');
+      this.confirmationMessage = {
+        type: 'info',
+        title: 'Sin Datos',
+        message: 'No hay datos para exportar. Aplica filtros diferentes o verifica que existan justificaciones',
+        show: true
+      };
       return;
     }
 
@@ -395,14 +533,16 @@ export class ListaJustificacionesComponent implements OnInit {
     link.click();
     document.body.removeChild(link);
 
-    this.showAlertMessage('Archivo CSV exportado exitosamente', 'success');
+    this.confirmationMessage = {
+      type: 'success',
+      title: 'Exportación Exitosa',
+      message: 'Archivo CSV exportado correctamente',
+      show: true
+    };
   }
 
-  actualizarLista() {
-    if (this.alumnoEncontrado) {
-      this.cargarJustificacionesPorAlumno(this.alumnoEncontrado.id_alumno);
-    } else {
-      this.cargarTodasJustificaciones();
-    }
+  onConfirmMessage(): void {
+    this.confirmationMessage.show = false;
+    this.cdr.detectChanges();
   }
 }

@@ -1,9 +1,12 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
+import { UserStoreService } from '../../../../auth/store/user.store';
+import { Subject, takeUntil } from 'rxjs';
+import { ConfirmationMessageComponent, ConfirmationMessage } from '../../../../shared/components/confirmation-message/confirmation-message.component';
 
 interface Alumno {
   id_alumno: string;
@@ -39,7 +42,7 @@ interface JustificacionResponse {
 @Component({
   selector: 'app-solicitud-justificacion',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, HttpClientModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, HttpClientModule, ConfirmationMessageComponent],
   templateUrl: './create-solicitud-justificacion.component.html',
   styleUrls: ['./create-solicitud-justificacion.component.css']
 })
@@ -72,17 +75,74 @@ export class SolicitudJustificacionComponent implements OnInit {
     return this.justificacionForm?.get('fecha_fin')?.value || '';
   }
 
-  // ID del auxiliar autenticado - CAMBIAR POR EL VALOR REAL
-  private readonly ID_AUXILIAR_AUTENTICADO = '37419ff9-9ce8-4b1a-bdc6-2ed28ae8cc0b';
+  // Subject para manejo de suscripciones
+  private destroy$ = new Subject<void>();
+
+  // Mensaje de confirmación personalizado
+  confirmationMessage: ConfirmationMessage = {
+    type: 'info',
+    title: '',
+    message: '',
+    show: false
+  };
+
+  // Propiedades del auxiliar autenticado
+  get puedeCrearJustificaciones(): boolean {
+    return this.userStore.isAuxiliar();
+  }
+
+  get idAuxiliarActual(): string | null {
+    return this.userStore.idAuxiliar();
+  }
+
+  get nombreAuxiliarActual(): string | null {
+    const auxiliar = this.userStore.user()?.auxiliar;
+    return auxiliar ? `${auxiliar.nombre} ${auxiliar.apellido}` : null;
+  }
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private userStore: UserStoreService
   ) {}
 
   ngOnInit() {
     this.initForm();
+    this.verificarPermisosAuxiliar();
+    this.setupUserSubscription();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ========================================
+  // MÉTODOS DE INICIALIZACIÓN Y PERMISOS
+  // ========================================
+  
+  private verificarPermisosAuxiliar(): void {
+    if (!this.puedeCrearJustificaciones) {
+      this.confirmationMessage = {
+        type: 'error',
+        title: 'Sin Permisos',
+        message: 'No tienes permisos de auxiliar para crear justificaciones.',
+        show: true
+      };
+    }
+  }
+
+  private setupUserSubscription(): void {
+    // Observar cambios en el usuario para mantener actualizado el ID del auxiliar
+    // Si userStore.user() es un signal, no necesitas suscripción
+    // Si es un observable, descomenta la línea siguiente:
+    
+    // this.userStore.user()
+    //   .pipe(takeUntil(this.destroy$))
+    //   .subscribe(user => {
+    //     this.cdr.detectChanges();
+    //   });
   }
 
   initForm() {
@@ -116,13 +176,29 @@ export class SolicitudJustificacionComponent implements OnInit {
     this.alumnoEncontrado = null;
     this.cdr.detectChanges();
 
-    this.http.get<Alumno>(`${environment.apiUrl}/alumnos/codigo/${codigo}`)
+    // Definir la interfaz de respuesta del backend
+    interface BackendResponse<T> {
+      success: boolean;
+      message: string;
+      timestamp: string;
+      data: T;
+    }
+
+    this.http.get<BackendResponse<Alumno>>(`${environment.apiUrl}/alumnos/codigo/${codigo}`)
       .subscribe({
-        next: (alumno) => {
+        next: (response) => {
           this.isSearchingAlumno = false;
-          this.alumnoEncontrado = alumno;
+          console.log('🔍 Respuesta completa del backend:', response);
+          
+          if (response && response.success && response.data) {
+            this.alumnoEncontrado = response.data;
+            this.errorBusquedaAlumno = '';
+          } else {
+            this.alumnoEncontrado = null;
+            this.errorBusquedaAlumno = 'Respuesta del backend no válida';
+          }
+          
           this.cdr.detectChanges();
-  
         },
         error: (error) => {
           this.isSearchingAlumno = false;
@@ -178,7 +254,12 @@ export class SolicitudJustificacionComponent implements OnInit {
     
 
     if (fin < inicio) {
-      this.showAlertMessage('La fecha de fin debe ser posterior a la fecha de inicio', 'error');
+      this.confirmationMessage = {
+        type: 'error',
+        title: 'Rango de Fechas Inválido',
+        message: 'La fecha de fin debe ser posterior a la fecha de inicio',
+        show: true
+      };
       return;
     }
 
@@ -282,7 +363,12 @@ export class SolicitudJustificacionComponent implements OnInit {
       this.markFormGroupTouched();
       
       if (!this.alumnoEncontrado) {
-        this.showAlertMessage('Debe buscar y seleccionar un alumno válido', 'error');
+        this.confirmationMessage = {
+          type: 'error',
+          title: 'Alumno Requerido',
+          message: 'Debe buscar y seleccionar un alumno válido',
+          show: true
+        };
       }
       return;
     }
@@ -290,9 +376,19 @@ export class SolicitudJustificacionComponent implements OnInit {
     // Validar fechas según el tipo seleccionado
     if (!this.validarRangoFechas()) {
       if (this.usarRangoFechas) {
-        this.showAlertMessage('Debe seleccionar fecha de inicio y fin válidas', 'error');
+        this.confirmationMessage = {
+          type: 'error',
+          title: 'Fechas Inválidas',
+          message: 'Debe seleccionar fecha de inicio y fin válidas',
+          show: true
+        };
       } else {
-        this.showAlertMessage('Debe agregar al menos una fecha', 'error');
+        this.confirmationMessage = {
+          type: 'error',
+          title: 'Fechas Requeridas',
+          message: 'Debe agregar al menos una fecha',
+          show: true
+        };
       }
       return;
     }
@@ -319,7 +415,12 @@ export class SolicitudJustificacionComponent implements OnInit {
     // Validar que hay fechas para enviar
     if (fechasParaEnviar.length === 0) {
       this.isLoading = false;
-      this.showAlertMessage('No hay fechas válidas para enviar', 'error');
+      this.confirmationMessage = {
+        type: 'error',
+        title: 'Fechas Requeridas',
+        message: 'No hay fechas válidas para enviar',
+        show: true
+      };
       return;
     }
     
@@ -327,32 +428,60 @@ export class SolicitudJustificacionComponent implements OnInit {
     const documentosFiltrados = formData.documentos_adjuntos
       .filter((doc: string) => doc && doc.trim());
 
+    // Verificar que el auxiliar esté autenticado
+    if (!this.idAuxiliarActual) {
+      this.isLoading = false;
+      this.confirmationMessage = {
+        type: 'error',
+        title: 'Error de Autenticación',
+        message: 'No se pudo obtener el ID del auxiliar. Verifica tu sesión y que tengas permisos de auxiliar.',
+        show: true
+      };
+      return;
+    }
+
     const payload: CreateJustificacionDto = {
       id_alumno: this.alumnoEncontrado.id_alumno,
-      id_auxiliar: this.ID_AUXILIAR_AUTENTICADO,
+      id_auxiliar: this.idAuxiliarActual,
       fecha_de_justificacion: fechasParaEnviar,
       tipo_justificacion: formData.tipo_justificacion,
       motivo: formData.motivo,
       documentos_adjuntos: documentosFiltrados.length > 0 ? documentosFiltrados : undefined
     };
 
-    console.log('Payload a enviar:', payload);
+    console.log('🔍 DIAGNÓSTICO DEL AUXILIAR:');
+    console.log('- Usuario actual:', this.userStore.user());
+    console.log('- Es auxiliar?:', this.userStore.isAuxiliar());
+    console.log('- ID auxiliar obtenido:', this.idAuxiliarActual);
+    console.log('- Nombre auxiliar:', this.nombreAuxiliarActual);
+    console.log('📦 Payload a enviar:', payload);
 
     this.http.post<JustificacionResponse>(`${environment.apiUrl}/detalle-justificaciones`, payload)
       .subscribe({
         next: (response) => {
           this.isLoading = false;
+          console.log('✅ Respuesta del backend:', response);
           
-          // Mostrar mensaje de éxito del backend o uno por defecto
-          const mensaje = response.message || 'Solicitud registrada exitosamente';
-          this.showAlertMessage(mensaje, 'success');
+          // Mostrar mensaje de éxito personalizado
+          this.confirmationMessage = {
+            type: 'success',
+            title: '¡Solicitud Registrada!',
+            message: response.message || 'Solicitud de justificación registrada exitosamente',
+            details: [
+              `Alumno: ${this.alumnoEncontrado?.nombre} ${this.alumnoEncontrado?.apellido}`,
+              `Auxiliar: ${this.nombreAuxiliarActual}`,
+              `Fechas: ${fechasParaEnviar.length} día(s)`,
+              `Tipo: ${formData.tipo_justificacion}`
+            ],
+            show: true
+          };
           
           this.resetForm();
           this.cdr.detectChanges();
         },
         error: (error) => {
           this.isLoading = false;
-          console.error('Error completo:', error);
+          console.error('❌ Error completo:', error);
           
           // Extraer mensaje específico del backend
           let mensajeError = 'Error al registrar la solicitud';
@@ -369,7 +498,14 @@ export class SolicitudJustificacionComponent implements OnInit {
             mensajeError = error.message;
           }
           
-          this.showAlertMessage(mensajeError, 'error');
+          // Mostrar error personalizado
+          this.confirmationMessage = {
+            type: 'error',
+            title: 'Error al Registrar',
+            message: mensajeError,
+            show: true
+          };
+          
           this.cdr.detectChanges();
         }
       });
@@ -381,16 +517,11 @@ export class SolicitudJustificacionComponent implements OnInit {
     return `${partes[2]}-${partes[1]}-${partes[0]}`;
   }
 
-  showAlertMessage(message: string, type: 'success' | 'error') {
-    this.alertMessage = message;
-    this.alertType = type;
-    this.showAlert = true;
-    this.cdr.detectChanges();
-    
-    setTimeout(() => {
-      this.showAlert = false;
-      this.cdr.detectChanges();
-    }, 5000);
+  /**
+   * Maneja la confirmación del mensaje de confirmación
+   */
+  onConfirmMessage(): void {
+    this.confirmationMessage.show = false;
   }
 
   markFormGroupTouched() {

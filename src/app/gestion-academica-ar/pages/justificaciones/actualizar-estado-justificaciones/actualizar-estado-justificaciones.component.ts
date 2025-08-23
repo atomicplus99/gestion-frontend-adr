@@ -39,16 +39,34 @@ interface BodyActualizarEstadoDto {
 }
 
 interface ActualizarEstadoResponse {
-  statusCode: number;
+  success: boolean;
   message: string;
-  data: JustificacionResponseDto;
+  timestamp: string;
+  data: {
+    statusCode: number;
+    message: string;
+    data: JustificacionResponseDto;
+  };
 }
 
 interface JustificacionesResponse {
-  statusCode: number;
+  success: boolean;
   message: string;
-  data: JustificacionResponseDto[];
-  total: number;
+  timestamp: string;
+  data: {
+    statusCode: number;
+    message: string;
+    data: JustificacionResponseDto[];
+    total: number;
+    paginacion?: {
+      pagina_actual: number;
+      elementos_por_pagina: number;
+      total_elementos: number;
+      total_paginas: number;
+      tiene_pagina_anterior: boolean;
+      tiene_pagina_siguiente: boolean;
+    };
+  };
 }
 
 @Component({
@@ -110,9 +128,13 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
       
       const response = await this.http.get<JustificacionesResponse>(`${environment.apiUrl}/detalle-justificaciones`).toPromise();
       
-      if (response) {
+      console.log('🔍 Respuesta completa del backend:', response);
+      console.log('📊 Datos anidados:', response?.data);
+      console.log('📋 Array de justificaciones:', response?.data?.data);
+      
+      if (response && response.success && response.data && Array.isArray(response.data.data)) {
         // Filtrar solo las que están PENDIENTES
-        this.justificacionesPendientes = (response.data || []).filter(j => j.estado === 'PENDIENTE');
+        this.justificacionesPendientes = response.data.data.filter(j => j.estado === 'PENDIENTE');
         this.aplicarFiltros();
         
         console.log(`Cargadas ${this.justificacionesPendientes.length} justificaciones pendientes`);
@@ -120,6 +142,9 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
         if (this.justificacionesPendientes.length === 0) {
           this.showAlertMessage('No hay justificaciones pendientes de revisión', 'info');
         }
+      } else {
+        console.warn('Respuesta del backend no válida:', response);
+        this.justificacionesPendientes = [];
       }
     } catch (error) {
       console.error('Error cargando justificaciones:', error);
@@ -215,17 +240,20 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
         payload
       ).toPromise();
 
-      if (response) {
+      if (response && response.success) {
         console.log('Response:', response);
         
         // Mostrar mensaje de éxito
-        this.showAlertMessage(response.message || 'Estado actualizado exitosamente', 'success');
+        this.showAlertMessage(response.data?.message || response.message || 'Estado actualizado exitosamente', 'success');
         
         // Recargar la lista
         await this.cargarJustificacionesPendientes();
         
         // Cerrar modal
         this.cerrarModal();
+      } else {
+        console.warn('Respuesta del backend no válida:', response);
+        this.showAlertMessage('Respuesta del backend no válida', 'error');
       }
     } catch (error: any) {
       console.error('Error actualizando estado:', error);
@@ -263,9 +291,12 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
         payload
       ).toPromise();
 
-      if (response) {
-        this.showAlertMessage(response.message || 'Estado actualizado exitosamente', 'success');
+      if (response && response.success) {
+        this.showAlertMessage(response.data?.message || response.message || 'Estado actualizado exitosamente', 'success');
         await this.cargarJustificacionesPendientes();
+      } else {
+        console.warn('Respuesta del backend no válida:', response);
+        this.showAlertMessage('Respuesta del backend no válida', 'error');
       }
     } catch (error: any) {
       console.error('Error en acción rápida:', error);
