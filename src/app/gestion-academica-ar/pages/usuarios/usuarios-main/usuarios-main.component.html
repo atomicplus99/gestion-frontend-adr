@@ -1,0 +1,56 @@
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
+      <p class="mt-2 text-gray-600">Administra usuarios, directores y personal del sistema</p>
+    </div>
+
+    <!-- Navegación por pestañas -->
+    <div class="bg-white shadow rounded-lg mb-6">
+      <div class="border-b border-gray-200">
+        <nav class="flex space-x-8 px-6" aria-label="Tabs">
+          <button
+            *ngFor="let tab of tabs"
+            (click)="cambiarTab(tab.id)"
+            [class]="getTabClass(tab.id)"
+                         [disabled]="tab.disabled || false">
+            <span class="mr-2 text-lg">{{ tab.icon }}</span>
+            <div class="text-left">
+              <div class="font-medium">{{ tab.label }}</div>
+              <div class="text-xs opacity-75">{{ tab.description }}</div>
+            </div>
+          </button>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Contenido de las pestañas -->
+    <div class="bg-white shadow rounded-lg">
+      
+      <!-- Lista de Usuarios -->
+      <div *ngIf="isTabActive('lista-usuarios')">
+        <app-lista-usuarios></app-lista-usuarios>
+      </div>
+
+      <!-- Crear Usuario -->
+      <div *ngIf="isTabActive('crear-usuario')">
+        <div class="p-6">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">Crear Nuevo Usuario</h2>
+          <app-create-usuario></app-create-usuario>
+        </div>
+      </div>
+
+      <!-- Administración de Personal -->
+      <div *ngIf="isTabActive('administracion-personal')">
+        <app-administracion-personal></app-administracion-personal>
+      </div>
+
+    </div>
+
+    <!-- Componente de notificaciones de errores -->
+    <app-error-toast></app-error-toast>
+
+  </div>
+</div>

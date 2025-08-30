@@ -150,6 +150,10 @@ export const routes: Routes = [
                         loadComponent: () => import('./gestion-academica-ar/pages/usuarios/administracion-personal/administracion-personal.component').then(m => m.AdministracionPersonalComponent),
                     },
                     {
+                        path: 'lista-usuarios',
+                        loadComponent: () => import('./gestion-academica-ar/pages/usuarios/lista-usuarios/lista-usuarios.component').then(m => m.ListaUsuariosComponent),
+                    },
+                    {
                         path: '',
                         redirectTo: 'create-usuario',
                         pathMatch: 'full'

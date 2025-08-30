@@ -102,6 +102,7 @@ export class SidebarComponent {
           link: '#',
           allowedRoles: ['DIRECTOR', 'ADMINISTRADOR', 'ADMIN'],
           children: [
+            { label: 'Lista Usuarios', link: '/home/usuarios/lista-usuarios' },
             { label: 'Crear Usuario', link: '/home/usuarios/create-usuario' },
           ]
         },
