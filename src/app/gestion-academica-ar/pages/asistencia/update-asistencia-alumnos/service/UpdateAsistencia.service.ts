@@ -89,7 +89,14 @@ export class AsistenciaService {
   constructor(private http: HttpClient) {}
 
   verificarAsistenciaPorCodigo(codigo: string): Observable<VerificarAsistenciaResponse> {
-    return this.http.get<BackendResponse<VerificarAsistenciaResponse>>(`${this.baseUrl}/verificar/${codigo}`)
+    // Obtener fecha actual en zona horaria de Perú (UTC-5)
+    const fechaActual = this.obtenerFechaActualPeru();
+    const url = `${this.baseUrl}/verificar/${codigo}?fecha=${fechaActual}`;
+    
+    console.log('🔍 Verificando asistencia para fecha:', fechaActual);
+    console.log('🌐 URL de verificación:', url);
+    
+    return this.http.get<BackendResponse<VerificarAsistenciaResponse>>(url)
       .pipe(
         map(response => {
           console.log('🔍 Respuesta completa del backend:', response);
@@ -119,6 +126,22 @@ export class AsistenciaService {
         }),
         catchError(this.handleError)
       );
+  }
+
+  /**
+   * Obtiene la fecha actual en zona horaria local (Perú)
+   */
+  private obtenerFechaActualPeru(): string {
+    // Obtener fecha actual en zona horaria local
+    const ahora = new Date();
+    
+    // Obtener componentes de fecha en zona horaria local
+    const año = ahora.getFullYear();
+    const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+    const dia = String(ahora.getDate()).padStart(2, '0');
+    
+    // Formatear como YYYY-MM-DD
+    return `${año}-${mes}-${dia}`;
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {

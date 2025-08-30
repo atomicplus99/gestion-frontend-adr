@@ -1,0 +1,85 @@
+<!-- Contenedor de notificaciones de error -->
+<div class="fixed top-4 right-4 z-50 w-96 max-w-full" *ngIf="errors.length > 0">
+  <!-- Header con botón de limpiar todos -->
+  <div class="flex items-center justify-between mb-2" *ngIf="errors.length > 1">
+    <span class="text-sm font-medium text-gray-700">
+      {{ errors.length }} error{{ errors.length !== 1 ? 'es' : '' }}
+    </span>
+    <button
+      (click)="clearAllErrors()"
+      class="text-xs text-gray-500 hover:text-gray-700 underline">
+      Limpiar todos
+    </button>
+  </div>
+
+  <!-- Lista de errores -->
+  <div class="space-y-2">
+    <div
+      *ngFor="let error of errors; trackBy: trackByErrorId"
+      [class]="getErrorClass(error) + ' error-toast'"
+      class="slide-in">
+      
+      <!-- Botón de cerrar -->
+      <button
+        (click)="removeError(error.id)"
+        class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <!-- Contenido del error -->
+      <div class="flex items-start">
+        <!-- Icono -->
+        <div class="flex-shrink-0 mr-3">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getErrorIcon(error)"/>
+          </svg>
+        </div>
+
+        <!-- Información del error -->
+        <div class="flex-1 min-w-0">
+          <!-- Título -->
+          <h4 class="text-sm font-semibold mb-1">
+            {{ error.title }}
+          </h4>
+
+          <!-- Mensaje -->
+          <p class="text-sm mb-2">
+            {{ error.message }}
+          </p>
+
+          <!-- Detalles (si existen) -->
+          <div *ngIf="error.details" class="text-xs opacity-75 mb-3">
+            <details class="cursor-pointer">
+              <summary class="hover:underline">Ver detalles</summary>
+              <div class="mt-1 p-2 bg-black bg-opacity-10 rounded text-xs font-mono">
+                {{ error.details }}
+              </div>
+            </details>
+          </div>
+
+          <!-- Acción (si existe) -->
+          <div *ngIf="error.action" class="flex items-center justify-between">
+            <button
+              (click)="error.action!.action()"
+              [class]="getActionButtonClass(error.action!.type)"
+              class="text-xs px-3 py-1 rounded-md font-medium transition-colors duration-200">
+              {{ error.action!.label }}
+            </button>
+            
+            <!-- Timestamp -->
+            <span class="text-xs opacity-60">
+              {{ formatTimestamp(error.timestamp) }}
+            </span>
+          </div>
+
+          <!-- Solo timestamp si no hay acción -->
+          <div *ngIf="!error.action" class="text-xs opacity-60">
+            {{ formatTimestamp(error.timestamp) }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

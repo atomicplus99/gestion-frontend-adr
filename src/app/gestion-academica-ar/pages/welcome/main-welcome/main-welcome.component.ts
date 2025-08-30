@@ -2,6 +2,8 @@ import { Component, Input, inject, computed, signal, OnInit, OnDestroy } from '@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { UserStoreService } from '../../../../auth/store/user.store';
+import { UsuarioService } from '../../usuarios/services/usuario.service';
+import { PhotoService } from '../../../../shared/services/photo.service';
 import { environment } from '../../../../../environments/environment';
 
 
@@ -75,6 +77,8 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   
   private userStore = inject(UserStoreService);
   private http = inject(HttpClient);
+  private usuarioService = inject(UsuarioService);
+  private photoService = inject(PhotoService);
   
   // Signals para datos en tiempo real
   currentUser = this.userStore.user;
@@ -91,6 +95,9 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   sessionTime = signal<string>('0:00');
   globalTimeZones = signal<{city: string, time: string}[]>([]);
   
+  // Signal para la URL real de la foto
+  realPhotoUrl = signal<string>('');
+  
   private sessionStartTime = Date.now();
   private timeInterval?: number;
   
@@ -103,8 +110,11 @@ export class WelcomeComponent implements OnInit, OnDestroy {
       return `${user.auxiliar.nombre} ${user.auxiliar.apellido}`;
     } else if (user.alumno) {
       return `${user.alumno.nombre} ${user.alumno.apellido}`;
+    } else if (user.director) {
+      return `${user.director.nombres} ${user.director.apellidos}`;
+    } else if (user.administrador) {
+      return `${user.administrador.nombres} ${user.administrador.apellidos}`;
     }
-    
     return user.username;
   });
 
@@ -117,6 +127,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     this.loadCountryInfo();
     this.loadUpcomingHolidays();
     this.loadGlobalTimes();
+    this.loadUserPhoto();
   }
 
   ngOnDestroy() {
@@ -302,14 +313,32 @@ export class WelcomeComponent implements OnInit, OnDestroy {
 
   getUserPhoto(): string {
     const user = this.currentUser();
-    if (user?.photo && user.photo.trim() !== '') {
-      return user.photo;
+    
+    // Usar la URL real obtenida del backend
+    if (user?.idUser) {
+      // La URL real se obtiene del backend y se almacena en el signal
+      return this.realPhotoUrl() || '';
     }
-    return `${environment.apiUrl}/uploads/profiles/no-image.png`;
+    
+    return '';
+  }
+
+  loadUserPhoto(): void {
+    const user = this.currentUser();
+    if (user?.idUser) {
+      this.photoService.getUserPhoto(user.idUser).subscribe({
+        next: (photoUrl) => {
+          this.realPhotoUrl.set(photoUrl);
+        },
+        error: (error) => {
+          this.realPhotoUrl.set('');
+        }
+      });
+    }
   }
 
   onImageError(event: any): void {
-    event.target.src = `${environment.apiUrl}/uploads/profiles/no-image.png`;
+    event.target.style.display = 'none';
   }
 
   getGreeting(): string {
@@ -339,6 +368,10 @@ export class WelcomeComponent implements OnInit, OnDestroy {
       firstName = user.auxiliar.nombre;
     } else if (user?.alumno) {
       firstName = user.alumno.nombre;
+    } else if (user?.director) {
+      firstName = user.director.nombres;
+    } else if (user?.administrador) {
+      firstName = user.administrador.nombres;
     }
     
     const messages = {

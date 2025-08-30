@@ -36,7 +36,7 @@ export class SidebarComponent {
           icon: 'layout-dashboard',
           label: 'Alumnos',
           link: '#',
-          allowedRoles: ['ALUMNO', 'AUXILIAR'], // 🎯 Roles permitidos
+          allowedRoles: ['AUXILIAR', 'DIRECTOR', 'ADMINISTRADOR', 'ADMIN'], // 🎯 Roles permitidos
           children: [
             { label: 'Registro Manual', link: '/home/registrar/manual' },
             { label: 'Desde Excel', link: '/home/registrar/excel' },
@@ -50,12 +50,13 @@ export class SidebarComponent {
           icon: 'layout-dashboard',
           label: 'Apoderados',
           link: '#',
-          allowedRoles: ['ALUMNO', 'AUXILIAR'], // 🎯 Roles permitidos
+          allowedRoles: ['AUXILIAR', 'DIRECTOR', 'ADMINISTRADOR', 'ADMIN'], // 🎯 Roles permitidos
           children: [
             { label: 'Registro Apoderado', link: '/home/apoderado/register-apoderado' },
             { label: 'Editar Apoderado', link: '/home/apoderado/edit-apoderado' },
             { label: 'Asignar Apoderado', link: '/home/apoderado/asign-apoderado' },
             { label: 'Eliminar Apoderado', link: '/home/apoderado/delete-apoderado' },
+            { label: 'Lista de Apoderados', link: '/home/apoderado/list-apoderados' },
           ],
         },
         {
@@ -63,7 +64,7 @@ export class SidebarComponent {
           label: 'Asistencia',
           badge: 'Pro',
           external: true,
-          allowedRoles: ['ALUMNO', 'AUXILIAR'],
+          allowedRoles: ['AUXILIAR', 'DIRECTOR', 'ADMINISTRADOR', 'ADMIN'],
           children: [
             { label: 'Asistencia Manual', link: '/home/asistencia/register-manual-alumnos' },
             { label: 'Registrar Ausencia', link: '/home/asistencia/create-ausencia-alumnos' },
@@ -74,12 +75,12 @@ export class SidebarComponent {
         },
         {
           icon: 'kanban',
-          label: 'Programacion Automatica',
+          label: 'Ausencias Masivas',
           badge: 'Pro',
           external: true,
-          allowedRoles: ['ALUMNO', 'AUXILIAR'],
+          allowedRoles: ['AUXILIAR', 'DIRECTOR', 'ADMINISTRADOR', 'ADMIN'],
           children: [
-            { label: 'Programar Registros', link: '/home/programming-scheduler/scheduler' },
+            { label: 'Programa de Ausencias', link: '/home/ausencias-masivas/programa' },
           ],
         },
         {
@@ -87,7 +88,7 @@ export class SidebarComponent {
           label: 'Justificaciones',
           badge: 'Pro',
           external: true,
-          allowedRoles: ['ALUMNO', 'AUXILIAR'],
+          allowedRoles: ['AUXILIAR', 'DIRECTOR', 'ADMINISTRADOR', 'ADMIN'],
           children: [
             { label: 'Registrar Solicitud', link: '/home/justificaciones/create-solicitud-justificacion' },
             { label: 'Ver Solicitudes', link: '/home/justificaciones/list-solicitudes-justificaciones-alumnos' },
@@ -99,17 +100,25 @@ export class SidebarComponent {
           icon: 'users',
           label: 'Usuarios',
           link: '#',
-          allowedRoles: ['ALUMNO', 'AUXILIAR'],
+          allowedRoles: ['DIRECTOR', 'ADMINISTRADOR', 'ADMIN'],
           children: [
-            { label: 'Lista de usuarios', link: '#' },
-            { label: 'Roles y permisos', link: '#' },
+            { label: 'Crear Usuario', link: '/home/usuarios/create-usuario' },
+          ]
+        },
+        {
+          icon: 'user-check',
+          label: 'Administración de Personal',
+          link: '#',
+          allowedRoles: ['DIRECTOR', 'ADMINISTRADOR', 'ADMIN'],
+          children: [
+            { label: 'Directores', link: '/home/usuarios/administracion-personal' },
           ]
         },
         {
           icon: 'log-in',
           label: 'Cerrar Sesion',
           link: '/login',
-          allowedRoles: ['ADMIN', 'AUXILIAR', 'ALUMNO'], // abierto a varios roles
+          allowedRoles: ['ADMIN', 'ADMINISTRADOR', 'DIRECTOR', 'AUXILIAR', 'ALUMNO'], // abierto a todos los roles
         },
       ]
     }

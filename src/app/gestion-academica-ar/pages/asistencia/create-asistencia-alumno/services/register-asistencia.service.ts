@@ -79,7 +79,16 @@ export class RegistroAsistenciaServiceManual {
 
   // Métodos de utilidad
   getFechaHoy(): string {
-    return new Date().toISOString().split('T')[0];
+    // Obtener fecha actual en zona horaria local (Perú)
+    const ahora = new Date();
+    
+    // Obtener componentes de fecha en zona horaria local
+    const año = ahora.getFullYear();
+    const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+    const dia = String(ahora.getDate()).padStart(2, '0');
+    
+    // Formatear como YYYY-MM-DD
+    return `${año}-${mes}-${dia}`;
   }
 
   esFechaHoy(fecha: string): boolean {

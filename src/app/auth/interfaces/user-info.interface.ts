@@ -2,8 +2,8 @@
 export interface UserInfo {
   idUser: string;
   username: string;
-  role: 'AUXILIAR' | 'ALUMNO' | 'ADMIN';
-  photo: string;
+  role: 'AUXILIAR' | 'ALUMNO' | 'DIRECTOR' | 'ADMINISTRADOR' | 'ADMIN';
+  photo: string; // URL completa de la foto que viene del servidor
   auxiliar?: {
     id_auxiliar: string;
     dni_auxiliar: string;
@@ -22,6 +22,22 @@ export interface UserInfo {
     telefono: string;
     correo_electronico: string;
     id_apoderado?: string;
+  } | null;
+  director?: {
+    id_director: string;
+    dni_director: string;
+    nombres: string;
+    apellidos: string;
+    correo_electronico: string;
+    telefono: string;
+  } | null;
+  administrador?: {
+    id_administrador: string;
+    dni_administrador: string;
+    nombres: string;
+    apellidos: string;
+    correo_electronico: string;
+    telefono: string;
   } | null;
 }
 

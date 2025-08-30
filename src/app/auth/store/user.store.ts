@@ -23,13 +23,43 @@ export class UserStoreService {
   // Computed para verificar si es auxiliar
   readonly isAuxiliar = computed(() => this.userRole() === 'AUXILIAR');
   
+  // Computed para verificar si es director
+  readonly isDirector = computed(() => this.userRole() === 'DIRECTOR');
+  
+  // Computed para verificar si es administrador
+  readonly isAdministrador = computed(() => this.userRole() === 'ADMINISTRADOR');
+  
+  // Computed para verificar si es admin
+  readonly isAdmin = computed(() => this.userRole() === 'ADMIN');
+  
+  // Computed para verificar si es alumno
+  readonly isAlumno = computed(() => this.userRole() === 'ALUMNO');
+  
   // Computed para obtener ID del auxiliar
   readonly idAuxiliar = computed(() => this._user()?.auxiliar?.id_auxiliar || null);
+  
+  // Computed para obtener ID del director
+  readonly idDirector = computed(() => this._user()?.director?.id_director || null);
+  
+  // Computed para obtener ID del administrador
+  readonly idAdministrador = computed(() => this._user()?.administrador?.id_administrador || null);
   
   // Computed para verificar si puede registrar asistencia
   readonly canRegisterAttendance = computed(() => {
     const role = this.userRole();
-    return role === 'AUXILIAR' || role === 'ADMIN';
+    return role === 'AUXILIAR' || role === 'ADMIN' || role === 'ADMINISTRADOR' || role === 'DIRECTOR';
+  });
+  
+  // Computed para verificar si puede gestionar usuarios
+  readonly canManageUsers = computed(() => {
+    const role = this.userRole();
+    return role === 'ADMIN' || role === 'ADMINISTRADOR' || role === 'DIRECTOR';
+  });
+  
+  // Computed para verificar si puede acceder a reportes
+  readonly canAccessReports = computed(() => {
+    const role = this.userRole();
+    return role === 'ADMIN' || role === 'ADMINISTRADOR' || role === 'DIRECTOR' || role === 'AUXILIAR';
   });
 
   constructor() {

@@ -1,6 +1,8 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UserStoreService } from '../../../auth/store/user.store';
+import { UsuarioService } from '../../../gestion-academica-ar/pages/usuarios/services/usuario.service';
+import { PhotoService } from '../../services/photo.service';
 import { environment } from '../../../../environments/environment';
 
 @Component({
@@ -11,6 +13,8 @@ import { environment } from '../../../../environments/environment';
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   private userStore = inject(UserStoreService);
+  private usuarioService = inject(UsuarioService);
+  private photoService = inject(PhotoService);
   
   // Signals para UI
   showNotificationsTooltip = false;
@@ -20,18 +24,57 @@ export class NavbarComponent implements OnInit, OnDestroy {
   // Signals para tiempo
   currentTime = signal<string>('');
   
+  // Signal para la URL real de la foto
+  realPhotoUrl = signal<string>('');
+  
   private timeInterval?: number;
   
   // Usar computed signals del UserStore
   currentUser = this.userStore.user;
   isAuthenticated = this.userStore.isAuthenticated;
   userRole = this.userStore.userRole;
+  
+  // Computed signals para evitar recálculos
+  displayName = computed(() => {
+    const user = this.userStore.getUserSilently();
+    if (!user) return '';
+
+    if (user.auxiliar) {
+      return `${user.auxiliar.nombre} ${user.auxiliar.apellido}`;
+    } else if (user.alumno) {
+      return `${user.alumno.nombre} ${user.alumno.apellido}`;
+    } else if (user.director) {
+      return `${user.director.nombres} ${user.director.apellidos}`;
+    } else if (user.administrador) {
+      return `${user.administrador.nombres} ${user.administrador.apellidos}`;
+    }
+    
+    return user.username || 'Usuario';
+  });
+  
+  roleDisplay = computed(() => {
+    const user = this.userStore.getUserSilently();
+    if (!user || !user.role) return '';
+    
+    const roleMap: { [key: string]: string } = {
+      'ADMIN': 'Super Administrador',
+      'ADMINISTRADOR': 'Administrador',
+      'DIRECTOR': 'Director',
+      'AUXILIAR': 'Auxiliar',
+      'ALUMNO': 'Alumno'
+    };
+    
+    return roleMap[user.role] || user.role;
+  });
 
   ngOnInit() {
     this.updateTime();
     this.timeInterval = window.setInterval(() => {
       this.updateTime();
     }, 1000);
+    
+    // Cargar la foto del usuario al inicializar
+    this.loadUserPhoto();
   }
 
   ngOnDestroy() {
@@ -49,41 +92,30 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   getUserPhoto(): string {
+    return this.realPhotoUrl();
+  }
+
+  loadUserPhoto(): void {
     const user = this.userStore.getUserSilently();
-    return user?.photo || 'assets/images/default-avatar.png';
+    if (user?.idUser) {
+      this.photoService.getUserPhoto(user.idUser).subscribe({
+        next: (photoUrl) => {
+          this.realPhotoUrl.set(photoUrl);
+        },
+        error: (error) => {
+          this.realPhotoUrl.set('');
+        }
+      });
+    }
   }
 
   onImageError(event: any): void {
-    event.target.src = `${environment.apiUrl}/uploads/profiles/no-image.png`;
+    event.target.style.display = 'none';
   }
 
-  getDisplayName(): string {
-    const user = this.userStore.getUserSilently();
-    if (!user) return '';
 
-    if (user.auxiliar) {
-      return `${user.auxiliar.nombre} ${user.auxiliar.apellido}`;
-    } else if (user.alumno) {
-      return `${user.alumno.nombre} ${user.alumno.apellido}`;
-    }
-    
-    return user.username || 'Usuario';
-  }
 
-  getRoleDisplay(): string {
-    const user = this.userStore.getUserSilently();
-    if (!user || !user.role) return '';
 
-    const roleMap: { [key: string]: string } = {
-      'AUXILIAR': 'Auxiliar',
-      'ADMIN': 'Administrador',
-      'ALUMNO': 'Alumno',
-      'auxiliar': 'Auxiliar',
-      'alumno': 'Alumno'
-    };
-    
-    return roleMap[user.role] || user.role;
-  }
 
   getCurrentDate(): string {
     return new Date().toLocaleDateString('es-ES', { 

@@ -79,6 +79,10 @@ export const routes: Routes = [
                         path: 'delete-apoderado',
                         loadComponent: () => import('./gestion-academica-ar/pages/apoderados/delete-apoderado/delete-apoderado.component').then(m => m.DeleteApoderadoComponent),
                     },
+                    {
+                        path: 'list-apoderados',
+                        loadComponent: () => import('./gestion-academica-ar/pages/apoderados/list-apoderados/list-apoderados.component').then(m => m.ApoderadoListComponent),
+                    },
                    
                 ]
             },
@@ -109,12 +113,11 @@ export const routes: Routes = [
                 ]
             },
             {
-                path: 'programming-scheduler',
+                path: 'ausencias-masivas',
                 children: [
                     {
-                        path: 'scheduler',
-                        loadComponent: () => import('./gestion-academica-ar/pages/scheduler/components/scheduler-nav.component').then(m => m.SchedulerMainComponent),
-
+                        path: 'programa',
+                        loadComponent: () => import('./gestion-academica-ar/pages/ausencias-masivas/ausencias-masivas.component').then(m => m.AusenciasMasivasComponent),
                     },
                 ]
             },
@@ -133,6 +136,24 @@ export const routes: Routes = [
                         path: 'actualizar-estado-justificaciones',
                         loadComponent: () => import('./gestion-academica-ar/pages/justificaciones/actualizar-estado-justificaciones/actualizar-estado-justificaciones.component').then(m => m.GestionEstadosJustificacionesComponent),
                     },
+                ]
+            },
+            {
+                path: 'usuarios',
+                children: [
+                    {
+                        path: 'create-usuario',
+                        loadComponent: () => import('./gestion-academica-ar/pages/usuarios/create-usuario/create-usuario.component').then(m => m.CreateUsuarioComponent),
+                    },
+                    {
+                        path: 'administracion-personal',
+                        loadComponent: () => import('./gestion-academica-ar/pages/usuarios/administracion-personal/administracion-personal.component').then(m => m.AdministracionPersonalComponent),
+                    },
+                    {
+                        path: '',
+                        redirectTo: 'create-usuario',
+                        pathMatch: 'full'
+                    }
                 ]
             },
             {

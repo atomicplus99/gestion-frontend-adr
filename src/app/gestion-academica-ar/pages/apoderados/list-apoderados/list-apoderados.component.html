@@ -1,1 +1,415 @@
-<p>list-apoderados works!</p>,
+<div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+  <!-- Header Principal -->
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-8">
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">
+        Lista de Apoderados
+      </h1>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+        Gestiona y visualiza la información completa de apoderados y sus alumnos a cargo
+      </p>
+    </div>
+
+    <!-- Panel de Búsqueda y Filtros -->
+    <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
+      <div class="grid lg:grid-cols-2 gap-6">
+        <!-- Búsqueda Principal -->
+        <div class="space-y-4">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">Búsqueda Rápida</h3>
+          
+          <form [formGroup]="searchForm" class="space-y-4">
+            <!-- Búsqueda por nombre -->
+            <div>
+              <label for="nombre" class="block text-sm font-medium text-gray-700 mb-2">
+                Buscar por Nombre
+              </label>
+              <input 
+                type="text" 
+                id="nombre"
+                formControlName="nombre"
+                placeholder="Ingresa el nombre del apoderado..."
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              >
+            </div>
+
+            <!-- Búsqueda por DNI -->
+            <div>
+              <label for="dni" class="block text-sm font-medium text-gray-700 mb-2">
+                Buscar por DNI
+              </label>
+              <input 
+                type="text" 
+                id="dni"
+                formControlName="dni"
+                placeholder="Ingresa el DNI del apoderado..."
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              >
+            </div>
+
+            <!-- Botón de búsqueda -->
+            <button 
+              type="button"
+              (click)="searchByDni()"
+              [disabled]="loading"
+              class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+            >
+              <span *ngIf="!loading">🔍 Buscar Apoderado</span>
+              <span *ngIf="loading">⏳ Buscando...</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Filtros Avanzados -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-800">Filtros Avanzados</h3>
+            <button 
+              type="button"
+              (click)="toggleAdvancedFilters()"
+              class="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              {{ showAdvancedFilters ? 'Ocultar' : 'Mostrar' }} Filtros
+            </button>
+          </div>
+
+          <form [formGroup]="advancedFiltersForm" *ngIf="showAdvancedFilters" class="space-y-4">
+            <!-- Filtro por tipo de relación -->
+            <div>
+              <label for="tipoRelacion" class="block text-sm font-medium text-gray-700 mb-2">
+                Tipo de Relación
+              </label>
+              <select 
+                id="tipoRelacion"
+                formControlName="tipoRelacion"
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+              >
+                <option *ngFor="let tipo of tiposRelacion" [value]="tipo.value">
+                  {{ tipo.label }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Filtro por estado -->
+            <div>
+              <label for="estado" class="block text-sm font-medium text-gray-700 mb-2">
+                Estado
+              </label>
+              <select 
+                id="estado"
+                formControlName="estado"
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
+              >
+                <option *ngFor="let estado of estadoOptions" [value]="estado.value">
+                  {{ estado.label }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="flex space-x-3">
+              <button 
+                type="button"
+                (click)="applyFilters()"
+                class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200"
+              >
+                ✅ Aplicar Filtros
+              </button>
+              <button 
+                type="button"
+                (click)="clearFilters()"
+                class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200"
+              >
+                🗑️ Limpiar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de Apoderados -->
+    <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-semibold text-gray-800">
+          Apoderados Registrados
+        </h2>
+        <div class="text-sm text-gray-600">
+          Total: {{ filteredApoderados.length }} apoderados
+        </div>
+      </div>
+
+      <!-- Estado de carga -->
+      <div *ngIf="loading" class="text-center py-8">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Cargando apoderados...</p>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center">
+          <div class="text-red-600 mr-3">❌</div>
+          <div>
+            <h3 class="text-red-800 font-semibold">Error</h3>
+            <p class="text-red-700">{{ error }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista de apoderados -->
+      <div *ngIf="!loading && !error" class="space-y-4">
+        <div 
+          *ngFor="let apoderado of paginatedApoderados; trackBy: trackByApoderadoId" 
+          class="border border-gray-200 rounded-lg p-6 hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+          [class.bg-blue-50]="selectedApoderado?.id_apoderado === apoderado.id_apoderado"
+          (click)="selectApoderado(apoderado)"
+        >
+          <div class="grid md:grid-cols-4 gap-4 items-center">
+            <!-- Información básica -->
+            <div class="md:col-span-2">
+              <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <span class="text-blue-600 font-bold text-lg">
+                    {{ getInitials(apoderado.nombre, apoderado.apellido) }}
+                  </span>
+                </div>
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-800">
+                    {{ apoderado.nombre }} {{ apoderado.apellido || '' }}
+                  </h3>
+                  <p class="text-sm text-gray-600">
+                    {{ getTipoRelacionLabel(apoderado.tipo_relacion) }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Información de contacto -->
+            <div>
+              <div class="text-sm text-gray-600">
+                <div *ngIf="apoderado.telefono" class="flex items-center space-x-2">
+                  <span>📞</span>
+                  <span>{{ apoderado.telefono }}</span>
+                </div>
+                <div *ngIf="apoderado.email" class="flex items-center space-x-2">
+                  <span>📧</span>
+                  <span>{{ apoderado.email }}</span>
+                </div>
+                <div *ngIf="apoderado.dni" class="flex items-center space-x-2">
+                  <span>🆔</span>
+                  <span>{{ apoderado.dni }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Estado y alumnos -->
+            <div class="text-right">
+              <div class="flex items-center justify-end space-x-2 mb-2">
+                <span 
+                  class="px-3 py-1 rounded-full text-sm font-medium"
+                  [ngClass]="apoderado.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                >
+                  {{ apoderado.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+              <div class="text-sm text-gray-600">
+                <div class="flex items-center justify-end space-x-2">
+                  <span>👥</span>
+                  <span>{{ apoderado.pupilos?.length || 0 }} alumnos</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sin resultados -->
+        <div *ngIf="filteredApoderados.length === 0" class="text-center py-12">
+          <div class="text-gray-400 mb-4">
+            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-600 mb-2">No se encontraron apoderados</h3>
+          <p class="text-gray-500">Intenta ajustar los filtros de búsqueda</p>
+        </div>
+      </div>
+
+      <!-- Paginación -->
+      <div *ngIf="filteredApoderados.length > 0" class="mt-6 flex items-center justify-between">
+        <div class="text-sm text-gray-600">
+          Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, filteredApoderados.length) }} de {{ filteredApoderados.length }} apoderados
+        </div>
+        <div class="flex space-x-2">
+          <button 
+            (click)="previousPage()"
+            [disabled]="currentPage === 1"
+            class="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Anterior
+          </button>
+          <span class="px-3 py-2 text-sm font-medium text-gray-700">
+            Página {{ currentPage }} de {{ totalPages }}
+          </span>
+          <button 
+            (click)="nextPage()"
+            [disabled]="currentPage === totalPages"
+            class="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Siguiente
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel de Detalles del Apoderado -->
+    <div *ngIf="selectedApoderado" class="bg-white rounded-2xl shadow-xl p-6">
+      <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Información del Apoderado -->
+        <div class="space-y-6">
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-semibold text-gray-800">
+              Detalles del Apoderado
+            </h2>
+            <button 
+              (click)="selectedApoderado = null"
+              class="text-gray-400 hover:text-gray-600"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+
+          <div class="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-6">
+            <div class="flex items-center space-x-4 mb-6">
+              <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+                <span class="text-white font-bold text-xl">
+                  {{ getInitials(selectedApoderado.nombre, selectedApoderado.apellido) }}
+                </span>
+              </div>
+              <div>
+                <h3 class="text-xl font-semibold text-gray-800">
+                  {{ selectedApoderado.nombre }} {{ selectedApoderado.apellido || '' }}
+                </h3>
+                <p class="text-blue-600 font-medium">
+                  {{ getTipoRelacionLabel(selectedApoderado.tipo_relacion) }}
+                </p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-3">
+                <div *ngIf="selectedApoderado.dni" class="flex items-center space-x-3">
+                  <span class="text-gray-500">🆔</span>
+                  <div>
+                    <div class="text-sm text-gray-600">DNI</div>
+                    <div class="font-semibold text-gray-800">{{ selectedApoderado.dni }}</div>
+                  </div>
+                </div>
+                <div *ngIf="selectedApoderado.telefono" class="flex items-center space-x-3">
+                  <span class="text-gray-500">📞</span>
+                  <div>
+                    <div class="text-sm text-gray-600">Teléfono</div>
+                    <div class="font-semibold text-gray-800">{{ selectedApoderado.telefono }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="space-y-3">
+                <div *ngIf="selectedApoderado.email" class="flex items-center space-x-3">
+                  <span class="text-gray-500">📧</span>
+                  <div>
+                    <div class="text-sm text-gray-600">Email</div>
+                    <div class="font-semibold text-gray-800">{{ selectedApoderado.email }}</div>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <span class="text-gray-500">📅</span>
+                  <div>
+                    <div class="text-sm text-gray-600">Estado</div>
+                    <span 
+                      class="px-3 py-1 rounded-full text-sm font-medium"
+                      [ngClass]="selectedApoderado.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                    >
+                      {{ selectedApoderado.activo ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="selectedApoderado.relacion_especifica" class="mt-4 p-3 bg-white/50 rounded-lg">
+              <div class="text-sm text-gray-600">Relación Específica</div>
+              <div class="font-semibold text-gray-800">{{ selectedApoderado.relacion_especifica }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alumnos a Cargo -->
+        <div class="space-y-6">
+          <h2 class="text-2xl font-semibold text-gray-800">
+            Alumnos a Cargo
+          </h2>
+
+          <div *ngIf="selectedApoderado.pupilos && selectedApoderado.pupilos.length > 0" class="space-y-4">
+            <div 
+              *ngFor="let alumno of selectedApoderado.pupilos; trackBy: trackByAlumnoId" 
+              class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-all duration-200"
+            >
+              <div class="flex items-start space-x-4">
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span class="text-green-600 font-bold">
+                    {{ getInitials(alumno.nombre, alumno.apellido) }}
+                  </span>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between mb-2">
+                    <h4 class="text-lg font-semibold text-gray-800">
+                      {{ alumno.nombre }} {{ alumno.apellido }}
+                    </h4>
+                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                      {{ alumno.nivel }}
+                    </span>
+                  </div>
+                  
+                  <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <div class="text-gray-600">Código</div>
+                      <div class="font-semibold text-gray-800">{{ alumno.codigo }}</div>
+                    </div>
+                    <div>
+                      <div class="text-gray-600">Grado y Sección</div>
+                      <div class="font-semibold text-gray-800">{{ alumno.grado }}° {{ alumno.seccion }}</div>
+                    </div>
+                    <div>
+                      <div class="text-gray-600">DNI</div>
+                      <div class="font-semibold text-gray-800">{{ alumno.dni_alumno }}</div>
+                    </div>
+                    <div>
+                      <div class="text-gray-600">Fecha de Nacimiento</div>
+                      <div class="font-semibold text-gray-800">{{ formatDate(alumno.fecha_nacimiento) }}</div>
+                    </div>
+                  </div>
+                  
+                  <div *ngIf="alumno.direccion" class="mt-3 p-2 bg-gray-50 rounded-lg">
+                    <div class="text-xs text-gray-600">Dirección</div>
+                    <div class="text-sm font-medium text-gray-800">{{ alumno.direccion }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sin alumnos -->
+          <div *ngIf="!selectedApoderado.pupilos || selectedApoderado.pupilos.length === 0" class="text-center py-8">
+            <div class="text-gray-400 mb-4">
+              <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-600 mb-2">Sin alumnos asignados</h3>
+            <p class="text-gray-500">Este apoderado no tiene alumnos a cargo</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

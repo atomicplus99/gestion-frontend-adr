@@ -55,6 +55,12 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
   totalPages = 0;
   paginatedApoderados: Apoderado[] = [];
 
+  // Apoderado seleccionado para mostrar detalles
+  selectedApoderado: Apoderado | null = null;
+
+  // Referencia a Math para usar en el template
+  Math = Math;
+
   // Ordenamiento
   sortField: keyof Apoderado = 'nombre';
   sortDirection: 'asc' | 'desc' = 'asc';
@@ -75,26 +81,30 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
 
   private initializeForms(): void {
     this.searchForm = this.fb.group({
-      searchTerm: ['']
+      nombre: [''],
+      dni: ['']
     });
 
     this.advancedFiltersForm = this.fb.group({
-      dni: [''],
-      nombre: [''],
-      apellido: [''],
-      email: [''],
-      telefono: [''],
       tipoRelacion: [''],
-      activo: [''],
-      fechaDesde: [''],
-      fechaHasta: [''],
-      conPupilos: ['']
+      estado: ['']
     });
   }
 
   private setupFormSubscriptions(): void {
-    // Búsqueda general con debounce
-    this.searchForm.get('searchTerm')?.valueChanges
+    // Búsqueda por nombre con debounce
+    this.searchForm.get('nombre')?.valueChanges
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.applyFilters();
+      });
+
+    // Búsqueda por DNI con debounce
+    this.searchForm.get('dni')?.valueChanges
       .pipe(
         debounceTime(300),
         distinctUntilChanged(),
@@ -126,7 +136,18 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe({
-        next: (apoderados) => {
+        next: (response: any) => {
+          // Manejar diferentes tipos de respuesta del backend
+          let apoderados: Apoderado[] = [];
+          
+          if (Array.isArray(response)) {
+            // Si la respuesta es directamente un array
+            apoderados = response;
+          } else if (response && typeof response === 'object' && 'data' in response) {
+            // Si la respuesta tiene estructura {success, message, data}
+            apoderados = Array.isArray(response.data) ? response.data : [];
+          }
+          
           this.originalApoderados = apoderados;
           this.apoderados = [...apoderados];
           this.filteredApoderados = [...apoderados];
@@ -141,21 +162,37 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
   }
 
   searchByDni(): void {
-    const dni = this.advancedFiltersForm.get('dni')?.value?.trim();
+    const dni = this.searchForm.get('dni')?.value?.trim();
     if (!dni) {
-      this.applyFilters();
+      this.loadApoderados(); // Recargar todos los apoderados si no hay DNI
       return;
     }
 
     this.loading = true;
-    this.apoderadoService.searchByDni(dni)
+    this.error = null;
+
+    this.apoderadoService.getByDni(dni)
       .pipe(
         finalize(() => this.loading = false),
         takeUntil(this.destroy$)
       )
       .subscribe({
-        next: (apoderado) => {
-          this.filteredApoderados = [apoderado];
+        next: (response: any) => {
+          let apoderados: Apoderado[] = [];
+          
+          if (response && typeof response === 'object' && 'data' in response) {
+            // Si la respuesta tiene estructura {success, message, data}
+            if (response.data) {
+              apoderados = Array.isArray(response.data) ? response.data : [response.data];
+            }
+          } else if (response) {
+            // Si la respuesta es directamente el apoderado
+            apoderados = [response];
+          }
+          
+          this.originalApoderados = apoderados;
+          this.apoderados = [...apoderados];
+          this.filteredApoderados = [...apoderados];
           this.currentPage = 1;
           this.updatePagination();
           this.updatePaginatedData();
@@ -174,69 +211,29 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
   }
 
   applyFilters(): void {
-    const searchTerm = this.searchForm.get('searchTerm')?.value?.toLowerCase() || '';
+    const nombre = this.searchForm.get('nombre')?.value?.toLowerCase() || '';
+    const dni = this.searchForm.get('dni')?.value?.toLowerCase() || '';
     const filters = this.advancedFiltersForm.value;
 
     this.filteredApoderados = this.originalApoderados.filter(apoderado => {
-      // Búsqueda general
-      if (searchTerm) {
-        const matchesSearch = 
-          apoderado.nombre.toLowerCase().includes(searchTerm) ||
-          apoderado.apellido?.toLowerCase().includes(searchTerm) ||
-          apoderado.dni?.includes(searchTerm) ||
-          apoderado.email?.toLowerCase().includes(searchTerm) ||
-          apoderado.telefono?.includes(searchTerm);
-        
-        if (!matchesSearch) return false;
-      }
-
-      // Filtros específicos
-      if (filters.nombre && !apoderado.nombre.toLowerCase().includes(filters.nombre.toLowerCase())) {
+      // Búsqueda por nombre
+      if (nombre && !apoderado.nombre.toLowerCase().includes(nombre)) {
         return false;
       }
 
-      if (filters.apellido && !apoderado.apellido?.toLowerCase().includes(filters.apellido.toLowerCase())) {
+      // Búsqueda por DNI
+      if (dni && !apoderado.dni?.toLowerCase().includes(dni)) {
         return false;
       }
 
-      if (filters.dni && !apoderado.dni?.includes(filters.dni)) {
-        return false;
-      }
-
-      if (filters.email && !apoderado.email?.toLowerCase().includes(filters.email.toLowerCase())) {
-        return false;
-      }
-
-      if (filters.telefono && !apoderado.telefono?.includes(filters.telefono)) {
-        return false;
-      }
-
+      // Filtro por tipo de relación
       if (filters.tipoRelacion && apoderado.tipo_relacion !== filters.tipoRelacion) {
         return false;
       }
 
-      if (filters.activo !== '' && apoderado.activo !== (filters.activo === 'true')) {
+      // Filtro por estado
+      if (filters.estado !== '' && apoderado.activo.toString() !== filters.estado) {
         return false;
-      }
-
-      if (filters.conPupilos !== '') {
-        const tienePupilos = apoderado.pupilos && apoderado.pupilos.length > 0;
-        if (filters.conPupilos === 'true' && !tienePupilos) return false;
-        if (filters.conPupilos === 'false' && tienePupilos) return false;
-      }
-
-      // Filtros de fecha
-      if (filters.fechaDesde) {
-        const fechaCreacion = new Date(apoderado.fecha_creacion);
-        const fechaDesde = new Date(filters.fechaDesde);
-        if (fechaCreacion < fechaDesde) return false;
-      }
-
-      if (filters.fechaHasta) {
-        const fechaCreacion = new Date(apoderado.fecha_creacion);
-        const fechaHasta = new Date(filters.fechaHasta);
-        fechaHasta.setHours(23, 59, 59, 999);
-        if (fechaCreacion > fechaHasta) return false;
       }
 
       return true;
@@ -337,9 +334,7 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
     return apoderado.pupilos?.length || 0;
   }
 
-  formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('es-PE');
-  }
+
 
   getTipoRelacionLabel(tipo: TipoRelacion): string {
     const found = this.tiposRelacion.find(t => t.value === tipo);
@@ -352,5 +347,67 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
 
   refresh(): void {
     this.loadApoderados();
+  }
+
+  trackByApoderadoId(index: number, apoderado: Apoderado): string {
+    return apoderado.id_apoderado;
+  }
+
+  trackByAlumnoId(index: number, alumno: any): string {
+    return alumno.id_alumno;
+  }
+
+  /**
+   * Selecciona un apoderado para mostrar sus detalles
+   */
+  selectApoderado(apoderado: Apoderado): void {
+    this.selectedApoderado = apoderado;
+  }
+
+  /**
+   * Obtiene las iniciales de un nombre y apellido
+   */
+  getInitials(nombre: string, apellido?: string): string {
+    const firstInitial = nombre ? nombre.charAt(0).toUpperCase() : '';
+    const lastInitial = apellido ? apellido.charAt(0).toUpperCase() : '';
+    return firstInitial + lastInitial;
+  }
+
+  /**
+   * Formatea una fecha para mostrar
+   */
+  formatDate(date: Date | string): string {
+    if (!date) return 'No especificada';
+    
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      return dateObj.toLocaleDateString('es-PE', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      return 'Fecha inválida';
+    }
+  }
+
+  /**
+   * Navega a la página anterior
+   */
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.updatePaginatedData();
+    }
+  }
+
+  /**
+   * Navega a la página siguiente
+   */
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.updatePaginatedData();
+    }
   }
 }

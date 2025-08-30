@@ -1,0 +1,91 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Administración de Personal</h1>
+      <p class="mt-2 text-gray-600">Gestiona el personal del colegio: directores, auxiliares, administradores y alumnos</p>
+    </div>
+
+    <!-- Pestañas -->
+    <div class="mb-6">
+      <div class="border-b border-gray-200">
+        <nav class="-mb-px flex space-x-8">
+          <button
+            *ngFor="let tab of tabs"
+            (click)="cambiarTab(tab.id)"
+            [disabled]="tab.disabled"
+            [class]="getTabClass(tab.id, tab.disabled || false)">
+            <span class="mr-2">{{ tab.icon }}</span>
+            {{ tab.label }}
+            <span *ngIf="tab.disabled" class="ml-2 text-xs text-gray-400">(Próximamente)</span>
+          </button>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Mensajes de estado -->
+    <div *ngIf="successMessage" class="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded">
+      <div class="flex justify-between items-center">
+        <div class="flex">
+          <svg class="w-5 h-5 text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          <p class="text-green-700 font-medium">{{ successMessage }}</p>
+        </div>
+        <button 
+          (click)="clearMessages()"
+          class="text-green-600 hover:text-green-800 text-sm">
+          ✕ Cerrar
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="mb-6 bg-red-50 border-l-4 border-red-400 p-4 rounded">
+      <div class="flex">
+        <svg class="w-5 h-5 text-red-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        </svg>
+        <p class="text-red-700 font-medium">{{ errorMessage }}</p>
+      </div>
+    </div>
+
+    <!-- Contenido de pestañas -->
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+      
+      <!-- Pestaña Directores -->
+      <div *ngIf="selectedTab === 'directores'">
+        <app-directores-crud
+          [directores]="directores"
+          [loading]="loading"
+          (directorCreado)="onDirectorCreado()"
+          (directorActualizado)="onDirectorActualizado()"
+          (directorEliminado)="onDirectorEliminado()">
+        </app-directores-crud>
+      </div>
+
+      <!-- Pestañas futuras -->
+      <div *ngIf="selectedTab === 'auxiliares'" class="p-8 text-center">
+        <div class="text-gray-400 text-6xl mb-4">👩‍💼</div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Gestión de Auxiliares</h3>
+        <p class="text-gray-500">Esta funcionalidad estará disponible próximamente</p>
+      </div>
+
+      <div *ngIf="selectedTab === 'administradores'" class="p-8 text-center">
+        <div class="text-gray-400 text-6xl mb-4">👨‍💻</div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Gestión de Administradores</h3>
+        <p class="text-gray-500">Esta funcionalidad estará disponible próximamente</p>
+      </div>
+
+      <div *ngIf="selectedTab === 'alumnos'" class="p-8 text-center">
+        <div class="text-gray-400 text-6xl mb-4">👨‍🎓</div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Gestión de Alumnos</h3>
+        <p class="text-gray-500">Esta funcionalidad estará disponible próximamente</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Sistema de notificaciones de error -->
+  <app-error-toast></app-error-toast>
+</div>
