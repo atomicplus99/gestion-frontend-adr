@@ -1,4 +1,4 @@
-import { Component, Input, inject, computed, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, inject, computed, signal, OnInit, OnDestroy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { UserStoreService } from '../../../../auth/store/user.store';
@@ -79,6 +79,17 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private usuarioService = inject(UsuarioService);
   private photoService = inject(PhotoService);
+
+  constructor() {
+    // Efecto para reaccionar a cambios en el userStore
+    effect(() => {
+      const currentUser = this.currentUser();
+      if (currentUser?.idUser) {
+        // Recargar foto cuando cambie el usuario
+        this.loadUserPhoto();
+      }
+    });
+  }
   
   // Signals para datos en tiempo real
   currentUser = this.userStore.user;
@@ -314,10 +325,15 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   getUserPhoto(): string {
     const user = this.currentUser();
     
-    // Usar la URL real obtenida del backend
+    // Usar la foto del userStore directamente
+    if (user?.photo) {
+      return user.photo;
+    }
+    
+    // Fallback: usar la URL real obtenida del backend
     if (user?.idUser) {
-      // La URL real se obtiene del backend y se almacena en el signal
-      return this.realPhotoUrl() || '';
+      const fallbackUrl = this.realPhotoUrl();
+      return fallbackUrl || '';
     }
     
     return '';
@@ -325,13 +341,18 @@ export class WelcomeComponent implements OnInit, OnDestroy {
 
   loadUserPhoto(): void {
     const user = this.currentUser();
-    if (user?.idUser) {
-      this.photoService.getUserPhoto(user.idUser).subscribe({
-        next: (photoUrl) => {
-          this.realPhotoUrl.set(photoUrl);
+    if (user?.idUser && !user.photo) {
+      this.usuarioService.obtenerUrlFotoPerfil(user.idUser).subscribe({
+        next: (response) => {
+          if (response.success && response.data?.foto_url) {
+            this.realPhotoUrl.set(response.data.foto_url);
+          } else {
+            this.realPhotoUrl.set('assets/default-avatar.png');
+          }
         },
         error: (error) => {
-          this.realPhotoUrl.set('');
+          console.error('Error al cargar foto:', error);
+          this.realPhotoUrl.set('assets/default-avatar.png');
         }
       });
     }

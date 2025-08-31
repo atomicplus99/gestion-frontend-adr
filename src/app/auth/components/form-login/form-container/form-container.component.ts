@@ -12,6 +12,7 @@ import { AuthService } from '../../../services/auth.service';
 
 import { UserInfo } from '../../../interfaces/user-info.interface';
 import { UserStoreService } from '../../../store/user.store';
+import { UsuarioService } from '../../../../gestion-academica-ar/pages/usuarios/services/usuario.service';
 
 
 
@@ -30,7 +31,8 @@ export class FormContainerComponent {
               private alertsService: AlertsService, 
               private loginService: LoginService,
               private authService: AuthService,
-              private route:Router
+              private route:Router,
+              private usuarioService: UsuarioService
             ){
 
   }  
@@ -67,8 +69,12 @@ export class FormContainerComponent {
     this.loginService.login(username!, password!).subscribe({
       next: (response) => {
         console.log('✅ [FORM] Login exitoso, estableciendo usuario en store...');
-        if (response && response.user) {
-          this.userStore.setUser(response.user);
+        if (response && response.data && response.data.user) {
+          this.userStore.setUser(response.data.user);
+          
+          // Cargar la foto inmediatamente después del login
+          this.loadUserPhotoAfterLogin(response.data.user.idUser);
+          
           this.alertsService.success(response.message || 'Inicio de sesión exitoso');
           this.route.navigate(['/home/welcome']);
         } else {
@@ -84,11 +90,26 @@ export class FormContainerComponent {
   
     this.formLogin.reset();
   }
-  
 
-  
+  private loadUserPhotoAfterLogin(userId: string): void {
+    this.usuarioService.obtenerUrlFotoPerfil(userId).subscribe({
+      next: (response: any) => {
+        if (response.success && response.data?.foto_url) {
+          // Actualizar el userStore con la foto
+          const currentUser = this.userStore.getUserSilently();
+          if (currentUser) {
+            const updatedUser = { ...currentUser, photo: response.data.foto_url };
+            this.userStore.setUser(updatedUser);
+          }
+        }
+      },
+      error: (error: any) => {
+        console.error('Error al cargar foto después del login:', error);
+      }
+    });
+  }
 
-  
-
-
+  goToForgotPassword(): void {
+    this.route.navigate(['/forgot-password']);
+  }
 }

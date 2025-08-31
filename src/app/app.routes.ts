@@ -161,6 +161,10 @@ export const routes: Routes = [
                 ]
             },
             {
+                path: 'perfil',
+                loadComponent: () => import('./gestion-academica-ar/pages/perfil/perfil.component').then(m => m.PerfilComponent),
+            },
+            {
                 path: '',
                 redirectTo: 'welcome',
                 pathMatch: 'full'
@@ -171,6 +175,16 @@ export const routes: Routes = [
     {
         path: 'login',
         component: LoginPageComponent
+    },
+
+    {
+        path: 'forgot-password',
+        loadComponent: () => import('./auth/components/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+    },
+
+    {
+        path: 'reset-password',
+        loadComponent: () => import('./auth/components/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
     },
 
 

@@ -33,17 +33,21 @@ export interface UserInfo {
   } | null;
   administrador?: {
     id_administrador: string;
-    dni_administrador: string;
     nombres: string;
     apellidos: string;
-    correo_electronico: string;
+    email: string;
     telefono: string;
+    direccion: string;
+    id_user: string;
   } | null;
 }
 
 // Interfaz para la respuesta completa del login
 export interface LoginResponse {
+  success: boolean;
   message: string;
-  access_token: string;
-  user: UserInfo;
+  data: {
+    access_token: string;
+    user: UserInfo;
+  };
 }

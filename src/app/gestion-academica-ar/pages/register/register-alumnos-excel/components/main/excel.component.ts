@@ -98,14 +98,16 @@ export class ExcelComponent implements OnInit, OnDestroy {
     this.stateService.getAlumnos()
       .pipe(takeUntil(this.destroy$))
       .subscribe(alumnos => {
-        this.alumnos = alumnos;
+        // Asegurar que alumnos sea un array
+        this.alumnos = Array.isArray(alumnos) ? alumnos : [];
         this.cdr.detectChanges();
       });
 
     this.stateService.getTurnos()
       .pipe(takeUntil(this.destroy$))
       .subscribe(turnos => {
-        this.turnos = turnos;
+        // Asegurar que turnos sea un array
+        this.turnos = Array.isArray(turnos) ? turnos : [];
         this.cdr.detectChanges();
       });
 

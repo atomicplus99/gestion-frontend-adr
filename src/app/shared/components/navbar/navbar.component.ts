@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UserStoreService } from '../../../auth/store/user.store';
 import { UsuarioService } from '../../../gestion-academica-ar/pages/usuarios/services/usuario.service';
@@ -67,6 +67,17 @@ export class NavbarComponent implements OnInit, OnDestroy {
     return roleMap[user.role] || user.role;
   });
 
+  constructor() {
+    // Efecto para reaccionar a cambios en el userStore
+    effect(() => {
+      const currentUser = this.currentUser();
+      if (currentUser?.idUser) {
+        // Recargar foto cuando cambie el usuario
+        this.loadUserPhoto();
+      }
+    });
+  }
+
   ngOnInit() {
     this.updateTime();
     this.timeInterval = window.setInterval(() => {
@@ -75,12 +86,25 @@ export class NavbarComponent implements OnInit, OnDestroy {
     
     // Cargar la foto del usuario al inicializar
     this.loadUserPhoto();
+    
+    // Escuchar eventos de actualización de foto
+    window.addEventListener('photoUpdated', (event: any) => {
+      this.loadUserPhoto();
+    });
+
+    // Escuchar eventos de actualización de datos del usuario
+    window.addEventListener('userDataUpdated', (event: any) => {
+      this.loadUserPhoto();
+    });
   }
 
   ngOnDestroy() {
     if (this.timeInterval) {
       clearInterval(this.timeInterval);
     }
+    // Limpiar los event listeners
+    window.removeEventListener('photoUpdated', this.loadUserPhoto);
+    window.removeEventListener('userDataUpdated', this.loadUserPhoto);
   }
 
   private updateTime() {
@@ -92,18 +116,32 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   getUserPhoto(): string {
-    return this.realPhotoUrl();
+    const user = this.currentUser();
+    
+    // Usar la foto del userStore directamente
+    if (user?.photo) {
+      return user.photo;
+    }
+    
+    // Fallback: usar la URL real obtenida del backend
+    const fallbackUrl = this.realPhotoUrl();
+    return fallbackUrl || '';
   }
 
   loadUserPhoto(): void {
     const user = this.userStore.getUserSilently();
-    if (user?.idUser) {
-      this.photoService.getUserPhoto(user.idUser).subscribe({
-        next: (photoUrl) => {
-          this.realPhotoUrl.set(photoUrl);
+    if (user?.idUser && !user.photo) {
+      this.usuarioService.obtenerUrlFotoPerfil(user.idUser).subscribe({
+        next: (response) => {
+          if (response.success && response.data?.foto_url) {
+            this.realPhotoUrl.set(response.data.foto_url);
+          } else {
+            this.realPhotoUrl.set('assets/default-avatar.png');
+          }
         },
         error: (error) => {
-          this.realPhotoUrl.set('');
+          console.error('Error al cargar foto:', error);
+          this.realPhotoUrl.set('assets/default-avatar.png');
         }
       });
     }

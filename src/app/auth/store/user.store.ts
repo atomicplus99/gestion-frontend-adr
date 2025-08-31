@@ -72,10 +72,9 @@ export class UserStoreService {
       if (storedUser) {
         const user = JSON.parse(storedUser);
         this._user.set(user);
-        console.log('👤 [USERSTORE] Usuario recuperado de localStorage:', user);
       }
     } catch (error) {
-      console.error('❌ [USERSTORE] Error al recuperar usuario del localStorage:', error);
+      console.error('Error al recuperar usuario del localStorage:', error);
       localStorage.removeItem(this.STORAGE_KEY);
     }
   }
@@ -88,22 +87,18 @@ export class UserStoreService {
         localStorage.removeItem(this.STORAGE_KEY);
       }
     } catch (error) {
-      console.error('❌ [USERSTORE] Error al guardar usuario en localStorage:', error);
+      console.error('Error al guardar usuario en localStorage:', error);
     }
   }
 
   setUser(user: UserInfo): void {
-    console.log('👤 [USERSTORE] Estableciendo usuario:', user);
     this._user.set(user);
     this.storeUser(user);
-    console.log('✅ [USERSTORE] Usuario establecido exitosamente');
   }
 
   clearUser(): void {
-    console.log('🧹 [USERSTORE] Limpiando usuario del store...');
     this._user.set(null);
     this.storeUser(null);
-    console.log('✅ [USERSTORE] Usuario limpiado del store');
   }
 
   // Método para obtener usuario sin logs (para uso interno)

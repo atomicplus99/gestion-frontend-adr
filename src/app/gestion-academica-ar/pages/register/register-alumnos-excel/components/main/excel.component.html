@@ -56,7 +56,7 @@
         <select [(ngModel)]="selectedTurnoId" name="turnoId" required
           class="block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 text-sm">
           <option [ngValue]="null" disabled>Selecciona un turno...</option>
-          <option *ngFor="let turno of turnos" [value]="turno.id_turno">
+          <option *ngFor="let turno of (turnos || [])" [value]="turno.id_turno">
             {{ turno.turno | uppercase }} ({{ turno.hora_inicio }} - {{ turno.hora_fin }})
           </option>
         </select>

@@ -60,7 +60,7 @@ import { Turno } from '../../interfaces/AlumnoRegister.interface';
               <select formControlName="nivel"
                 class="w-full pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none appearance-none bg-white transition-colors">
                 <option value="" disabled selected>Selecciona nivel</option>
-                <option *ngFor="let nivel of nivelesEducativos" [value]="nivel">{{ nivel }}</option>
+                <option *ngFor="let nivel of (nivelesEducativos || [])" [value]="nivel">{{ nivel }}</option>
               </select>
               <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -83,7 +83,7 @@ import { Turno } from '../../interfaces/AlumnoRegister.interface';
               <select formControlName="grado"
                 class="w-full pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none appearance-none bg-white transition-colors">
                 <option value="" disabled selected>Selecciona grado</option>
-                <option *ngFor="let g of grados" [value]="g">{{ g }}</option>
+                <option *ngFor="let g of (grados || [])" [value]="g">{{ g }}</option>
               </select>
               <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -106,7 +106,7 @@ import { Turno } from '../../interfaces/AlumnoRegister.interface';
               <select formControlName="seccion"
                 class="w-full pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none appearance-none bg-white transition-colors">
                 <option value="" disabled selected>Selecciona sección</option>
-                <option *ngFor="let s of secciones" [value]="s">{{ s }}</option>
+                <option *ngFor="let s of (secciones || [])" [value]="s">{{ s }}</option>
               </select>
               <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -129,10 +129,11 @@ export class AcademicInfoFormComponent implements OnInit {
   
   grados: string[] = [];
   secciones: string[] = [];
-  nivelesEducativos = this.gradosService.obtenerNivelesEducativos();
+  nivelesEducativos: string[] = [];
 
   ngOnInit() {
     this.secciones = this.gradosService.obtenerSecciones();
+    this.nivelesEducativos = this.gradosService.obtenerNivelesEducativos();
     
     // Escuchar cambios en el nivel para actualizar grados
     this.formGroup.get('nivel')?.valueChanges.subscribe((nivel) => {

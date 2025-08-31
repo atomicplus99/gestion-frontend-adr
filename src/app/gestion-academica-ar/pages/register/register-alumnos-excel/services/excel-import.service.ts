@@ -30,7 +30,15 @@ export class ExcelImportService {
      * Obtiene la lista de turnos disponibles
      */
     obtenerTurnos(): Observable<TurnoModuleExcel[]> {
-        return this.http.get<TurnoModuleExcel[]>(this.turnosUrl).pipe(
+        return this.http.get<any>(this.turnosUrl).pipe(
+            map(response => {
+                // Manejar respuesta estructurada del backend
+                if (response && response.success && response.data) {
+                    return response.data;
+                }
+                // Fallback para respuesta directa (sin estructura)
+                return response || [];
+            }),
             catchError(error => {
                 console.error('Error al cargar turnos:', error);
                 return throwError(() => new Error(EXCEL_MESSAGES.ERROR.NETWORK));

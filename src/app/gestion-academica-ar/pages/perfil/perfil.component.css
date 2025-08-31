@@ -1,0 +1,162 @@
+/* Estilos específicos para el componente de perfil */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Estilos para los inputs con focus */
+input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Estilos para los botones */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Estilos para las notificaciones */
+.notification-enter {
+  animation: slideInDown 0.3s ease-out;
+}
+
+.notification-exit {
+  animation: slideOutUp 0.3s ease-in;
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutUp {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+/* Estilos para la foto de perfil */
+.profile-photo {
+  transition: all 0.3s ease;
+}
+
+.profile-photo:hover {
+  transform: scale(1.05);
+}
+
+/* Estilos para los formularios */
+.form-group {
+  transition: all 0.2s ease;
+}
+
+.form-group:focus-within {
+  transform: translateY(-1px);
+}
+
+/* Estilos para los botones de acción */
+.action-button {
+  transition: all 0.2s ease;
+}
+
+.action-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilos para las tarjetas */
+.card {
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para los inputs de archivo */
+.file-input {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.file-input input[type=file] {
+  position: absolute;
+  left: -9999px;
+}
+
+/* Estilos para el loading */
+.loading-spinner {
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 2s linear infinite;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  .grid-cols-1 {
+    grid-template-columns: 1fr;
+  }
+  
+  .md\\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Estilos para los mensajes de error */
+.error-message {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Estilos para los labels requeridos */
+.required::after {
+  content: " *";
+  color: #dc2626;
+}
+
+/* Estilos para los campos deshabilitados */
+input:disabled {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+/* Estilos para las imágenes de preview */
+.preview-image {
+  border: 2px solid #3b82f6;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Estilos para los iconos */
+.icon {
+  transition: all 0.2s ease;
+}
+
+.icon:hover {
+  transform: scale(1.1);
+}

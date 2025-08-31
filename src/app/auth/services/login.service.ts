@@ -27,11 +27,11 @@ export class LoginService {
         ).pipe(
             tap(response => {
                 console.log('✅ [LOGIN] Respuesta exitosa del backend:', response);
-                if (response && response.access_token) {
+                if (response && response.data && response.data.access_token) {
                     console.log('🔑 [LOGIN] Token recibido, guardando en localStorage...');
-                    this.tokenService.storeToken(response.access_token);
+                    this.tokenService.storeToken(response.data.access_token);
                     console.log('✅ [LOGIN] Token guardado exitosamente');
-                    console.log('👤 [LOGIN] Usuario autenticado:', response.user);
+                    console.log('👤 [LOGIN] Usuario autenticado:', response.data.user);
                 } else {
                     console.warn('⚠️ [LOGIN] Respuesta sin token:', response);
                 }
