@@ -97,10 +97,10 @@ export class DirectorService {
   }
 
   /**
-   * Obtener usuarios disponibles con rol DIRECTOR
+   * Obtener usuarios disponibles con rol DIRECTOR que no tengan director asignado
    */
   obtenerUsuariosDisponibles(): Observable<UsuariosDisponiblesResponse> {
-    return this.http.get<any>(`${this.apiUrl}/usuarios?rol=DIRECTOR`).pipe(
+    return this.http.get<any>(`${this.apiUrl}/usuarios/disponibles?rol=DIRECTOR`).pipe(
       map(response => {
         // El backend devuelve {success, message, data: {usuarios: [...]}}
         // Necesitamos convertirlo a {success, message, data: [...]}
@@ -113,7 +113,7 @@ export class DirectorService {
         }
         return {
           success: response.success || false,
-          message: response.message || 'Error al obtener usuarios',
+          message: response.message || 'Error al obtener usuarios disponibles',
           data: []
         };
       })

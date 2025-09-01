@@ -165,6 +165,10 @@ export const routes: Routes = [
                 loadComponent: () => import('./gestion-academica-ar/pages/perfil/perfil.component').then(m => m.PerfilComponent),
             },
             {
+                path: 'notifications/:id',
+                loadComponent: () => import('./shared/components/notification-detail/notification-detail.component').then(m => m.NotificationDetailComponent),
+            },
+            {
                 path: '',
                 redirectTo: 'welcome',
                 pathMatch: 'full'

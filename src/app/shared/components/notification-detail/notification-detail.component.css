@@ -1,0 +1,42 @@
+/* Estilos específicos para el componente de detalle de notificación */
+
+.whitespace-pre-wrap {
+  white-space: pre-wrap;
+}
+
+/* Animación suave para transiciones */
+.transition-colors {
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+/* Estilo para el botón de volver */
+button:hover svg {
+  transform: translateX(-2px);
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Mejora visual para el contenido del mensaje */
+.bg-gray-50 p {
+  line-height: 1.6;
+}
+
+/* Estilo para los badges */
+.inline-flex.items-center.px-2\.5.py-0\.5 {
+  font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .max-w-4xl {
+    margin: 0 1rem;
+  }
+  
+  .px-6 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .grid-cols-1.md\\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,143 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Header -->
+    <div class="mb-8">
+      <button 
+        (click)="goBack()"
+        class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 mb-4">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        Volver
+      </button>
+      
+      <h1 class="text-3xl font-bold text-gray-900">Detalle de Notificación</h1>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading()" class="flex justify-center items-center py-12">
+      <div class="inline-flex items-center space-x-2 text-gray-500">
+        <svg class="animate-spin h-6 w-6" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>Cargando notificación...</span>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error()" class="bg-red-50 border border-red-200 rounded-lg p-6">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div>
+          <h3 class="text-sm font-medium text-red-800">Error</h3>
+          <p class="text-sm text-red-700 mt-1">{{ error() }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notificación -->
+    <div *ngIf="!isLoading() && !error() && notificacion()" class="bg-white shadow-lg rounded-lg overflow-hidden">
+      
+      <!-- Header de la notificación -->
+      <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <!-- Icono -->
+            <div class="flex-shrink-0">
+              <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
+                <span class="text-2xl">{{ getIconoTipo(notificacion()!.tipo) }}</span>
+              </div>
+            </div>
+            
+            <!-- Título y tipo -->
+            <div>
+              <h2 class="text-xl font-semibold text-gray-900">{{ notificacion()!.titulo }}</h2>
+              <div class="flex items-center space-x-2 mt-1">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                      [ngClass]="getClaseTipo(notificacion()!.tipo)">
+                  {{ notificacion()!.tipo }}
+                </span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                      [ngClass]="getClasePrioridad(notificacion()!.prioridad)">
+                  {{ notificacion()!.prioridad }}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Estado y acciones -->
+          <div class="flex items-center space-x-3">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                  [class.bg-red-100]="notificacion()!.estado === 'no_leida'"
+                  [class.text-red-800]="notificacion()!.estado === 'no_leida'"
+                  [class.bg-green-100]="notificacion()!.estado === 'leida'"
+                  [class.text-green-800]="notificacion()!.estado === 'leida'">
+              {{ notificacion()!.estado === 'no_leida' ? 'No leída' : 'Leída' }}
+            </span>
+            
+            <button *ngIf="notificacion()!.estado === 'no_leida'"
+                    (click)="markAsRead()"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Marcar como leída
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenido -->
+      <div class="px-6 py-6">
+        <!-- Mensaje -->
+        <div class="mb-6">
+          <h3 class="text-sm font-medium text-gray-900 mb-2">Mensaje</h3>
+          <div class="bg-gray-50 rounded-lg p-4">
+            <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ notificacion()!.mensaje }}</p>
+          </div>
+        </div>
+
+                 <!-- Información adicional -->
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+           <!-- Fechas -->
+           <div>
+             <h3 class="text-sm font-medium text-gray-900 mb-3">Información Temporal</h3>
+             <dl class="space-y-2">
+               <div class="flex justify-between">
+                 <dt class="text-sm text-gray-500">Recibida:</dt>
+                 <dd class="text-sm text-gray-900">{{ formatearFecha(notificacion()!.fecha_creacion) }}</dd>
+               </div>
+               <div *ngIf="notificacion()!.fecha_lectura" class="flex justify-between">
+                 <dt class="text-sm text-gray-500">Leída:</dt>
+                 <dd class="text-sm text-gray-900">{{ formatearFecha(notificacion()!.fecha_lectura!) }}</dd>
+               </div>
+             </dl>
+           </div>
+
+           <!-- Información de la notificación -->
+           <div>
+             <h3 class="text-sm font-medium text-gray-900 mb-3">Información de la Notificación</h3>
+             <dl class="space-y-2">
+               <div class="flex justify-between">
+                 <dt class="text-sm text-gray-500">Categoría:</dt>
+                 <dd class="text-sm text-gray-900">{{ getTipoDescripcion(notificacion()!.tipo) }}</dd>
+               </div>
+               <div class="flex justify-between">
+                 <dt class="text-sm text-gray-500">Importancia:</dt>
+                 <dd class="text-sm text-gray-900">{{ getPrioridadDescripcion(notificacion()!.prioridad) }}</dd>
+               </div>
+                               <div class="flex justify-between">
+                  <dt class="text-sm text-gray-500">Estado:</dt>
+                  <dd class="text-sm text-gray-900">{{ notificacion()!.estado === 'no_leida' ? 'Pendiente de lectura' : 'Ya leída' }}</dd>
+                </div>
+             </dl>
+           </div>
+         </div>
+      </div>
+    </div>
+  </div>
+</div>

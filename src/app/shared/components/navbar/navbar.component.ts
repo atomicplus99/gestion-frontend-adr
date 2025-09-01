@@ -4,11 +4,12 @@ import { UserStoreService } from '../../../auth/store/user.store';
 import { UsuarioService } from '../../../gestion-academica-ar/pages/usuarios/services/usuario.service';
 import { PhotoService } from '../../services/photo.service';
 import { environment } from '../../../../environments/environment';
+import { NotificationsBellComponent } from '../notifications-bell/notifications-bell.component';
 
 @Component({
   selector: 'shared-navbar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NotificationsBellComponent],
   templateUrl: './navbar.component.html'
 })
 export class NavbarComponent implements OnInit, OnDestroy {
@@ -17,7 +18,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private photoService = inject(PhotoService);
   
   // Signals para UI
-  showNotificationsTooltip = false;
   showSettingsTooltip = false;
   showHelpTooltip = false;
   

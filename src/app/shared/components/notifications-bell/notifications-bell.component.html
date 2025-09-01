@@ -1,0 +1,221 @@
+<!-- Campana de notificaciones -->
+<div class="relative">
+  <!-- Botón de la campana -->
+  <button
+    (click)="toggleDropdown()"
+    class="relative p-2 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg transition-colors"
+    [class.text-blue-600]="isOpen()"
+    title="Notificaciones">
+    
+    <!-- Icono de la campana -->
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+    </svg>
+    
+    <!-- Badge de notificaciones no leídas -->
+    <span
+      *ngIf="hasUnreadNotifications() && unreadCount() > 0"
+      class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium animate-pulse">
+      {{ unreadCount() > 99 ? '99+' : unreadCount() }}
+    </span>
+    
+    <!-- Indicador de conexión WebSocket (solo visible cuando hay notificaciones) -->
+    <div *ngIf="hasUnreadNotifications()" 
+         class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white"
+         [class.bg-green-500]="isWebSocketConnected()"
+         [class.bg-red-500]="!isWebSocketConnected()"
+         [title]="'WebSocket: ' + webSocketStatusText">
+    </div>
+  </button>
+
+  <!-- Dropdown de notificaciones -->
+  <div
+    *ngIf="isOpen()"
+    class="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden">
+    
+    <!-- Header del dropdown -->
+    <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">Notificaciones</h3>
+        <div class="flex items-center space-x-2">
+          <!-- Estado de conexión WebSocket -->
+          <div class="flex items-center space-x-1">
+            <div class="w-2 h-2 rounded-full"
+                 [class.bg-green-500]="isWebSocketConnected()"
+                 [class.bg-red-500]="!isWebSocketConnected()">
+            </div>
+            <span class="text-xs" [ngClass]="webSocketStatusClass">
+              {{ webSocketStatusText }}
+            </span>
+          </div>
+          <!-- Botón cerrar -->
+          <button
+            (click)="closeDropdown()"
+            class="text-gray-400 hover:text-gray-600 focus:outline-none">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Filtros -->
+      <div class="mt-3 flex space-x-2">
+        <!-- Filtro de tipo -->
+        <select
+          [value]="selectedTipo()"
+          (change)="onTipoChange($event)"
+          class="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500">
+          <option *ngFor="let option of tipoOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        
+        <!-- Filtro de estado -->
+        <select
+          [value]="selectedEstado()"
+          (change)="onEstadoChange($event)"
+          class="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500">
+          <option *ngFor="let option of estadoOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Contenido del dropdown -->
+    <div class="max-h-80 overflow-y-auto">
+      <!-- Loading -->
+      <div *ngIf="isLoading()" class="p-4 text-center">
+        <div class="inline-flex items-center space-x-2 text-gray-500">
+          <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Cargando notificaciones...</span>
+        </div>
+      </div>
+
+      <!-- Lista de notificaciones -->
+      <div *ngIf="!isLoading() && hasNotifications" class="divide-y divide-gray-200">
+        <div
+          *ngFor="let notificacion of notificacionesNoLeidas"
+          class="p-4 hover:bg-gray-50 cursor-pointer transition-colors bg-blue-50"
+          (click)="viewNotificationDetails(notificacion)">
+          
+          <div class="flex items-start space-x-3">
+            <!-- Icono del tipo -->
+            <div class="flex-shrink-0">
+              <span class="text-lg">{{ getIconoTipo(notificacion.tipo) }}</span>
+            </div>
+            
+            <!-- Contenido de la notificación -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <h4 class="text-sm font-medium text-gray-900 truncate">
+                  {{ notificacion.titulo }}
+                </h4>
+                <div class="flex items-center space-x-2">
+                  <!-- Badge de tipo -->
+                  <span class="px-2 py-1 text-xs font-medium rounded-full"
+                        [ngClass]="getClaseTipo(notificacion.tipo)">
+                    {{ notificacion.tipo }}
+                  </span>
+                  <!-- Indicador de no leída -->
+                  <div *ngIf="notificacion.estado === 'no_leida'"
+                       class="w-2 h-2 bg-blue-500 rounded-full">
+                  </div>
+                </div>
+              </div>
+              
+              <p class="mt-1 text-sm text-gray-600 line-clamp-2">
+                {{ notificacion.mensaje }}
+              </p>
+              
+              <div class="mt-2 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <span class="text-xs text-gray-500">
+                    {{ formatearFecha(notificacion.fecha_creacion) }}
+                  </span>
+                  <span class="text-xs font-medium"
+                        [class.text-red-600]="notificacion.prioridad === 'ALTA'"
+                        [class.text-yellow-600]="notificacion.prioridad === 'MEDIA'"
+                        [class.text-green-600]="notificacion.prioridad === 'BAJA'">
+                    {{ notificacion.prioridad }}
+                  </span>
+                </div>
+                
+                <!-- Botón para marcar como leída -->
+                <button *ngIf="notificacion.estado === 'no_leida'"
+                        (click)="markAsRead(notificacion); $event.stopPropagation()"
+                        [disabled]="isMarkingAsRead()"
+                        class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  <svg *ngIf="!isMarkingAsRead()" class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <svg *ngIf="isMarkingAsRead()" class="w-3 h-3 mr-1 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  {{ isMarkingAsRead() ? 'Marcando...' : 'Marcar como leída' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sin notificaciones -->
+      <div *ngIf="!isLoading() && !hasNotifications" class="p-8 text-center">
+        <div class="text-gray-400 mb-2">
+          <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+        </div>
+        <p class="text-gray-600 text-sm">No hay notificaciones</p>
+        <p class="text-gray-500 text-xs mt-1">Las nuevas notificaciones aparecerán aquí</p>
+      </div>
+    </div>
+
+    <!-- Footer con paginación -->
+    <div *ngIf="!isLoading() && hasNotifications && totalPages() > 1" 
+         class="px-4 py-3 border-t border-gray-200 bg-gray-50">
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-gray-500">
+          Página {{ currentPage() }} de {{ totalPages() }} ({{ totalItems() }} total)
+        </span>
+        
+        <div class="flex items-center space-x-1">
+          <!-- Botón anterior -->
+          <button
+            *ngIf="currentPage() > 1"
+            (click)="onPageChange(currentPage() - 1)"
+            class="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500">
+            ←
+          </button>
+          
+          <!-- Números de página -->
+          <button
+            *ngFor="let page of paginas"
+            (click)="onPageChange(page)"
+            class="px-2 py-1 text-xs border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+            [class.bg-blue-500]="page === currentPage()"
+            [class.text-white]="page === currentPage()"
+            [class.border-blue-500]="page === currentPage()"
+            [class.border-gray-300]="page !== currentPage()"
+            [class.hover:bg-gray-100]="page !== currentPage()">
+            {{ page }}
+          </button>
+          
+          <!-- Botón siguiente -->
+          <button
+            *ngIf="currentPage() < totalPages()"
+            (click)="onPageChange(currentPage() + 1)"
+            class="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500">
+            →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

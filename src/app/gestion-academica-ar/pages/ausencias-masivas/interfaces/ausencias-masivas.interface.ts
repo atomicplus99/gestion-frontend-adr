@@ -64,7 +64,15 @@ export interface AusenciaProgramada {
   fecha: string;
   hora: string;
   turnos: string;
-  estado: 'PROGRAMADA' | 'COMPLETADO' | 'EN_PROCESO' | 'ERROR';
+  estado: 'PROGRAMADA' | 'COMPLETADO' | 'EN_PROCESO' | 'ERROR' | 'CANCELADA';
+  usuario: {
+    id: string;
+    nombre_usuario: string;
+    rol: string;
+    nombre: string;
+    apellido: string;
+  };
+  fechaCreacion: string;
 }
 
 /**
@@ -110,6 +118,26 @@ export interface PayloadProgramacion {
   turnos: string;
 }
 
+/**
+ * Respuesta de cancelación de ausencia programada
+ * Estructura actual del backend
+ */
+export interface RespuestaCancelacion {
+  cancelada: boolean;
+  // Estructura futura (cuando el backend se actualice)
+  id?: string;
+  estado?: 'CANCELADA';
+  fecha_cancelacion?: string;
+}
+
+/**
+ * Respuesta de eliminación del historial
+ */
+export interface RespuestaEliminacionHistorial {
+  registrosEliminados: number;
+  fechaEliminacion: string;
+}
+
 // ===== ENUMS Y CONSTANTES =====
 
 /**
@@ -128,7 +156,8 @@ export enum EstadoEjecucion {
   PROGRAMADA = 'PROGRAMADA',
   COMPLETADO = 'COMPLETADO',
   EN_PROCESO = 'EN_PROCESO',
-  ERROR = 'ERROR'
+  ERROR = 'ERROR',
+  CANCELADA = 'CANCELADA'
 }
 
 // ===== INTERFACES DE UTILIDAD =====

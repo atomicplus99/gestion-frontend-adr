@@ -4,20 +4,24 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { AusenciasMasivasService } from './services/ausencias-masivas.service';
+import { WebSocketService } from '../../../shared/services/websocket.service';
 import { ConfirmationMessageComponent, ConfirmationMessage } from '../../../shared/components/confirmation-message/confirmation-message.component';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 import { 
   ResultadoEjecucion, 
   EstadisticasAusencias,
   EjecucionAusenciasMasivas,
   RespuestaProgramacion,
   AusenciaProgramada,
+  RespuestaCancelacion,
+  RespuestaEliminacionHistorial,
   TurnosDisponibles 
 } from './interfaces/ausencias-masivas.interface';
 
 @Component({
   selector: 'app-ausencias-masivas',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, ConfirmationMessageComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, ConfirmationMessageComponent, ConfirmationDialogComponent],
   templateUrl: './ausencias-masivas.component.html',
   styleUrls: ['./ausencias-masivas.component.css']
 })
@@ -29,6 +33,8 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
   // Estados del componente
   isLoading = false;
   isExecuting = false;
+  isCancelling = false;
+  isDeletingHistorial = false;
   showEstadisticas = false;
   
   // Datos del componente
@@ -44,10 +50,23 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
     message: '',
     show: false
   };
+
+  // Modal de confirmación para eliminar historial
+  confirmationDialog: ConfirmationDialogData = {
+    title: 'Confirmar Eliminación',
+    message: '¿Estás seguro de que quieres eliminar TODO el historial de ejecuciones? Esta acción es irreversible.',
+    confirmText: 'Eliminar Todo',
+    cancelText: 'Cancelar',
+    type: 'danger',
+    show: false
+  };
   
   // Fecha y hora actual
   fechaActual: string;
   horaActual: string;
+  
+  // Timer para actualizar hora en tiempo real
+  private horaTimer: any;
   
   // Opciones de turnos disponibles para programación
   turnosDisponibles = [
@@ -64,10 +83,11 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private ausenciasMasivasService: AusenciasMasivasService,
+    private webSocketService: WebSocketService,
     private cdr: ChangeDetectorRef
   ) {
-    this.fechaActual = this.ausenciasMasivasService.obtenerFechaActual();
-    this.horaActual = this.obtenerHoraActual();
+    this.fechaActual = this.obtenerFechaActualPeru();
+    this.horaActual = this.obtenerHoraActualPeru();
   }
 
   ngOnInit() {
@@ -75,41 +95,237 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
     this.cargarEstadisticas();
     this.cargarHistorial();
     this.cargarAusenciasProgramadas();
-    
-    // Log para verificar que el componente se inicializó correctamente
-    console.log('🚀 COMPONENTE AUSENCIAS MASIVAS INICIALIZADO:');
-    console.log('  - Formulario válido:', this.ejecucionForm?.valid);
-    console.log('  - Estado del formulario:', this.ejecucionForm?.status);
-    console.log('  - Botón deshabilitado:', this.botonDeshabilitado);
-    console.log('  - isExecuting:', this.isExecuting);
+    this.setupWebSocketListeners();
+    this.iniciarTimerHora();
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+    
+    // Limpiar timer de hora
+    if (this.horaTimer) {
+      clearInterval(this.horaTimer);
+    }
+  }
+
+  /**
+   * Inicia el timer para actualizar la hora en tiempo real
+   */
+  private iniciarTimerHora(): void {
+    // Actualizar hora inmediatamente
+    this.actualizarHoraActual();
+    
+    // Actualizar cada minuto
+    this.horaTimer = setInterval(() => {
+      this.actualizarHoraActual();
+    }, 60000); // 60000ms = 1 minuto
+  }
+
+  /**
+   * Actualiza la hora actual
+   */
+  private actualizarHoraActual(): void {
+    this.horaActual = this.obtenerHoraActualPeru();
+  }
+
+  /**
+   * Valida que la fecha y hora de programación sean futuras
+   */
+  private validarFechaYHoraProgramacion(fecha: string, hora: string): boolean {
+    if (!fecha || !hora) return false;
+    
+    // Obtener fecha y hora actual
+    const ahora = new Date();
+    const fechaActualPeru = this.obtenerFechaActualPeru();
+    const horaActualPeru = this.obtenerHoraActualPeru();
+    
+    // Crear objeto Date para la fecha/hora a validar
+    const [año, mes, dia] = fecha.split('-').map(Number);
+    const [horas, minutos, segundos] = hora.split(':').map(Number);
+    
+    const fechaHoraProgramacion = new Date(año, mes - 1, dia, horas, minutos, segundos);
+    
+    // Crear objeto Date para la fecha/hora actual
+    const [añoActual, mesActual, diaActual] = fechaActualPeru.split('-').map(Number);
+    const [horasActual, minutosActual, segundosActual] = horaActualPeru.split(':').map(Number);
+    
+    const fechaHoraActual = new Date(añoActual, mesActual - 1, diaActual, horasActual, minutosActual, segundosActual);
+    
+    return fechaHoraProgramacion > fechaHoraActual;
+  }
+
+  /**
+   * Muestra el modal de confirmación para eliminar historial
+   */
+  mostrarConfirmacionEliminarHistorial(): void {
+    this.confirmationDialog.show = true;
+  }
+
+  /**
+   * Confirma la eliminación del historial
+   */
+  async confirmarEliminarHistorial(): Promise<void> {
+    // Ocultar el modal
+    this.confirmationDialog.show = false;
+    
+    this.isDeletingHistorial = true;
+    
+    try {
+      const resultado = await this.ausenciasMasivasService.eliminarHistorial(true).toPromise();
+      
+      if (resultado) {
+        this.confirmationMessage = {
+          type: 'success',
+          title: 'Historial Eliminado',
+          message: `Se eliminaron exitosamente ${resultado.registrosEliminados} registros del historial`,
+          show: true
+        };
+        
+        // Limpiar el historial local
+        this.historialEjecuciones = [];
+        
+        // Recargar estadísticas
+        await this.cargarEstadisticas();
+      }
+    } catch (error: any) {
+      let mensajeError = 'Error al eliminar el historial';
+      
+      if (error.error?.message) {
+        mensajeError = error.error.message;
+      } else if (error.message) {
+        mensajeError = error.message;
+      }
+      
+      this.confirmationMessage = {
+        type: 'error',
+        title: 'Error de Eliminación',
+        message: mensajeError,
+        show: true
+      };
+    } finally {
+      this.isDeletingHistorial = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  /**
+   * Cancela la eliminación del historial
+   */
+  cancelarEliminarHistorial(): void {
+    this.confirmationDialog.show = false;
+  }
+
+  /**
+   * Configura los listeners de WebSocket para actualizaciones en tiempo real
+   */
+  private setupWebSocketListeners(): void {
+    // Escuchar nuevas ausencias programadas
+    this.webSocketService.ausenciaProgramada$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((nuevaAusencia: AusenciaProgramada) => {
+        
+        // Agregar la nueva ausencia a la lista
+        this.ausenciasProgramadas = [...this.ausenciasProgramadas, nuevaAusencia];
+        
+        // Mostrar mensaje de éxito
+        this.confirmationMessage = {
+          type: 'success',
+          title: 'Ausencia Programada',
+          message: `Se programó exitosamente una nueva ausencia para el ${this.formatearFecha(nuevaAusencia.fecha)} a las ${nuevaAusencia.hora}`,
+          show: true
+        };
+        
+        this.cdr.detectChanges();
+      });
+
+    // Escuchar ausencias canceladas
+    this.webSocketService.ausenciaCancelada$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data: { id: string; fecha_cancelacion: string }) => {
+
+        
+        // Remover la ausencia cancelada de la lista
+        this.ausenciasProgramadas = this.ausenciasProgramadas.filter(
+          ausencia => ausencia.id !== data.id
+        );
+        
+        // Mostrar mensaje de éxito
+        this.confirmationMessage = {
+          type: 'success',
+          title: 'Ausencia Cancelada',
+          message: 'Se canceló exitosamente una ausencia programada',
+          show: true
+        };
+        
+        this.cdr.detectChanges();
+      });
+
+    // Escuchar eventos de programación creada
+    this.webSocketService.programacionCreada$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data: {
+        programacion: AusenciaProgramada;
+        historial: any[];
+        programadas: AusenciaProgramada[];
+        timestamp: string;
+      }) => {
+
+        
+        // Actualizar todos los datos automáticamente
+        this.ausenciasProgramadas = data.programadas;
+        this.historialEjecuciones = data.historial;
+        
+        // Mostrar mensaje de éxito
+        this.confirmationMessage = {
+          type: 'success',
+          title: 'Programación Creada',
+          message: `Se programó exitosamente una nueva ausencia para el ${this.formatearFecha(data.programacion.fecha)} a las ${data.programacion.hora}`,
+          show: true
+        };
+        
+        this.cdr.detectChanges();
+      });
+
+    // Escuchar eventos de programación cancelada
+    this.webSocketService.programacionCancelada$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data: {
+        programacion_id: string;
+        historial: any[];
+        programadas: AusenciaProgramada[];
+        timestamp: string;
+      }) => {
+
+        
+        // Actualizar todos los datos automáticamente
+        this.ausenciasProgramadas = data.programadas;
+        this.historialEjecuciones = data.historial;
+        
+        // Mostrar mensaje de éxito
+        this.confirmationMessage = {
+          type: 'success',
+          title: 'Programación Cancelada',
+          message: 'La programación de ausencias fue cancelada exitosamente',
+          show: true
+        };
+        
+        this.cdr.detectChanges();
+      });
   }
 
   /**
    * Inicializa el formulario de programación
    */
   initForm() {
-    // Obtener fecha de mañana como fecha por defecto válida
-    const manana = new Date();
-    manana.setDate(manana.getDate() + 1);
-    const fechaManana = manana.toISOString().split('T')[0];
+    // Obtener fecha y hora actual de Perú
+    const fechaActualPeru = this.obtenerFechaActualPeru();
+    const horaActual = this.obtenerHoraActualPeru();
     
-    // Obtener hora actual
-    const horaActual = this.obtenerHoraActual();
-    
-    console.log('📅 INICIALIZANDO FORMULARIO:');
-    console.log('  - Fecha por defecto (mañana):', fechaManana);
-    console.log('  - Hora por defecto:', horaActual);
-    console.log('  - Turnos por defecto:', ['MAÑANA']);
-    console.log('  - Fecha actual del sistema:', new Date().toISOString());
-    console.log('  - Fecha de mañana como Date:', new Date(fechaManana));
+
     
     this.ejecucionForm = this.fb.group({
-      fecha: [fechaManana, [Validators.required]],
+      fecha: [fechaActualPeru, [Validators.required]],
       hora: [horaActual, [Validators.required]],
       turnos: ['MAÑANA', [Validators.required]]
     });
@@ -118,45 +334,40 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
     this.ejecucionForm.get('fecha')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(fecha => {
-        console.log('📅 CAMBIO EN FECHA DETECTADO:', fecha);
-        console.log('  - Fecha recibida en valueChanges:', fecha);
-        console.log('  - Tipo de fecha:', typeof fecha);
-        console.log('  - Fecha como Date:', new Date(fecha));
-        
-        if (fecha && !this.ausenciasMasivasService.validarFechaProgramacion(fecha)) {
-          console.log('❌ FECHA INVÁLIDA - Estableciendo error fechaFutura');
-          this.ejecucionForm.get('fecha')?.setErrors({ fechaFutura: true });
-        } else {
-          console.log('✅ FECHA VÁLIDA - Limpiando errores');
-          this.ejecucionForm.get('fecha')?.setErrors(null);
+        if (fecha) {
+          const esFechaValida = this.validarFechaYHoraProgramacion(fecha, this.ejecucionForm.get('hora')?.value);
+          if (!esFechaValida) {
+            this.ejecucionForm.get('fecha')?.setErrors({ fechaHoraPasada: true });
+          } else {
+            this.ejecucionForm.get('fecha')?.setErrors(null);
+          }
         }
-        
-        console.log('  - Estado del formulario después del cambio:', this.ejecucionForm.status);
-        console.log('  - Errores del campo fecha:', this.ejecucionForm.get('fecha')?.errors);
       });
-      
-    console.log('📋 ESTADO INICIAL DEL FORMULARIO:');
-    console.log('  - Válido:', this.ejecucionForm.valid);
-    console.log('  - Errores:', this.ejecucionForm.errors);
-    console.log('  - Valores:', this.ejecucionForm.value);
-    console.log('  - Estado:', this.ejecucionForm.status);
-    console.log('  - Campos del formulario:', Object.keys(this.ejecucionForm.controls));
+
+    // Escuchar cambios en la hora para validar
+    this.ejecucionForm.get('hora')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(hora => {
+        if (hora) {
+          const esHoraValida = this.validarFechaYHoraProgramacion(this.ejecucionForm.get('fecha')?.value, hora);
+          if (!esHoraValida) {
+            this.ejecucionForm.get('hora')?.setErrors({ fechaHoraPasada: true });
+          } else {
+            this.ejecucionForm.get('hora')?.setErrors(null);
+          }
+        }
+      });
   }
 
   /**
    * Programa ausencias automáticas para una fecha y hora futura
    */
   async programarAusencias() {
-    console.log('🚀 INICIANDO PROGRAMACIÓN DE AUSENCIAS');
-    console.log('📋 Estado del formulario:', this.ejecucionForm.valid ? 'VÁLIDO' : 'INVÁLIDO');
-    console.log('📋 Errores del formulario:', this.ejecucionForm.errors);
     
     if (this.ejecucionForm.invalid) {
-      console.log('❌ FORMULARIO INVÁLIDO - Detalles de errores:');
       Object.keys(this.ejecucionForm.controls).forEach(key => {
         const control = this.ejecucionForm.get(key);
         if (control?.errors) {
-          console.log(`  - ${key}:`, control.errors);
         }
       });
       
@@ -173,43 +384,21 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
     const hora = this.ejecucionForm.get('hora')?.value;
     const turnos = this.ejecucionForm.get('turnos')?.value as 'MAÑANA' | 'TARDE' | 'AMBOS';
     
-    console.log('📅 DATOS DEL FORMULARIO:');
-    console.log('  - Fecha seleccionada:', fecha);
-    console.log('  - Hora seleccionada:', hora);
-    console.log('  - Turnos seleccionados:', turnos);
-    console.log('  - Tipo de fecha:', typeof fecha);
-    console.log('  - Fecha actual del sistema:', new Date().toISOString());
-    
-    // Validar fecha de programación
-    const esFechaValida = this.ausenciasMasivasService.validarFechaProgramacion(fecha);
-    console.log('✅ VALIDACIÓN DE FECHA:');
-    console.log('  - Método validarFechaProgramacion() retorna:', esFechaValida);
-    console.log('  - Fecha seleccionada como Date:', new Date(fecha));
-    console.log('  - Fecha actual como Date:', new Date());
-    console.log('  - Comparación fecha > hoy:', new Date(fecha) > new Date());
-    
-    if (!esFechaValida) {
-      console.log('❌ FECHA INVÁLIDA PARA PROGRAMACIÓN');
+    // Validar que la fecha y hora sean futuras
+    if (!this.validarFechaYHoraProgramacion(fecha, hora)) {
       this.confirmationMessage = {
         type: 'error',
-        title: 'Fecha Inválida',
-        message: 'Solo se pueden programar ausencias para hoy o fechas futuras',
+        title: 'Fecha/Hora Inválida',
+        message: 'No se puede programar para fechas u horas pasadas. La programación debe ser futura.',
         show: true
       };
       return;
     }
     
-    console.log('✅ FECHA VÁLIDA - Continuando con la programación...');
 
     this.isExecuting = true;
     
     try {
-      console.log('🚀 ENVIANDO PETICIÓN AL BACKEND:');
-      console.log('  - Fecha a programar:', fecha);
-      console.log('  - Hora a programar:', hora);
-      console.log('  - Turno a programar:', turnos);
-      console.log('  - Tipo de turno:', typeof turnos);
-      console.log('  - Turno seleccionado:', turnos);
       
       // Log del payload que se enviará
       const payload = {
@@ -217,39 +406,23 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
         hora: hora,
         turnos: turnos
       };
-      console.log('📤 PAYLOAD COMPLETO A ENVIAR:', payload);
-      console.log('📤 JSON.stringify del payload:', JSON.stringify(payload));
-      console.log('📤 Tipo de turnos en payload:', typeof payload.turnos);
-      console.log('📤 Turnos como string:', payload.turnos);
       
-      console.log('🌐 LLAMANDO AL SERVICIO programarAusencias()...');
       
       const resultado = await this.ausenciasMasivasService.programarAusencias(fecha, hora, turnos).toPromise();
       
-      console.log('📥 RESPUESTA DEL BACKEND RECIBIDA:');
-      console.log('  - Resultado completo:', resultado);
-      console.log('  - Tipo de resultado:', typeof resultado);
+
       
       if (resultado) {
-        console.log('✅ PROGRAMACIÓN EXITOSA:');
-        console.log('  - ID de programación:', resultado.idProgramacion);
-        console.log('  - Fecha programada:', resultado.fecha);
-        console.log('  - Hora programada:', resultado.hora);
-        console.log('  - Turnos programados:', resultado.turnos);
-        console.log('  - Mensaje del backend:', resultado.mensaje);
         
         this.confirmationMessage = {
           type: 'success',
           title: 'Ausencias Programadas Exitosamente',
-          message: `Se programaron ausencias automáticas para el ${resultado.fecha} a las ${resultado.hora} para el turno: ${turnos}`,
+          message: `Se programaron ausencias automáticas para el ${this.formatearFecha(fecha)} a las ${hora} para el turno: ${turnos}`,
           show: true
         };
         
-        // Recargar ausencias programadas
-        console.log('🔄 Recargando ausencias programadas...');
-        await this.cargarAusenciasProgramadas();
+        // Limpiar formulario (la lista se actualizará via WebSocket)
         this.limpiarFormulario();
-        console.log('✅ Formulario limpiado y ausencias recargadas');
       }
     } catch (error: any) {
       console.error('❌ ERROR EN PROGRAMACIÓN DE AUSENCIAS:');
@@ -263,10 +436,8 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
       
       if (error.error?.message) {
         mensajeError = error.error.message;
-        console.log('  - Mensaje del backend:', error.error.message);
       } else if (error.message) {
         mensajeError = error.message;
-        console.log('  - Mensaje del error:', error.message);
       }
       
       this.confirmationMessage = {
@@ -276,12 +447,8 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
         show: true
       };
     } finally {
-      console.log('🏁 FINALIZANDO EJECUCIÓN:');
-      console.log('  - isExecuting cambiando a false');
       this.isExecuting = false;
-      console.log('  - Detectando cambios en la UI');
       this.cdr.detectChanges();
-      console.log('✅ PROGRAMACIÓN COMPLETADA');
     }
   }
 
@@ -312,29 +479,20 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
    */
   async cargarAusenciasProgramadas() {
     try {
-      console.log('🔄 CARGANDO AUSENCIAS PROGRAMADAS...');
-      const programadas = await this.ausenciasMasivasService.obtenerAusenciasProgramadas().toPromise();
+      // Obtener todas las ausencias programadas (sin filtrar por usuario)
+      const programadas = await this.ausenciasMasivasService.obtenerAusenciasProgramadas(false).toPromise();
       
-      console.log('📥 AUSENCIAS PROGRAMADAS RECIBIDAS:', programadas);
-      
-      if (programadas) {
-        console.log('📋 DETALLES DE AUSENCIAS:');
-        programadas.forEach((ausencia, index) => {
-          console.log(`  - Ausencia ${index + 1}:`, {
-            id: ausencia.id,
-            fecha: ausencia.fecha,
-            tipoFecha: typeof ausencia.fecha,
-            hora: ausencia.hora,
-            turnos: ausencia.turnos,
-            estado: ausencia.estado
-          });
-        });
-        
+      if (programadas && Array.isArray(programadas)) {
         this.ausenciasProgramadas = programadas;
-        console.log('✅ Ausencias programadas cargadas en el componente');
+        
+        if (this.ausenciasProgramadas.length === 0) {
+          // No hay ausencias programadas
+        }
+      } else {
+        this.ausenciasProgramadas = [];
       }
     } catch (error) {
-      console.error('❌ Error cargando ausencias programadas:', error);
+      this.ausenciasProgramadas = [];
     }
   }
 
@@ -343,30 +501,15 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
    */
   async cargarHistorial() {
     try {
-      console.log('🔄 CARGANDO HISTORIAL DE EJECUCIONES...');
       const historial = await this.ausenciasMasivasService.obtenerHistorial().toPromise();
       
-      console.log('📥 HISTORIAL RECIBIDO:', historial);
-      
       if (historial) {
-        console.log('📋 DETALLES DEL HISTORIAL:');
-        historial.forEach((ejecucion, index) => {
-          console.log(`  - Ejecución ${index + 1}:`, {
-            id: ejecucion.id,
-            fecha: ejecucion.fecha,
-            tipoFecha: typeof ejecucion.fecha,
-            horaEjecucion: ejecucion.horaEjecucion,
-            totalAlumnos: ejecucion.totalAlumnos,
-            ausenciasCreadas: ejecucion.ausenciasCreadas,
-            estado: ejecucion.estado
-          });
-        });
-        
         this.historialEjecuciones = historial;
-        console.log('✅ Historial cargado en el componente');
+      } else {
+        this.historialEjecuciones = [];
       }
     } catch (error) {
-      console.error('❌ Error cargando historial:', error);
+      this.historialEjecuciones = [];
     }
   }
 
@@ -397,6 +540,8 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
         return 'bg-yellow-100 text-yellow-800';
       case 'ERROR':
         return 'bg-red-100 text-red-800';
+      case 'CANCELADA':
+        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -413,24 +558,14 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
    * Obtiene el texto del botón de programación
    */
   get textoBotonProgramacion(): string {
-    if (this.isExecuting) {
-      return 'Programando Ausencias...';
-    }
-    return 'Programar Ausencias Automáticas';
+    return this.isExecuting ? 'Programando Ausencias...' : 'Programar Ausencias Automáticas';
   }
 
   /**
    * Obtiene si el botón está deshabilitado
    */
   get botonDeshabilitado(): boolean {
-    const deshabilitado = this.isExecuting || this.ejecucionForm.invalid;
-    console.log('🔘 ESTADO DEL BOTÓN:');
-    console.log('  - isExecuting:', this.isExecuting);
-    console.log('  - ejecucionForm.invalid:', this.ejecucionForm.invalid);
-    console.log('  - Botón deshabilitado:', deshabilitado);
-    console.log('  - Estado del formulario:', this.ejecucionForm.status);
-    console.log('  - Errores del formulario:', this.ejecucionForm.errors);
-    return deshabilitado;
+    return this.isExecuting || this.ejecucionForm.invalid;
   }
 
   /**
@@ -445,9 +580,12 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
    * Limpia el formulario y resetea el estado
    */
   limpiarFormulario() {
+    const fechaActual = this.obtenerFechaActualPeru();
+    const horaActual = this.obtenerHoraActualPeru();
+    
     this.ejecucionForm.reset({ 
-      fecha: '',
-      hora: '',
+      fecha: fechaActual,
+      hora: horaActual,
       turnos: 'MAÑANA'
     });
     this.resultadoEjecucion = undefined;
@@ -466,7 +604,128 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Obtiene la hora actual en formato HH:MM:SS
+   * Cancela una ausencia programada
+   * @param ausencia Ausencia programada a cancelar
+   */
+  async cancelarAusencia(ausencia: AusenciaProgramada) {
+    
+    this.isCancelling = true;
+    
+    try {
+      const resultado = await this.ausenciasMasivasService.cancelarAusenciaProgramada(ausencia.id).toPromise();
+      
+      // Verificar si la cancelación fue exitosa según la estructura actual del backend
+      if (resultado?.cancelada === true || resultado?.estado === 'CANCELADA') {
+        
+        this.confirmationMessage = {
+          type: 'success',
+          title: 'Ausencia Cancelada',
+          message: `Se canceló exitosamente la ausencia programada para el ${this.formatearFecha(ausencia.fecha)} a las ${ausencia.hora}`,
+          show: true
+        };
+        
+        // La lista se actualizará automáticamente via WebSocket
+      } else {
+        this.confirmationMessage = {
+          type: 'error',
+          title: 'Error de Cancelación',
+          message: 'La cancelación no se completó correctamente',
+          show: true
+        };
+      }
+    } catch (error: any) {
+      
+      let mensajeError = 'Error al cancelar la ausencia programada';
+      let tituloError = 'Error de Cancelación';
+      
+      // Manejar diferentes tipos de errores según el status code
+      if (error.status === 403) {
+        tituloError = 'Sin Permisos';
+        mensajeError = error.error?.message || 'No tienes permisos para cancelar esta programación';
+      } else if (error.status === 400) {
+        tituloError = 'No se puede cancelar';
+        mensajeError = error.error?.message || 'No se puede cancelar esta programación';
+      } else if (error.status === 404) {
+        tituloError = 'No encontrada';
+        mensajeError = error.error?.message || 'Programación de ausencias no encontrada';
+      } else if (error.error?.message) {
+        mensajeError = error.error.message;
+      } else if (error.message) {
+        mensajeError = error.message;
+      }
+      
+      this.confirmationMessage = {
+        type: 'error',
+        title: tituloError,
+        message: mensajeError,
+        show: true
+      };
+    } finally {
+      this.isCancelling = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  /**
+   * Verifica si el usuario actual puede cancelar una ausencia
+   * @param ausencia Ausencia programada
+   * @returns true si puede cancelar
+   */
+  puedeCancelarAusencia(ausencia: AusenciaProgramada): boolean {
+    // Solo el usuario que programó la ausencia puede cancelarla
+    // Por ahora, permitir cancelación a todos los usuarios autenticados
+    // TODO: Implementar lógica específica según los requerimientos del negocio
+    return true;
+  }
+
+  /**
+   * Obtiene la fecha actual de Perú en formato YYYY-MM-DD
+   */
+  obtenerFechaActualPeru(): string {
+    // Crear fecha en zona horaria de Perú (UTC-5)
+    const ahora = new Date();
+    const peruOffset = -5 * 60; // -5 horas en minutos
+    const utc = ahora.getTime() + (ahora.getTimezoneOffset() * 60000);
+    const peruTime = new Date(utc + (peruOffset * 60000));
+    
+    const year = peruTime.getFullYear();
+    const month = String(peruTime.getMonth() + 1).padStart(2, '0');
+    const day = String(peruTime.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Obtiene la fecha de mañana en Perú en formato YYYY-MM-DD
+   */
+  obtenerFechaMananaPeru(): string {
+    const ahora = new Date();
+    // Perú está en UTC-5 (PET - Peru Time)
+    const peruTime = new Date(ahora.getTime() - (5 * 60 * 60 * 1000));
+    // Agregar un día
+    peruTime.setDate(peruTime.getDate() + 1);
+    return peruTime.toISOString().split('T')[0];
+  }
+
+  /**
+   * Obtiene la hora actual de Perú en formato HH:MM:SS
+   */
+  obtenerHoraActualPeru(): string {
+    // Crear fecha en zona horaria de Perú (UTC-5)
+    const ahora = new Date();
+    const peruOffset = -5 * 60; // -5 horas en minutos
+    const utc = ahora.getTime() + (ahora.getTimezoneOffset() * 60000);
+    const peruTime = new Date(utc + (peruOffset * 60000));
+    
+    const hours = String(peruTime.getHours()).padStart(2, '0');
+    const minutes = String(peruTime.getMinutes()).padStart(2, '0');
+    const seconds = String(peruTime.getSeconds()).padStart(2, '0');
+    
+    return `${hours}:${minutes}:${seconds}`;
+  }
+
+  /**
+   * Obtiene la hora actual en formato HH:MM:SS (método legacy)
    */
   obtenerHoraActual(): string {
     const ahora = new Date();
