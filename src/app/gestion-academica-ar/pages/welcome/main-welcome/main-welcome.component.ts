@@ -24,11 +24,6 @@ interface WeatherData {
   };
 }
 
-interface QuoteData {
-  text: string;
-  author: string;
-}
-
 interface NewsItem {
   title: string;
   description: string;
@@ -38,13 +33,6 @@ interface NewsItem {
   source: {
     name: string;
   };
-}
-
-interface CryptoPrice {
-  id: string;
-  name: string;
-  current_price: number;
-  price_change_percentage_24h: number;
 }
 
 interface CountryInfo {
@@ -94,9 +82,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   // Signals para datos en tiempo real
   currentUser = this.userStore.user;
   weather = signal<WeatherData | null>(null);
-  dailyQuote = signal<QuoteData | null>(null);
   worldNews = signal<NewsItem[]>([]);
-  cryptoPrices = signal<CryptoPrice[]>([]);
   countryInfo = signal<CountryInfo | null>(null);
   upcomingHolidays = signal<HolidayInfo[]>([]);
   
@@ -132,9 +118,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.initializeTimeUpdates();
     this.loadWeatherData();
-    this.loadDailyQuote();
     this.loadWorldNews();
-    this.loadCryptoPrices();
     this.loadCountryInfo();
     this.loadUpcomingHolidays();
     this.loadGlobalTimes();
@@ -177,49 +161,72 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   }
 
   private loadWeatherData() {
-    // WeatherAPI - API gratuita real
-    this.http.get<WeatherData>('https://api.weatherapi.com/v1/current.json?key=demo&q=Lima&aqi=no')
-      .subscribe({
-        next: (data) => this.weather.set(data),
-        error: () => {
-          // Usar una API alternativa gratuita: OpenWeatherMap
-          this.http.get<any>('https://api.openweathermap.org/data/2.5/weather?q=Lima,PE&appid=demo&units=metric')
-            .subscribe({
-              next: (data) => {
-                this.weather.set({
-                  location: { name: data.name, country: data.sys.country },
-                  current: {
-                    temp_c: Math.round(data.main.temp),
-                    condition: { 
-                      text: data.weather[0].description,
-                      icon: `//openweathermap.org/img/w/${data.weather[0].icon}.png`
-                    },
-                    humidity: data.main.humidity,
-                    wind_kph: Math.round(data.wind.speed * 3.6)
-                  }
-                });
-              },
-              error: () => {}
-            });
-        }
-      });
+    // WeatherAPI - API real con clave válida
+    const apiKey = environment.weatherApiKey;
+    if (apiKey && apiKey !== 'TU_CLAVE_WEATHERAPI_AQUI') {
+      this.http.get<WeatherData>(`https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=Lima&aqi=no`)
+        .subscribe({
+          next: (data) => {
+            console.log('✅ [WEATHER] Datos obtenidos de WeatherAPI:', data);
+            this.weather.set(data);
+          },
+          error: (error) => {
+            console.warn('⚠️ [WEATHER] Error con WeatherAPI, intentando OpenWeatherMap:', error);
+            this.loadWeatherFromOpenWeatherMap();
+          }
+        });
+    } else {
+      this.loadWeatherFromOpenWeatherMap();
+    }
   }
 
-  private loadDailyQuote() {
-    // API de Quotable - completamente gratuita y funcional
-    this.http.get<{content: string, author: string}>('https://api.quotable.io/random?tags=motivational,education,wisdom')
-      .subscribe({
-        next: (data) => this.dailyQuote.set({ text: data.content, author: data.author }),
-        error: () => {
-          // Fallback con frases locales motivacionales
-          const quotes = [
-            { text: 'La educación es el arma más poderosa que puedes usar para cambiar el mundo.', author: 'Nelson Mandela' },
-            { text: 'El éxito es la suma de pequeños esfuerzos repetidos día tras día.', author: 'Robert Collier' },
-            { text: 'No esperes el momento perfecto. Toma el momento y hazlo perfecto.', author: 'Zoey Sayward' }
-          ];
-          this.dailyQuote.set(quotes[Math.floor(Math.random() * quotes.length)]);
-        }
-      });
+  private loadWeatherFromOpenWeatherMap() {
+    // OpenWeatherMap - API alternativa
+    const apiKey = environment.openWeatherApiKey;
+    if (apiKey && apiKey !== 'TU_CLAVE_OPENWEATHER_AQUI') {
+      this.http.get<any>(`https://api.openweathermap.org/data/2.5/weather?q=Lima,PE&appid=${apiKey}&units=metric`)
+        .subscribe({
+          next: (data) => {
+            console.log('✅ [WEATHER] Datos obtenidos de OpenWeatherMap:', data);
+            const weatherData: WeatherData = {
+              location: { name: data.name, country: data.sys.country },
+              current: {
+                temp_c: Math.round(data.main.temp),
+                condition: { 
+                  text: data.weather[0].description,
+                  icon: `https://openweathermap.org/img/w/${data.weather[0].icon}.png`
+                },
+                humidity: data.main.humidity,
+                wind_kph: Math.round(data.wind.speed * 3.6)
+              }
+            };
+            this.weather.set(weatherData);
+          },
+          error: (error) => {
+            console.warn('⚠️ [WEATHER] Error con OpenWeatherMap, usando datos estáticos:', error);
+            this.loadWeatherStatic();
+          }
+        });
+    } else {
+      this.loadWeatherStatic();
+    }
+  }
+
+  private loadWeatherStatic() {
+    // Datos estáticos como fallback
+    const weatherData: WeatherData = {
+      location: { name: 'Lima', country: 'Perú' },
+      current: {
+        temp_c: 22,
+        condition: { 
+          text: 'Parcialmente nublado',
+          icon: '//cdn.weatherapi.com/weather/64x64/day/116.png'
+        },
+        humidity: 75,
+        wind_kph: 12
+      }
+    };
+    this.weather.set(weatherData);
   }
 
  
@@ -229,6 +236,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     this.http.get<any>('https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/mundo/rss.xml')
       .subscribe({
         next: (data) => {
+          console.log('✅ [NEWS] Noticias obtenidas de RSS2JSON:', data);
           const articles: NewsItem[] = data.items?.slice(0, 5).map((item: any) => ({
             title: item.title,
             description: item.description?.replace(/<[^>]*>/g, '').substring(0, 100) + '...',
@@ -239,63 +247,139 @@ export class WelcomeComponent implements OnInit, OnDestroy {
           })) || [];
           this.worldNews.set(articles);
         },
-        error: () => {
-          // Usar JSONPlaceholder para datos de ejemplo
-          this.http.get<any[]>('https://jsonplaceholder.typicode.com/posts?_limit=5')
-            .subscribe({
-              next: (posts) => {
-                const articles: NewsItem[] = posts.map(post => ({
-                  title: post.title.charAt(0).toUpperCase() + post.title.slice(1),
-                  description: post.body.substring(0, 100) + '...',
-                  url: '#',
-                  urlToImage: '',
-                  publishedAt: new Date().toISOString(),
-                  source: { name: 'Noticias Académicas' }
-                }));
-                this.worldNews.set(articles);
-              },
-              error: () => {}
-            });
+        error: (error) => {
+          console.warn('⚠️ [NEWS] Error con RSS2JSON, intentando JSONPlaceholder:', error);
+          this.loadNewsFromJSONPlaceholder();
         }
       });
   }
 
-  private loadCryptoPrices() {
-    // CoinGecko API - completamente gratuita
-    this.http.get<CryptoPrice[]>('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,cardano&order=market_cap_desc&per_page=3&page=1')
+  private loadNewsFromJSONPlaceholder() {
+    // JSONPlaceholder como fallback
+    this.http.get<any[]>('https://jsonplaceholder.typicode.com/posts?_limit=5')
       .subscribe({
-        next: (data) => this.cryptoPrices.set(data),
-        error: () => {}
+        next: (posts) => {
+          console.log('✅ [NEWS] Noticias obtenidas de JSONPlaceholder:', posts);
+          const articles: NewsItem[] = posts.map(post => ({
+            title: post.title.charAt(0).toUpperCase() + post.title.slice(1),
+            description: post.body.substring(0, 100) + '...',
+            url: '#',
+            urlToImage: '',
+            publishedAt: new Date().toISOString(),
+            source: { name: 'Noticias Académicas' }
+          }));
+          this.worldNews.set(articles);
+        },
+        error: (error) => {
+          console.warn('⚠️ [NEWS] Error con JSONPlaceholder, usando noticias estáticas:', error);
+          this.loadNewsStatic();
+        }
       });
+  }
+
+  private loadNewsStatic() {
+    // Noticias estáticas como fallback
+    const articles: NewsItem[] = [
+      {
+        title: 'Avances en la Educación Digital',
+        description: 'Las nuevas tecnologías están transformando la forma en que aprendemos y enseñamos en las instituciones educativas...',
+        url: '#',
+        urlToImage: '',
+        publishedAt: new Date().toISOString(),
+        source: { name: 'Noticias Académicas' }
+      },
+      {
+        title: 'Innovación en el Sistema Educativo',
+        description: 'Las metodologías modernas están revolucionando la educación tradicional, mejorando la experiencia de aprendizaje...',
+        url: '#',
+        urlToImage: '',
+        publishedAt: new Date().toISOString(),
+        source: { name: 'Noticias Académicas' }
+      },
+      {
+        title: 'Tecnología al Servicio de la Educación',
+        description: 'Las herramientas digitales están facilitando el acceso a la educación de calidad para todos los estudiantes...',
+        url: '#',
+        urlToImage: '',
+        publishedAt: new Date().toISOString(),
+        source: { name: 'Noticias Académicas' }
+      }
+    ];
+    this.worldNews.set(articles);
   }
 
   private loadCountryInfo() {
     // REST Countries API - completamente gratuita
-    this.http.get<CountryInfo[]>('https://restcountries.com/v3.1/name/peru')
+    this.http.get<CountryInfo[]>(`${environment.restCountriesApiUrl}/name/peru`)
       .subscribe({
         next: (data) => {
+          console.log('✅ [COUNTRY] Información obtenida de REST Countries:', data);
           if (data && data.length > 0) {
             this.countryInfo.set(data[0]);
           }
         },
-        error: () => {}
+        error: (error) => {
+          console.warn('⚠️ [COUNTRY] Error con REST Countries, usando datos estáticos:', error);
+          this.loadCountryStatic();
+        }
       });
+  }
+
+  private loadCountryStatic() {
+    // Información estática de Perú como fallback
+    const peruInfo: CountryInfo = {
+      name: { common: 'Perú' },
+      capital: ['Lima'],
+      region: 'Americas',
+      population: 32971846,
+      flags: { png: 'https://flagcdn.com/w320/pe.png' }
+    };
+    this.countryInfo.set(peruInfo);
   }
 
   private loadUpcomingHolidays() {
     // Nager.Date API - días festivos gratuitos
     const currentYear = new Date().getFullYear();
-    this.http.get<HolidayInfo[]>(`https://date.nager.at/api/v3/PublicHolidays/${currentYear}/PE`)
+    this.http.get<HolidayInfo[]>(`${environment.holidaysApiUrl}/PublicHolidays/${currentYear}/PE`)
       .subscribe({
         next: (data) => {
+          console.log('✅ [HOLIDAYS] Días festivos obtenidos de Nager.Date:', data);
           const now = new Date();
           const upcoming = data
             .filter(holiday => new Date(holiday.date) > now)
             .slice(0, 3);
           this.upcomingHolidays.set(upcoming);
         },
-        error: () => {}
+        error: (error) => {
+          console.warn('⚠️ [HOLIDAYS] Error con Nager.Date, usando datos estáticos:', error);
+          this.loadHolidaysStatic();
+        }
       });
+  }
+
+  private loadHolidaysStatic() {
+    // Días festivos estáticos de Perú como fallback
+    const holidays: HolidayInfo[] = [
+      {
+        date: '2025-01-01',
+        localName: 'Año Nuevo',
+        name: 'New Year\'s Day',
+        countryCode: 'PE'
+      },
+      {
+        date: '2025-04-20',
+        localName: 'Domingo de Resurrección',
+        name: 'Easter Sunday',
+        countryCode: 'PE'
+      },
+      {
+        date: '2025-07-28',
+        localName: 'Día de la Independencia',
+        name: 'Independence Day',
+        countryCode: 'PE'
+      }
+    ];
+    this.upcomingHolidays.set(holidays);
   }
 
   private loadGlobalTimes() {
@@ -307,9 +391,10 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     ];
 
     timeZones.forEach(tz => {
-      this.http.get<any>(`https://worldtimeapi.org/api/timezone/${tz.zone}`)
+      this.http.get<any>(`${environment.worldTimeApiUrl}/timezone/${tz.zone}`)
         .subscribe({
           next: (data) => {
+            console.log(`✅ [TIME] Hora obtenida para ${tz.city}:`, data);
             const time = new Date(data.datetime).toLocaleTimeString('es-ES', { 
               hour: '2-digit', 
               minute: '2-digit' 
@@ -317,9 +402,22 @@ export class WelcomeComponent implements OnInit, OnDestroy {
             const current = this.globalTimeZones();
             this.globalTimeZones.set([...current, { city: tz.city, time }]);
           },
-          error: () => {}
+          error: (error) => {
+            console.warn(`⚠️ [TIME] Error con WorldTimeAPI para ${tz.city}, usando hora estática:`, error);
+            this.loadTimeStatic();
+          }
         });
     });
+  }
+
+  private loadTimeStatic() {
+    // Horarios globales estáticos como fallback
+    const times = [
+      { city: 'Nueva York', time: '10:30 AM' },
+      { city: 'Londres', time: '3:30 PM' },
+      { city: 'Tokio', time: '11:30 PM' }
+    ];
+    this.globalTimeZones.set(times);
   }
 
   getUserPhoto(): string {
@@ -378,48 +476,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     return 'Noche tardía';
   }
 
-  getPersonalizedMessage(): string {
-    if (this.welcomeMessage) return this.welcomeMessage;
-    
-    const hour = new Date().getHours();
-    const user = this.currentUser();
-    
-    let firstName = user?.username || '';
-    if (user?.auxiliar) {
-      firstName = user.auxiliar.nombre;
-    } else if (user?.alumno) {
-      firstName = user.alumno.nombre;
-    } else if (user?.director) {
-      firstName = user.director.nombres;
-    } else if (user?.administrador) {
-      firstName = user.administrador.nombres;
-    }
-    
-    const messages = {
-      morning: [
-        `${firstName}, ¡que tengas un excelente día de aprendizaje! Todo está listo para que alcances tus metas académicas.`,
-        `Es un nuevo día lleno de oportunidades, ${firstName}. Tu progreso académico te está esperando.`,
-        `¡Perfecto momento para comenzar, ${firstName}! Tienes todo lo necesario para un día productivo.`
-      ],
-      afternoon: [
-        `¡Esperamos que tu día esté siendo productivo, ${firstName}! Continúa con el gran trabajo que vienes realizando.`,
-        `La tarde es perfecta para revisar tu progreso, ${firstName}. Sigues avanzando hacia tus objetivos.`,
-        `¡Buen trabajo hasta ahora, ${firstName}! Mantén el momentum para terminar el día con éxito.`
-      ],
-      evening: [
-        `¡Buen trabajo hoy, ${firstName}! Es tiempo de revisar lo logrado y planificar el día de mañana.`,
-        `La noche es ideal para reflexionar sobre tus logros, ${firstName}. Has hecho un gran progreso.`,
-        `${firstName}, tu dedicación es admirable. Aprovecha este momento para organizar tus próximas actividades.`
-      ]
-    };
 
-    let timeMessages;
-    if (hour < 12) timeMessages = messages.morning;
-    else if (hour < 18) timeMessages = messages.afternoon;
-    else timeMessages = messages.evening;
-
-    return timeMessages[Math.floor(Math.random() * timeMessages.length)];
-  }
 
   getRoleDisplay(role: string): string {
     const roleMap: { [key: string]: string } = {

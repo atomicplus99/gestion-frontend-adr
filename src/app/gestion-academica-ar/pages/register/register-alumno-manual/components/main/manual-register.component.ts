@@ -51,6 +51,8 @@ export class ManualRegisterAlumnoComponent implements OnInit {
 
   constructor() {
     this.alumnoForm = this.createForm();
+    // Asegurar que turnos siempre sea un array
+    this.turnos = [];
   }
 
   ngOnInit() {
@@ -63,7 +65,7 @@ export class ManualRegisterAlumnoComponent implements OnInit {
       nombre: ['', [Validators.required, Validators.maxLength(100)]],
       codigo: ['', [Validators.required, Validators.pattern(/^\d{14}$/)]],
       apellido: ['', [Validators.required, Validators.maxLength(100)]],
-      fechaNacimiento: ['', [Validators.required, ValidationService.validarEdad()]],
+      fechaNacimiento: ['', [Validators.required]],
       dni: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
       direccion: ['', [Validators.required, Validators.maxLength(100)]],
       
@@ -76,22 +78,23 @@ export class ManualRegisterAlumnoComponent implements OnInit {
   }
 
   obtenerTurnos() {
-    console.log('🔄 [MANUAL-REGISTER] Iniciando obtención de turnos...');
     this.turnoService.obtenerTurnos().subscribe({
       next: (turnos) => {
-        console.log('✅ [MANUAL-REGISTER] Turnos recibidos del servicio:', turnos);
-        console.log('✅ [MANUAL-REGISTER] Tipo de turnos:', typeof turnos);
-        console.log('✅ [MANUAL-REGISTER] Es array:', Array.isArray(turnos));
-        console.log('✅ [MANUAL-REGISTER] Cantidad de turnos:', turnos?.length || 0);
-        console.log('✅ [MANUAL-REGISTER] Turnos individuales:', turnos);
-        
-        this.turnos = turnos;
-        console.log('✅ [MANUAL-REGISTER] Turnos asignados al componente:', this.turnos);
+        // Asegurar que turnos sea siempre un array
+        if (Array.isArray(turnos)) {
+          this.turnos = turnos;
+          console.log('✅ [MANUAL-REGISTER] Turnos asignados correctamente:', this.turnos);
+        } else {
+          console.warn('⚠️ [MANUAL-REGISTER] Respuesta inesperada, asignando array vacío');
+          this.turnos = [];
+        }
         this.cd.markForCheck();
       },
       error: (error) => {
         console.error('❌ [MANUAL-REGISTER] Error al obtener turnos:', error);
-        console.error('❌ [MANUAL-REGISTER] Error completo:', error);
+        
+        // En caso de error, asignar array vacío para evitar errores en el template
+        this.turnos = [];
         
         // Mostrar mensaje específico según el tipo de error
         if (error?.status === 0) {
@@ -101,6 +104,8 @@ export class ManualRegisterAlumnoComponent implements OnInit {
         } else {
           this.alerts.error('No se pudo cargar los turnos. Inténtalo más tarde.');
         }
+        
+        this.cd.markForCheck();
       }
     });
   }
@@ -175,11 +180,13 @@ export class ManualRegisterAlumnoComponent implements OnInit {
       next: async (response) => {
         this.alerts.success('Alumno registrado exitosamente');
         this.resetForm();
+        this.isSubmitting = false;
         this.cd.markForCheck();
       },
       error: (err) => {
         console.error('❌ [MANUAL-REGISTER] Error del backend:', err);
         this.alerts.error('Error al registrar alumno: ' + (err?.error?.message || err?.message || 'Error desconocido'));
+        this.isSubmitting = false;
         this.cd.markForCheck();
       },
       complete: () => {

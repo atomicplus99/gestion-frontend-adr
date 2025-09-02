@@ -275,7 +275,7 @@ export class TableStudentComponent implements OnChanges, OnInit {
 
   private validarFormulario(): string | null {
     if (!this.alumnoEditando) return 'No hay datos para validar';
-    if (this.alumnoEditando.codigo.length !== 14) return 'El código debe tener exactamente 14 dígitos';
+    if (this.alumnoEditando.codigo.length < 1) return 'El código debe tener al menos 1 dígito';
     if (this.alumnoEditando.dni_alumno.length !== 8) return 'El DNI debe tener exactamente 8 dígitos';
     if (this.alumnoEditando.nombre.length > 100) return 'El nombre no puede superar los 100 caracteres';
     if (this.alumnoEditando.apellido.length > 100) return 'El apellido no puede superar los 100 caracteres';

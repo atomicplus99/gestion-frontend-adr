@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, tap, catchError } from 'rxjs';
+import { Observable, tap, catchError, map } from 'rxjs';
 import { Turno } from '../interfaces/turno.interface';
 import { environment } from '../../../environments/environment';
 
@@ -11,28 +11,29 @@ export class TurnoService {
   constructor(private http: HttpClient) {}
 
   obtenerTurnos(): Observable<Turno[]> {
-    console.log('🔄 [TURNO-SERVICE] Iniciando petición GET a /turno...');
-    console.log('🔄 [TURNO-SERVICE] URL completa:', this.API_URL);
-    console.log('🔄 [TURNO-SERVICE] Environment API URL:', environment.apiUrl);
-    
     // Crear headers personalizados para evitar el interceptor
     const headers = new HttpHeaders({
       'Content-Type': 'application/json'
     });
     
-    console.log('🔄 [TURNO-SERVICE] Headers creados:', headers);
-    console.log('🔄 [TURNO-SERVICE] Usando HttpClient...');
-    
-    return this.http.get<Turno[]>(this.API_URL, { headers }).pipe(
-      tap(response => {
-        console.log('✅ [TURNO-SERVICE] Respuesta exitosa:', response);
+    return this.http.get<any>(this.API_URL, { headers }).pipe(
+      map(response => {
+        // Manejar respuesta anidada del backend
+        if (response && response.data && Array.isArray(response.data)) {
+          return response.data;
+        } else if (Array.isArray(response)) {
+          return response;
+        } else {
+          console.warn('⚠️ [TURNO-SERVICE] Respuesta inesperada del backend:', response);
+          return [];
+        }
+      }),
+      tap(turnos => {
+        console.log('✅ [TURNO-SERVICE] Turnos procesados:', turnos);
+        console.log('✅ [TURNO-SERVICE] Cantidad de turnos:', turnos.length);
       }),
       catchError(error => {
         console.error('❌ [TURNO-SERVICE] Error al obtener turnos:', error);
-        console.error('❌ [TURNO-SERVICE] Status:', error?.status);
-        console.error('❌ [TURNO-SERVICE] StatusText:', error?.statusText);
-        console.error('❌ [TURNO-SERVICE] URL:', error?.url);
-        console.error('❌ [TURNO-SERVICE] Error completo:', error);
         throw error;
       })
     );

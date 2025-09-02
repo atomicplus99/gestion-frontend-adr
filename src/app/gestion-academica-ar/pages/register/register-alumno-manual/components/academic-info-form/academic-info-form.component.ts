@@ -35,7 +35,7 @@ import { Turno } from '../../interfaces/AlumnoRegister.interface';
               <select formControlName="turno"
                 class="w-full pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none appearance-none bg-white transition-colors">
                 <option value="" disabled selected>Selecciona turno</option>
-                <option *ngFor="let t of turnos" [value]="t.id_turno">
+                <option *ngFor="let t of turnosSeguros" [value]="t.id_turno">
                   {{ t.turno }} ({{ t.hora_inicio }} - {{ t.hora_fin }})
                 </option>
               </select>
@@ -130,6 +130,11 @@ export class AcademicInfoFormComponent implements OnInit {
   grados: string[] = [];
   secciones: string[] = [];
   nivelesEducativos: string[] = [];
+
+  // Getter para asegurar que turnos sea siempre un array
+  get turnosSeguros(): Turno[] {
+    return Array.isArray(this.turnos) ? this.turnos : [];
+  }
 
   ngOnInit() {
     this.secciones = this.gradosService.obtenerSecciones();
