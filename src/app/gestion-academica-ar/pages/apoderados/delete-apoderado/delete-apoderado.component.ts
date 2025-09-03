@@ -37,7 +37,7 @@ export class DeleteApoderadoComponent implements OnInit {
 
     // ✅ Validación de seguridad
     if (!filtered || !Array.isArray(filtered)) {
-      console.warn('⚠️ [FILTRO] Apoderados no es un array válido:', filtered);
+      
       return [];
     }
 
@@ -85,7 +85,7 @@ export class DeleteApoderadoComponent implements OnInit {
       const apoderados = await firstValueFrom(this.apoderadoService.getAllApoderados());
       this.apoderados.set(apoderados || []);
     } catch (error) {
-      console.error('Error al cargar apoderados:', error);
+      
       this.showError('Error al cargar los apoderados');
       this.apoderados.set([]);
     } finally {
@@ -128,7 +128,7 @@ export class DeleteApoderadoComponent implements OnInit {
       await this.loadApoderados();
 
     } catch (error) {
-      console.error('Error al eliminar apoderado:', error);
+      
       this.showError('Error al eliminar el apoderado. Intenta nuevamente.');
     } finally {
       this.isLoading.set(false);

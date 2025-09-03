@@ -12,7 +12,7 @@ import { Alumno, Apoderado, ApoderadosResponseDto, AlumnosResponseDto, ErrorResp
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="container mx-auto px-4 py-8 max-w-7xl">
+    <div class="w-full px-4 py-8 min-h-screen bg-white">
       <!-- Header -->
       <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Asignar Alumnos a Apoderado</h1>
@@ -171,15 +171,7 @@ import { Alumno, Apoderado, ApoderadosResponseDto, AlumnosResponseDto, ErrorResp
             </div>
           }
 
-          <!-- Botón temporal para debug -->
-          <div class="mb-4 flex justify-center">
-            <button
-              (click)="toggleFilterForDebug()"
-              class="px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white rounded-lg hover:from-yellow-500 hover:to-yellow-600 text-sm font-medium shadow-md transition-all duration-200 hover:shadow-lg">
-              <i class="fas fa-search mr-2"></i>
-              Debug: Cambiar Filtro (Actual: {{ filterStatus() }})
-            </button>
-          </div>
+          
 
           <!-- Filtros y Paginación -->
           <div class="mb-6 grid grid-cols-1 lg:grid-cols-5 gap-4">
@@ -655,12 +647,11 @@ export class AssignStudentsComponent implements OnInit {
     let filtered = this.apoderados();
     
     // ✅ Debug: verificar datos disponibles
-    console.log('🔍 [ASIGNAR-APODERADO] Total apoderados cargados:', filtered.length);
-    console.log('🔍 [ASIGNAR-APODERADO] Término de búsqueda:', this.searchApoderado());
+    
     
     if (this.searchApoderado()) {
       const term = this.searchApoderado().toLowerCase();
-      console.log('🔍 [ASIGNAR-APODERADO] Buscando término:', term);
+      
       
       filtered = filtered.filter(apoderado => {
         const matches = 
@@ -669,14 +660,12 @@ export class AssignStudentsComponent implements OnInit {
           (apoderado.dni && apoderado.dni.toLowerCase().includes(term)) ||
           apoderado.tipo_relacion.toLowerCase().includes(term);
         
-        if (matches) {
-          console.log('✅ [ASIGNAR-APODERADO] Apoderado encontrado:', apoderado.nombre, apoderado.dni);
-        }
+        
         
         return matches;
       });
       
-      console.log('🔍 [ASIGNAR-APODERADO] Apoderados filtrados:', filtered.length);
+      
     }
     
     return filtered;
@@ -688,14 +677,11 @@ export class AssignStudentsComponent implements OnInit {
     
     // ✅ Validación de seguridad
     if (!filtered || !Array.isArray(filtered)) {
-      console.warn('⚠️ [FILTRO] Alumnos no es un array válido:', filtered);
+      
       return [];
     }
     
-    console.log('🔍 [FILTRO] Total alumnos antes de filtrar:', filtered.length);
-    console.log('🔍 [FILTRO] Estado del filtro:', this.filterStatus());
-    console.log('🔍 [FILTRO] Alumnos con apoderado:', filtered.filter(a => a.apoderado).length);
-    console.log('🔍 [FILTRO] Alumnos sin apoderado:', filtered.filter(a => !a.apoderado).length);
+    
 
     // Search filter
     if (this.searchTerm()) {
@@ -706,37 +692,37 @@ export class AssignStudentsComponent implements OnInit {
         alumno.codigo.toLowerCase().includes(term) ||
         alumno.dni_alumno.toLowerCase().includes(term)
       );
-      console.log('🔍 [FILTRO] Después de búsqueda:', filtered.length);
+      
     }
 
     // Nivel filter
     if (this.filterNivel()) {
       filtered = filtered.filter(alumno => alumno.nivel === this.filterNivel());
-      console.log('🔍 [FILTRO] Después de nivel:', filtered.length);
+      
     }
 
     // Grado filter
     if (this.filterGrado()) {
       filtered = filtered.filter(alumno => alumno.grado.toString() === this.filterGrado());
-      console.log('🔍 [FILTRO] Después de grado:', filtered.length);
+      
     }
 
     // Status filter
     if (this.filterStatus() === 'sin-apoderado') {
       filtered = filtered.filter(alumno => !alumno.apoderado);
-      console.log('🔍 [FILTRO] Después de filtro sin-apoderado:', filtered.length);
+      
     } else if (this.filterStatus() === 'con-apoderado') {
       filtered = filtered.filter(alumno => alumno.apoderado);
-      console.log('🔍 [FILTRO] Después de filtro con-apoderado:', filtered.length);
+      
     } else if (this.filterStatus() === 'asignado-este') {
       filtered = filtered.filter(alumno => this.isInitiallyAssigned(alumno.id_alumno));
-      console.log('🔍 [FILTRO] Después de filtro asignado-este:', filtered.length);
+      
     } else if (this.filterStatus() === 'todos') {
       // No filtrar por estado - mostrar todos
-      console.log('🔍 [FILTRO] Mostrando todos los alumnos sin filtrar por estado');
+      
     }
 
-    console.log('🔍 [FILTRO] Total alumnos después de filtrar:', filtered.length);
+    
     return filtered;
   });
 
@@ -745,7 +731,7 @@ export class AssignStudentsComponent implements OnInit {
     
     // ✅ Validación de seguridad adicional
     if (!filtered || !Array.isArray(filtered)) {
-      console.warn('⚠️ [PAGINACIÓN] Alumnos filtrados no es un array válido:', filtered);
+      
       return [];
     }
     
@@ -753,10 +739,7 @@ export class AssignStudentsComponent implements OnInit {
     const end = start + this.itemsPerPage();
     const paginated = filtered.slice(start, end);
     
-    console.log('🔍 [PAGINACIÓN] Alumnos filtrados:', filtered.length);
-    console.log('🔍 [PAGINACIÓN] Página actual:', this.currentPage());
-    console.log('🔍 [PAGINACIÓN] Alumnos por página:', this.itemsPerPage());
-    console.log('🔍 [PAGINACIÓN] Alumnos en esta página:', paginated.length);
+    
     
     return paginated;
   });
@@ -829,14 +812,14 @@ export class AssignStudentsComponent implements OnInit {
       newFilter = 'todos';
     }
     
-    console.log('🔄 [DEBUG] Cambiando filtro de', currentFilter, 'a', newFilter);
+    
     this.filterStatus.set(newFilter);
     this.resetPagination();
   }
 
   async loadData() {
     try {
-      console.log('🔄 [ASIGNAR-APODERADO] Iniciando carga de datos...');
+      
       
       // ✅ Usar firstValueFrom en lugar de toPromise() para evitar problemas de iteración
       const [apoderadosResponse, alumnosResponse] = await Promise.all([
@@ -844,8 +827,7 @@ export class AssignStudentsComponent implements OnInit {
         firstValueFrom(this.alumnoService.getAllAlumnos()).then(result => result || {})
       ]);
 
-      console.log('🔍 [ASIGNAR-APODERADO] Respuesta apoderados del backend:', apoderadosResponse);
-      console.log('🔍 [ASIGNAR-APODERADO] Respuesta alumnos del backend:', alumnosResponse);
+      
 
             // ✅ Función helper para extraer datos del backend
       const extractData = (response: any): any[] => {
@@ -871,34 +853,26 @@ export class AssignStudentsComponent implements OnInit {
 
 
 
-      console.log('🔍 [ASIGNAR-APODERADO] Apoderados extraídos:', apoderados);
-      console.log('🔍 [ASIGNAR-APODERADO] Alumnos extraídos:', alumnos);
-      console.log('🔍 [ASIGNAR-APODERADO] Apoderados array final:', apoderadosArray);
-      console.log('🔍 [ASIGNAR-APODERADO] Alumnos array final:', alumnosArray);
+      
 
       // ✅ Log detallado de la estructura de los primeros alumnos
       if (alumnosArray.length > 0) {
-        console.log('🔍 [ASIGNAR-APODERADO] Primer alumno completo:', alumnosArray[0]);
-        console.log('🔍 [ASIGNAR-APODERADO] ¿Tiene apoderado?', !!alumnosArray[0].apoderado);
-        console.log('🔍 [ASIGNAR-APODERADO] Propiedades del alumno:', Object.keys(alumnosArray[0]));
+        
         
         // ✅ Verificar si hay alumnos con apoderado
         const alumnosConApoderado = alumnosArray.filter(a => a.apoderado);
         const alumnosSinApoderado = alumnosArray.filter(a => !a.apoderado);
-        console.log('🔍 [ASIGNAR-APODERADO] Alumnos con apoderado:', alumnosConApoderado.length);
-        console.log('🔍 [ASIGNAR-APODERADO] Alumnos sin apoderado:', alumnosSinApoderado.length);
         
-        if (alumnosConApoderado.length > 0) {
-          console.log('🔍 [ASIGNAR-APODERADO] Ejemplo de alumno con apoderado:', alumnosConApoderado[0]);
-        }
+        
+        
       }
 
       this.apoderados.set(apoderadosArray);
       this.alumnos.set(alumnosArray);
       
-      console.log('✅ [ASIGNAR-APODERADO] Datos establecidos - Apoderados:', apoderadosArray.length, 'Alumnos:', alumnosArray.length);
+      
     } catch (error) {
-      console.error('❌ [ASIGNAR-APODERADO] Error al cargar datos:', error);
+      
       this.showError('Error al cargar los datos');
       // ✅ Establecer arrays vacíos en caso de error
       this.apoderados.set([]);
@@ -1024,9 +998,7 @@ export class AssignStudentsComponent implements OnInit {
       const promises = [];
       
       // ✅ Debug: verificar qué cambios se van a aplicar
-      console.log('🔍 [ASIGNAR-APODERADO] Apoderado ID:', apoderadoId);
-      console.log('🔍 [ASIGNAR-APODERADO] Estudiantes a agregar:', this.studentsToAdd());
-      console.log('🔍 [ASIGNAR-APODERADO] Estudiantes a remover:', this.studentsToRemove());
+      
       
       // ✅ Validación adicional: verificar si hay alumnos que ya tienen apoderado
       const allAlumnos = this.alumnos();
@@ -1037,8 +1009,7 @@ export class AssignStudentsComponent implements OnInit {
       });
       
       if (alumnosConOtroApoderado.length > 0) {
-        console.log('⚠️ [ASIGNAR-APODERADO] Advertencia: Alumnos que ya tienen otro apoderado:', alumnosConOtroApoderado);
-        console.log('⚠️ [ASIGNAR-APODERADO] El backend debería rechazar esta operación con código 409');
+        
       }
 
       // Asignar nuevos estudiantes
@@ -1063,14 +1034,14 @@ export class AssignStudentsComponent implements OnInit {
       const results = await Promise.all(promises);
       
       // ✅ Debug: verificar respuestas del backend
-      console.log('✅ [ASIGNAR-APODERADO] Respuestas del backend:', results);
+      
       
       // ✅ Verificar si las operaciones fueron exitosas
       for (const result of results) {
         if (result && typeof result === 'object' && 'success' in result) {
           const response = result as any;
           if (response.success) {
-            console.log('✅ [ASIGNAR-APODERADO] Operación exitosa:', response.message);
+            
           }
         }
       }
@@ -1086,7 +1057,7 @@ export class AssignStudentsComponent implements OnInit {
     } catch (error: any) {
       // ✅ Manejar específicamente el código 409 (Conflict) del backend
       if (error.status === 409) {
-        console.error('❌ [ASIGNAR-APODERADO] Error 409 - Alumnos ya tienen apoderado:', error);
+        
         
         // Extraer información específica del error del backend con tipado fuerte
         const errorData = error.error as ConflictErrorResponseDto;
@@ -1115,13 +1086,13 @@ export class AssignStudentsComponent implements OnInit {
         const errorData = error.error as AssignmentErrorResponseDto;
         const errorMessage = errorData?.message || 'Error en la solicitud';
         this.showError(`❌ Error: ${errorMessage}`);
-        console.error('❌ [ASIGNAR-APODERADO] Error 400 - ASSIGNMENT_ERROR:', error);
+        
         
       } else {
         // ✅ Otros errores (500, 404, etc.)
         const errorMessage = error.error?.message || 'Error al guardar los cambios';
         this.showError(`❌ Error: ${errorMessage}`);
-        console.error('❌ [ASIGNAR-APODERADO] Error general:', error);
+        
       }
     } finally {
     }

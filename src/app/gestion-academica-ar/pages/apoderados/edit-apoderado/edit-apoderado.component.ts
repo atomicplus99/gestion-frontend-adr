@@ -86,13 +86,10 @@ export class ApoderadoSearchAndEditComponent {
         this.searchExecuted.set(true);
         
         // ✅ Debug: verificar qué se está estableciendo
-        console.log('🔍 [EDIT-APODERADO] Búsqueda por DNI:', this.searchDni);
-        console.log('🔍 [EDIT-APODERADO] Respuesta completa del backend:', response);
-        console.log('🔍 [EDIT-APODERADO] Apoderado extraído:', apoderado);
-        console.log('🔍 [EDIT-APODERADO] Resultados establecidos:', results);
+        
       },
       error: (error) => {
-        console.error('Error searching by DNI:', error);
+        
         this.searchResults.set([]);
         this.searching.set(false);
         this.searchExecuted.set(true);
@@ -122,12 +119,10 @@ export class ApoderadoSearchAndEditComponent {
         this.searchExecuted.set(true);
         
         // ✅ Debug: verificar qué se está estableciendo
-        console.log('🔍 [EDIT-APODERADO] Búsqueda por nombre:', this.searchName);
-        console.log('🔍 [EDIT-APODERADO] Apoderados totales:', apoderadosArray.length);
-        console.log('🔍 [EDIT-APODERADO] Resultados filtrados:', filtered.length);
+        
       },
       error: (error) => {
-        console.error('Error searching by name:', error);
+        
         this.searchResults.set([]);
         this.searching.set(false);
         this.searchExecuted.set(true);
@@ -211,8 +206,7 @@ export class ApoderadoSearchAndEditComponent {
         this.successMessage.set(fullMessage);
         
         // ✅ Debug: verificar la respuesta
-        console.log('✅ [EDIT-APODERADO] Respuesta de actualización:', response);
-        console.log('✅ [EDIT-APODERADO] Mensaje de éxito:', successMsg);
+        
         
         // Actualizar el apoderado seleccionado con los nuevos datos
         this.selectedApoderado.set(updatedApoderado);
@@ -278,7 +272,7 @@ export class ApoderadoSearchAndEditComponent {
   }
 
   private handleError(error: any): void {
-    console.error('Error:', error);
+    
     
     if (error.status === 409) {
       this.errorMessage.set('Ya existe un apoderado con este DNI');

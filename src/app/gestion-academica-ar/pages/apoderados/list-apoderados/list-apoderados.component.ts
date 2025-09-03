@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil, finalize } from 'rxjs';
 import { Apoderado, TipoRelacion } from '../models/ApoderadoDtos';
 import { ApoderadoService } from '../apoderado.service';
+import { ChangeDetectorRef } from '@angular/core';
 
 
 @Component({
@@ -16,6 +17,7 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
   private apoderadoService = inject(ApoderadoService);
   private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
+  private cdr = inject(ChangeDetectorRef);
 
   // Estado del componente
   apoderados: Apoderado[] = [];
@@ -132,31 +134,27 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
 
     this.apoderadoService.getAll()
       .pipe(
-        finalize(() => this.loading = false),
+        finalize(() => { this.loading = false; this.cdr.detectChanges(); }),
         takeUntil(this.destroy$)
       )
       .subscribe({
         next: (response: any) => {
-          // Manejar diferentes tipos de respuesta del backend
           let apoderados: Apoderado[] = [];
-          
           if (Array.isArray(response)) {
-            // Si la respuesta es directamente un array
             apoderados = response;
           } else if (response && typeof response === 'object' && 'data' in response) {
-            // Si la respuesta tiene estructura {success, message, data}
             apoderados = Array.isArray(response.data) ? response.data : [];
           }
-          
           this.originalApoderados = apoderados;
           this.apoderados = [...apoderados];
           this.filteredApoderados = [...apoderados];
           this.updatePagination();
           this.updatePaginatedData();
+          this.cdr.detectChanges();
         },
-        error: (error) => {
+        error: () => {
           this.error = 'Error al cargar los apoderados';
-          console.error('Error loading apoderados:', error);
+          this.cdr.detectChanges();
         }
       });
   }
@@ -164,7 +162,7 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
   searchByDni(): void {
     const dni = this.searchForm.get('dni')?.value?.trim();
     if (!dni) {
-      this.loadApoderados(); // Recargar todos los apoderados si no hay DNI
+      this.loadApoderados();
       return;
     }
 
@@ -173,29 +171,26 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
 
     this.apoderadoService.getByDni(dni)
       .pipe(
-        finalize(() => this.loading = false),
+        finalize(() => { this.loading = false; this.cdr.detectChanges(); }),
         takeUntil(this.destroy$)
       )
       .subscribe({
         next: (response: any) => {
           let apoderados: Apoderado[] = [];
-          
           if (response && typeof response === 'object' && 'data' in response) {
-            // Si la respuesta tiene estructura {success, message, data}
             if (response.data) {
               apoderados = Array.isArray(response.data) ? response.data : [response.data];
             }
           } else if (response) {
-            // Si la respuesta es directamente el apoderado
             apoderados = [response];
           }
-          
           this.originalApoderados = apoderados;
           this.apoderados = [...apoderados];
           this.filteredApoderados = [...apoderados];
           this.currentPage = 1;
           this.updatePagination();
           this.updatePaginatedData();
+          this.cdr.detectChanges();
         },
         error: (error) => {
           if (error.status === 404) {
@@ -204,8 +199,8 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
             this.updatePaginatedData();
           } else {
             this.error = 'Error al buscar por DNI';
-            console.error('Error searching by DNI:', error);
           }
+          this.cdr.detectChanges();
         }
       });
   }
@@ -216,32 +211,17 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
     const filters = this.advancedFiltersForm.value;
 
     this.filteredApoderados = this.originalApoderados.filter(apoderado => {
-      // Búsqueda por nombre
-      if (nombre && !apoderado.nombre.toLowerCase().includes(nombre)) {
-        return false;
-      }
-
-      // Búsqueda por DNI
-      if (dni && !apoderado.dni?.toLowerCase().includes(dni)) {
-        return false;
-      }
-
-      // Filtro por tipo de relación
-      if (filters.tipoRelacion && apoderado.tipo_relacion !== filters.tipoRelacion) {
-        return false;
-      }
-
-      // Filtro por estado
-      if (filters.estado !== '' && apoderado.activo.toString() !== filters.estado) {
-        return false;
-      }
-
+      if (nombre && !apoderado.nombre.toLowerCase().includes(nombre)) return false;
+      if (dni && !apoderado.dni?.toLowerCase().includes(dni)) return false;
+      if (filters.tipoRelacion && apoderado.tipo_relacion !== filters.tipoRelacion) return false;
+      if (filters.estado !== '' && apoderado.activo.toString() !== filters.estado) return false;
       return true;
     });
 
     this.currentPage = 1;
     this.updatePagination();
     this.updatePaginatedData();
+    this.cdr.detectChanges();
   }
 
   sortBy(field: keyof Apoderado): void {
@@ -255,21 +235,18 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
     this.filteredApoderados.sort((a, b) => {
       const aValue = a[field] || '';
       const bValue = b[field] || '';
-      
-      if (aValue < bValue) {
-        return this.sortDirection === 'asc' ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return this.sortDirection === 'asc' ? 1 : -1;
-      }
+      if (aValue < bValue) return this.sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return this.sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
 
     this.updatePaginatedData();
+    this.cdr.detectChanges();
   }
 
   toggleAdvancedFilters(): void {
     this.showAdvancedFilters = !this.showAdvancedFilters;
+    this.cdr.detectChanges();
   }
 
   clearFilters(): void {
@@ -279,9 +256,9 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
     this.currentPage = 1;
     this.updatePagination();
     this.updatePaginatedData();
+    this.cdr.detectChanges();
   }
 
-  // Métodos de paginación
   updatePagination(): void {
     this.totalItems = this.filteredApoderados.length;
     this.totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
@@ -297,6 +274,7 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
       this.updatePaginatedData();
+      this.cdr.detectChanges();
     }
   }
 
@@ -305,63 +283,31 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
     this.currentPage = 1;
     this.updatePagination();
     this.updatePaginatedData();
+    this.cdr.detectChanges();
   }
 
   getPaginationArray(): number[] {
     const pages: number[] = [];
     const maxVisible = 5;
-    
     let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
     let end = Math.min(this.totalPages, start + maxVisible - 1);
-    
-    if (end - start + 1 < maxVisible) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-    
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    
+    if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
     return pages;
   }
 
-  // Métodos utilitarios para el template
-  getFullName(apoderado: Apoderado): string {
-    return `${apoderado.nombre} ${apoderado.apellido || ''}`.trim();
-  }
+  getFullName(apoderado: Apoderado): string { return `${apoderado.nombre} ${apoderado.apellido || ''}`.trim(); }
+  getPupilosCount(apoderado: Apoderado): number { return apoderado.pupilos?.length || 0; }
+  getTipoRelacionLabel(tipo: TipoRelacion): string { const found = this.tiposRelacion.find(t => t.value === tipo); return found?.label || tipo; }
+  trackByApoderado(index: number, apoderado: Apoderado): string { return apoderado.id_apoderado; }
 
-  getPupilosCount(apoderado: Apoderado): number {
-    return apoderado.pupilos?.length || 0;
-  }
+  refresh(): void { this.loadApoderados(); }
+  trackByApoderadoId(index: number, apoderado: Apoderado): string { return apoderado.id_apoderado; }
+  trackByAlumnoId(index: number, alumno: any): string { return alumno.id_alumno; }
 
-
-
-  getTipoRelacionLabel(tipo: TipoRelacion): string {
-    const found = this.tiposRelacion.find(t => t.value === tipo);
-    return found?.label || tipo;
-  }
-
-  trackByApoderado(index: number, apoderado: Apoderado): string {
-    return apoderado.id_apoderado;
-  }
-
-  refresh(): void {
-    this.loadApoderados();
-  }
-
-  trackByApoderadoId(index: number, apoderado: Apoderado): string {
-    return apoderado.id_apoderado;
-  }
-
-  trackByAlumnoId(index: number, alumno: any): string {
-    return alumno.id_alumno;
-  }
-
-  /**
-   * Selecciona un apoderado para mostrar sus detalles
-   */
   selectApoderado(apoderado: Apoderado): void {
     this.selectedApoderado = apoderado;
+    this.cdr.detectChanges();
   }
 
   /**
@@ -398,6 +344,7 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
     if (this.currentPage > 1) {
       this.currentPage--;
       this.updatePaginatedData();
+      this.cdr.detectChanges();
     }
   }
 
@@ -408,6 +355,7 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
       this.updatePaginatedData();
+      this.cdr.detectChanges();
     }
   }
 }
