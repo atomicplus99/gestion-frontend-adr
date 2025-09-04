@@ -37,7 +37,8 @@ export interface RegistroAsistenciaRequestManual {
   hora_salida?: string;
   estado_asistencia: 'PUNTUAL' | 'TARDANZA';
   motivo: string;
-  id_auxiliar: string;
+  id_auxiliar?: string;
+  id_usuario?: string; // id del administrador o director
   fecha?: string;
 }
 

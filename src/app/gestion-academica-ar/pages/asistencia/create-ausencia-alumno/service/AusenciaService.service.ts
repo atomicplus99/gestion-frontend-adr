@@ -26,6 +26,16 @@ export interface ResponseAusenciaAlumno {
   };
 }
 
+export interface EstudianteInfo {
+  id_alumno: string;
+  codigo: string;
+  nombre: string;
+  apellido: string;
+  seccion: string;
+  grado: number;
+  nivel: string;
+}
+
 // services/asistencia.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
@@ -46,5 +56,9 @@ export class AsistenciaService {
 
   crearAusenciaAlumno(data: RegistroAusenciaAlumno): Observable<ResponseAusenciaAlumno> {
     return this.http.post<ResponseAusenciaAlumno>(`${this.baseUrl}/crear-ausencia-alumno`, data);
+  }
+
+  buscarEstudiantePorCodigo(codigo: string): Observable<EstudianteInfo> {
+    return this.http.get<EstudianteInfo>(`${environment.apiUrl}/alumnos/codigo/${codigo}`);
   }
 }

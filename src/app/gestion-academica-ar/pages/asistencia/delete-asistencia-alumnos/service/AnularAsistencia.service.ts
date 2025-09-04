@@ -42,7 +42,7 @@ export interface Asistencia {
   hora_de_llegada: string;
   hora_salida?: string;
   estado_asistencia: EstadoAsistencia;
-  fecha: Date;
+  fecha: string; // Cambiado de Date a string porque el backend envía string
   alumno: Alumno;
 }
 
@@ -59,12 +59,13 @@ export enum EstadoAsistencia {
   JUSTIFICADO = 'JUSTIFICADO'
 }
 
-// ✅ INTERFACE SIMPLIFICADA - SIN FECHA (SIEMPRE DÍA ACTUAL)
+// ✅ INTERFACE CON ROLES DINÁMICOS Y FECHA OPCIONAL
 export interface AnularAsistenciaRequest {
   codigo_estudiante: string;
   motivo: string;
-  id_auxiliar: string;
-  // fecha se omite - siempre será día actual
+  id_auxiliar?: string; // Para auxiliares
+  id_usuario?: string; // Para administrador o director
+  fecha?: string; // Para fechas específicas (formato YYYY-MM-DD)
 }
 
 export interface AnularAsistenciaResponse {
@@ -106,8 +107,9 @@ export class AsistenciaService {
   }
 
   // ✅ OBTENER ASISTENCIAS DEL DÍA ACTUAL DE UN ALUMNO
-  obtenerAsistenciasHoyAlumno(codigo: string): Observable<Asistencia[]> {
-    console.log(`📋 Obteniendo asistencias de hoy del alumno: ${codigo}`);
+  obtenerAsistenciasAlumno(codigo: string, fecha?: string): Observable<Asistencia[]> {
+    const fechaBusqueda = fecha || this.getFechaHoy();
+    console.log(`📋 Obteniendo asistencias del alumno: ${codigo} para fecha: ${fechaBusqueda}`);
     
     // Definir la interfaz de respuesta del backend
     interface BackendResponse<T> {
@@ -123,17 +125,32 @@ export class AsistenciaService {
           console.log('📋 Respuesta completa del backend:', response);
           const data = response.data;
           
-          // Filtrar solo asistencias del día actual
-          const hoy = new Date();
-          const asistenciasHoy = data.asistencias.filter(asistencia => {
-            const fechaAsistencia = new Date(asistencia.fecha);
-            return this.esMismaFecha(fechaAsistencia, hoy);
+          // Filtrar asistencias de la fecha especificada
+          // Comparar strings directamente para evitar problemas de zona horaria
+          console.log(`🔍 Fecha buscada: ${fechaBusqueda}`);
+          console.log(`📅 Todas las asistencias del alumno:`, data.asistencias.map(a => ({ 
+            id: a.id_asistencia, 
+            fecha: a.fecha, 
+            fechaSplit: a.fecha.split('T')[0] 
+          })));
+          
+          const asistenciasFecha = data.asistencias.filter(asistencia => {
+            // Extraer solo la fecha (YYYY-MM-DD) de la asistencia
+            const fechaAsistencia = asistencia.fecha.split('T')[0];
+            const coincide = fechaAsistencia === fechaBusqueda;
+            console.log(`📋 Asistencia ${asistencia.id_asistencia}: ${asistencia.fecha} -> ${fechaAsistencia} === ${fechaBusqueda} = ${coincide}`);
+            return coincide;
           });
           
-          console.log(`📅 Asistencias de hoy encontradas: ${asistenciasHoy.length}`);
-          return asistenciasHoy;
+          console.log(`📅 Asistencias de ${fechaBusqueda} encontradas: ${asistenciasFecha.length}`);
+          return asistenciasFecha;
         })
       );
+  }
+
+  // ✅ MANTENER COMPATIBILIDAD: Método para obtener asistencias de hoy
+  obtenerAsistenciasHoyAlumno(codigo: string): Observable<Asistencia[]> {
+    return this.obtenerAsistenciasAlumno(codigo);
   }
 
   // ✅ ANULAR ASISTENCIA DEL DÍA ACTUAL (SIN FECHA ESPECÍFICA)
@@ -170,6 +187,33 @@ export class AsistenciaService {
     return fecha1.getDate() === fecha2.getDate() &&
            fecha1.getMonth() === fecha2.getMonth() &&
            fecha1.getFullYear() === fecha2.getFullYear();
+  }
+
+  // ✅ UTILIDADES PARA FECHAS
+  esFechaHoy(fecha: string): boolean {
+    // Obtener fecha actual en zona horaria de Perú
+    const fechaHoy = this.getFechaHoy();
+    return fecha === fechaHoy;
+  }
+
+  getFechaHoy(): string {
+    // Obtener fecha y hora peruana real
+    const ahora = new Date();
+    console.log(`🕐 Hora actual del navegador: ${ahora.toISOString()}`);
+    
+    // Crear fecha en zona horaria de Perú (UTC-5)
+    const fechaPeru = new Date(ahora.toLocaleString("en-US", {timeZone: "America/Lima"}));
+    console.log(`🇵🇪 Fecha en zona horaria de Perú: ${fechaPeru.toISOString()}`);
+    
+    // Formatear fecha en formato YYYY-MM-DD
+    const año = fechaPeru.getFullYear();
+    const mes = String(fechaPeru.getMonth() + 1).padStart(2, '0');
+    const dia = String(fechaPeru.getDate()).padStart(2, '0');
+    
+    const fechaFormateada = `${año}-${mes}-${dia}`;
+    console.log(`📅 Fecha formateada para Perú: ${fechaFormateada}`);
+    
+    return fechaFormateada;
   }
 
   // ✅ HELPER: OBTENER INFORMACIÓN DEL ESTADO
@@ -216,7 +260,13 @@ export class AsistenciaService {
 
   // ✅ HELPER: OBTENER FECHA DE HOY EN FORMATO LEGIBLE
   obtenerFechaHoy(): string {
-    return new Date().toLocaleDateString('es-PE', {
+    // Obtener fecha y hora peruana real
+    const ahora = new Date();
+    
+    // Crear fecha en zona horaria de Perú (UTC-5)
+    const fechaPeru = new Date(ahora.toLocaleString("en-US", {timeZone: "America/Lima"}));
+    
+    return fechaPeru.toLocaleDateString('es-PE', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',

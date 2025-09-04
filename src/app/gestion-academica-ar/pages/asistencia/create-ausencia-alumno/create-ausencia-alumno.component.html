@@ -61,7 +61,54 @@
                 [class.bg-green-50]="!codigoInvalid && personalForm.get('codigo')?.value">
             </div>
             
-            <!-- Mensaje de validación mejorado -->
+            <!-- Estados de búsqueda -->
+            <div *ngIf="buscandoEstudiante" class="flex items-center p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <div class="flex-shrink-0">
+                <svg class="animate-spin w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-blue-800">Buscando estudiante...</p>
+              </div>
+            </div>
+
+            <!-- Error de búsqueda -->
+            <div *ngIf="errorBusqueda" class="flex items-center p-4 bg-red-50 border border-red-200 rounded-xl">
+              <div class="flex-shrink-0">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-red-800">{{ errorBusqueda }}</p>
+              </div>
+            </div>
+
+            <!-- Estudiante encontrado -->
+            <div *ngIf="estudianteEncontrado" class="p-4 bg-green-50 border border-green-200 rounded-xl">
+              <div class="flex items-start">
+                <div class="flex-shrink-0">
+                  <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                  </div>
+                </div>
+                <div class="ml-3 flex-1">
+                  <h4 class="text-sm font-semibold text-green-800 mb-2">Estudiante Encontrado</h4>
+                  <div class="grid grid-cols-2 gap-2 text-xs text-green-700">
+                    <div><strong>Nombre:</strong> {{ estudianteEncontrado.nombre }} {{ estudianteEncontrado.apellido }}</div>
+                    <div><strong>Código:</strong> {{ estudianteEncontrado.codigo }}</div>
+                    <div><strong>Grado:</strong> {{ estudianteEncontrado.grado }}° {{ estudianteEncontrado.nivel }}</div>
+                    <div><strong>Sección:</strong> {{ estudianteEncontrado.seccion }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mensaje de validación para código inválido -->
             <div *ngIf="codigoInvalid" class="flex items-center p-4 bg-red-50 border border-red-200 rounded-xl">
               <div class="flex-shrink-0">
                 <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,7 +116,7 @@
                 </svg>
               </div>
               <div class="ml-3">
-                <p class="text-sm font-medium text-red-800">El código del estudiante es requerido (mínimo 3 caracteres)</p>
+                <p class="text-sm font-medium text-red-800">El código del estudiante es requerido (mínimo 8 caracteres para búsqueda automática)</p>
               </div>
             </div>
           </div>
@@ -172,17 +219,31 @@
               </span>
             </button>
 
-            <!-- Botón Limpiar con diseño moderno -->
-            <button 
-              type="button" 
-              (click)="clearMessages()"
-              *ngIf="successPersonal || errorPersonal"
-              class="w-full px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold text-lg rounded-2xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center">
-              <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-              Limpiar Mensajes
-            </button>
+            <!-- Botones adicionales -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Botón Limpiar Mensajes -->
+              <button 
+                type="button" 
+                (click)="clearMessages()"
+                *ngIf="successPersonal || errorPersonal || errorBusqueda"
+                class="w-full px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                Limpiar Mensajes
+              </button>
+
+              <!-- Botón Reiniciar Todo -->
+              <button 
+                type="button" 
+                (click)="resetearTodo()"
+                class="w-full px-6 py-3 border-2 border-blue-300 text-blue-700 font-semibold rounded-xl hover:bg-blue-50 hover:border-blue-400 transition-all duration-300 flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Reiniciar Todo
+              </button>
+            </div>
           </div>
         </form>
       </div>

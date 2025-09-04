@@ -1,7 +1,7 @@
 // components/registro-ausencias.component.ts
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AsistenciaService, RegistroAusenciaAlumno, ResponseAusenciaAlumno } from './service/AusenciaService.service';
+import { AsistenciaService, RegistroAusenciaAlumno, ResponseAusenciaAlumno, EstudianteInfo } from './service/AusenciaService.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -16,12 +16,17 @@ export class RegistroAusenciasComponent implements OnInit {
 
   // Estados de carga
   loadingPersonal: boolean = false;
+  buscandoEstudiante: boolean = false;
 
   // Estados de éxito
   successPersonal: string | null = null;
 
   // Estados de error
   errorPersonal: string | null = null;
+  errorBusqueda: string | null = null;
+
+  // Información del estudiante
+  estudianteEncontrado: EstudianteInfo | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -32,6 +37,15 @@ export class RegistroAusenciasComponent implements OnInit {
     this.personalForm = this.fb.group({
       codigo: ['', [Validators.required, Validators.minLength(3)]],
       fecha: [''] // Campo opcional para fecha específica
+    });
+
+    // Suscribirse a cambios en el campo código para búsqueda automática
+    this.personalForm.get('codigo')?.valueChanges.subscribe(codigo => {
+      if (codigo && codigo.length >= 8) {
+        this.buscarEstudiante(codigo);
+      } else if (codigo && codigo.length < 8) {
+        this.limpiarBusqueda();
+      }
     });
   }
 
@@ -67,6 +81,65 @@ export class RegistroAusenciasComponent implements OnInit {
     
     // Formatear como YYYY-MM-DD para el input type="date"
     return fechaPeruAjustada.toISOString().split('T')[0];
+  }
+
+  /**
+   * Busca información del estudiante por código
+   */
+  private buscarEstudiante(codigo: string): void {
+    if (!codigo || codigo.length < 8) {
+      return;
+    }
+
+    this.buscandoEstudiante = true;
+    this.errorBusqueda = null;
+    this.cdr.markForCheck();
+
+    console.log('🔍 Buscando estudiante con código:', codigo);
+
+    this.asistenciaService.buscarEstudiantePorCodigo(codigo.trim()).subscribe({
+      next: (response: any) => {
+        console.log('✅ Respuesta búsqueda estudiante:', response);
+        
+        // Manejar diferentes estructuras de respuesta
+        let estudiante: EstudianteInfo;
+        if (response.data) {
+          estudiante = response.data;
+        } else if (response.id_alumno) {
+          estudiante = response;
+        } else {
+          throw new Error('Formato de respuesta no reconocido');
+        }
+
+        this.estudianteEncontrado = estudiante;
+        this.buscandoEstudiante = false;
+        this.errorBusqueda = null;
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error('❌ Error buscando estudiante:', error);
+        this.buscandoEstudiante = false;
+        this.estudianteEncontrado = null;
+        
+        if (error.status === 404) {
+          this.errorBusqueda = 'No se encontró ningún estudiante con ese código';
+        } else {
+          this.errorBusqueda = 'Error al buscar el estudiante. Intente nuevamente.';
+        }
+        
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  /**
+   * Limpia la búsqueda y información del estudiante
+   */
+  private limpiarBusqueda(): void {
+    this.estudianteEncontrado = null;
+    this.errorBusqueda = null;
+    this.buscandoEstudiante = false;
+    this.cdr.markForCheck();
   }
 
   /**
@@ -164,7 +237,18 @@ export class RegistroAusenciasComponent implements OnInit {
   clearMessages(): void {
     this.successPersonal = null;
     this.errorPersonal = null;
+    this.errorBusqueda = null;
     this.cdr.markForCheck();
+  }
+
+  /**
+   * Reinicia completamente el formulario
+   */
+  resetearTodo(): void {
+    this.personalForm.reset();
+    this.limpiarBusqueda();
+    this.clearMessages();
+    this.establecerFechaActual();
   }
 
   /**

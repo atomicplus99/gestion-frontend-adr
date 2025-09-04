@@ -1,7 +1,7 @@
 <!-- src/app/components/actualizar-asistencia/actualizar-asistencia.component.html -->
 
-<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-4xl mx-auto">
+<div class="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8">
+    <div class="w-full">
 
         <!-- Header -->
         <div class="text-center mb-8">
@@ -84,6 +84,60 @@
 
                         </div>
                     </form>
+
+                    <!-- Selector de fecha -->
+                    <div class="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <h4 class="text-sm font-bold text-blue-800 mb-3">📅 Fecha de Actualización</h4>
+                        
+                        <!-- Fecha actual vs personalizada -->
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-sm font-medium text-blue-700">
+                                {{ esFechaHoy ? '📅 Hoy' : '📅 Fecha personalizada' }}
+                            </span>
+                            <button 
+                                type="button"
+                                (click)="toggleFechaPersonalizada()"
+                                class="text-xs px-3 py-1 rounded-full transition-colors"
+                                [ngClass]="{
+                                    'bg-blue-600 text-white': usarFechaPersonalizada,
+                                    'bg-blue-200 text-blue-700 hover:bg-blue-300': !usarFechaPersonalizada
+                                }">
+                                {{ usarFechaPersonalizada ? 'Usar hoy' : 'Personalizar' }}
+                            </button>
+                        </div>
+
+                        <!-- Campo de fecha -->
+                        <input
+                            type="date"
+                            [value]="fechaSeleccionada"
+                            (change)="onFechaChange($event)"
+                            [disabled]="!usarFechaPersonalizada"
+                            class="w-full px-3 py-2 text-sm border-2 border-blue-300 rounded-lg transition-all"
+                            [class.bg-gray-100]="!usarFechaPersonalizada"
+                            [class.border-blue-500]="usarFechaPersonalizada"
+                        />
+
+                        <!-- Fechas rápidas -->
+                        <div *ngIf="usarFechaPersonalizada" class="mt-3 flex space-x-2">
+                            <button 
+                                type="button"
+                                (click)="establecerFechaRapida(-1)"
+                                class="text-xs px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition-colors">
+                                Ayer
+                            </button>
+                            <button 
+                                type="button"
+                                (click)="establecerFechaRapida(0)"
+                                class="text-xs px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition-colors">
+                                Hoy
+                            </button>
+                        </div>
+
+                        <!-- Información de la fecha -->
+                        <div class="mt-3 text-xs text-blue-600">
+                            <p>🔍 Actualizará asistencia para: <strong>{{ fechaSeleccionada }}</strong></p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Información del alumno encontrado -->
@@ -132,30 +186,17 @@
                             </div>
 
                             <!-- Información del turno -->
-                            <div class="space-y-3" *ngIf="alumnoData?.alumno?.turno">
+                            <div class="space-y-3" *ngIf="alumnoData?.alumno">
                                 <h4 class="text-sm font-semibold text-gray-600 uppercase tracking-wide">
                                     Turno Asignado
                                 </h4>
                                 <div class="space-y-2">
-                                    <p class="text-sm">
+                                    <p class="text-sm" *ngIf="alumnoData.alumno.turno">
                                         <span class="font-medium text-gray-700">Turno:</span>
-                                        <span class="ml-2 text-gray-900">{{ alumnoData.alumno.turno.turno }}</span>
+                                        <span class="ml-2 text-gray-900 capitalize">{{ alumnoData.alumno.turno }}</span>
                                     </p>
-                                    <p class="text-sm">
-                                        <span class="font-medium text-gray-700">Horario:</span>
-                                        <span class="ml-2 text-gray-900 font-mono">{{ turnoInfo }}</span>
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <!-- Sin información de turno -->
-                            <div class="space-y-3" *ngIf="!alumnoData?.alumno?.turno">
-                                <h4 class="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                                    Turno Asignado
-                                </h4>
-                                <div class="space-y-2">
-                                    <p class="text-sm text-gray-500">
-                                        No hay información de turno disponible
+                                    <p class="text-sm text-red-600 font-medium" *ngIf="!alumnoData.alumno.turno">
+                                        ⚠️ Este estudiante no tiene turno asignado. Contacte al administrador.
                                     </p>
                                 </div>
                             </div>
@@ -380,8 +421,8 @@
 
             </div> <!-- Cierre px-6 py-8 sm:px-8 -->
         </div> <!-- Cierre bg-white shadow-lg rounded-xl -->
-    </div> <!-- Cierre max-w-4xl mx-auto -->
-</div> <!-- Cierre min-h-screen bg-gray-50 -->
+    </div> <!-- Cierre w-full -->
+</div> <!-- Cierre min-h-screen bg-white -->
 
 <!-- Mensaje de confirmación personalizado -->
 <app-confirmation-message 

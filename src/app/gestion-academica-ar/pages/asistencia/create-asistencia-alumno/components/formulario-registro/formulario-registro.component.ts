@@ -41,6 +41,7 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
   registrando = false;
   alumnoEncontrado: AlumnoInfoAsistenciaManual | null = null;
   fechaSeleccionada: string = '';
+  mostrarPayload = false;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -86,7 +87,7 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
         Validators.minLength(10),
         Validators.maxLength(500)
       ]],
-      id_auxiliar: ['', [Validators.required]],
+      id_auxiliar: [''],
       id_alumno: ['']
     });
   }
@@ -142,10 +143,10 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
   // GETTERS
   // ========================================
   get puedeRegistrar(): boolean {
-    return !!this.alumnoEncontrado && 
-           !this.registroService.asistenciaActual && 
+    return !!this.alumnoEncontrado &&
+           !this.registroService.asistenciaActual &&
            !this.registrando &&
-           !!this.idAuxiliarActual;
+           this.userStore.canRegisterAttendance();
   }
 
   get esFechaHoy(): boolean {
@@ -173,6 +174,30 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
     return 'Cargando...';
   }
 
+  get nombreUsuarioActual(): string {
+    const user = this.userStore.getUserSilently();
+    if (user?.auxiliar) {
+      return `${user.auxiliar.nombre} ${user.auxiliar.apellido}`;
+    } else if (user?.administrador) {
+      return `${user.administrador.nombres} ${user.administrador.apellidos}`;
+    } else if (user?.director) {
+      return `${user.director.nombres} ${user.director.apellidos}`;
+    }
+    return 'Usuario';
+  }
+
+  get rolUsuarioActual(): string {
+    const user = this.userStore.getUserSilently();
+    if (user?.auxiliar) {
+      return 'Auxiliar';
+    } else if (user?.administrador) {
+      return 'Administrador';
+    } else if (user?.director) {
+      return 'Director';
+    }
+    return 'Usuario';
+  }
+
   // ========================================
   // MÉTODOS DE VALIDACIÓN
   // ========================================
@@ -191,7 +216,7 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
     return this.validationService.getSubmitButtonClass(
       this.registroForm.valid,
       this.registrando,
-      !!this.idAuxiliarActual
+      this.userStore.canRegisterAttendance()
     );
   }
 
@@ -227,8 +252,9 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
     if (salidaMinutos <= llegadaMinutos) {
       Swal.fire({
         icon: 'warning',
-        title: 'Error en Secuencia',
+        title: 'Error en Secuencia de Horarios',
         text: `La hora de salida (${horaSalida}) debe ser posterior a la hora de llegada (${horaLlegada}).`,
+        confirmButtonText: 'Entendido',
         confirmButtonColor: '#f59e0b',
         timer: 4000
       });
@@ -249,9 +275,7 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
     if (!this.puedeRegistrar) {
       this.errorHandler.mostrarError(
         'Registro No Permitido',
-        !this.idAuxiliarActual 
-          ? 'No tiene permisos de auxiliar para registrar asistencia.'
-          : 'Debe buscar un estudiante válido que no tenga asistencia registrada.'
+        'Debe buscar un estudiante válido que no tenga asistencia registrada.'
       );
       return false;
     }
@@ -278,12 +302,18 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
     
     const datosRegistro = this.construirDatosRegistro();
     
+    console.log('🚀 [REGISTRO MANUAL] Iniciando envío al backend...');
+    console.log('📋 [REGISTRO MANUAL] Datos a enviar:', datosRegistro);
+    console.log('🌐 [REGISTRO MANUAL] URL del endpoint:', 'POST /asistencia/registro-manual');
+    
     try {
       const response = await firstValueFrom(this.registroService.registrarAsistencia(datosRegistro));
       
+      console.log('✅ [REGISTRO MANUAL] Respuesta exitosa del backend:', response);
       await this.manejarRegistroExitoso(response, datosRegistro);
       
     } catch (error: any) {
+      console.log('❌ [REGISTRO MANUAL] Error del backend:', error);
       await this.manejarErrorRegistro(error, datosRegistro);
     } finally {
       this.registrando = false;
@@ -300,15 +330,49 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
       hora_de_llegada: this.registroForm.get('hora_de_llegada')?.value,
       hora_salida: this.registroForm.get('hora_salida')?.value || undefined,
       estado_asistencia: this.registroForm.get('estado_asistencia')?.value,
-      motivo: this.registroForm.get('motivo')?.value,
-      id_auxiliar: this.registroForm.get('id_auxiliar')?.value
+      motivo: this.registroForm.get('motivo')?.value
     };
+
+    // Actor que registra: auxiliar o (admin/director) vía id_usuario
+    const idAux = this.userStore.idAuxiliar();
+    const user = this.userStore.getUserSilently();
+    
+    console.log('🔍 [REGISTRO MANUAL] Construyendo payload:');
+    console.log('- Usuario logueado:', user);
+    console.log('- ID Auxiliar disponible:', idAux);
+    console.log('- Rol del usuario:', this.userStore.userRole());
+    
+    if (idAux) {
+      datos.id_auxiliar = idAux;
+      console.log('✅ [REGISTRO MANUAL] Enviando como AUXILIAR con id_auxiliar:', idAux);
+    } else if (user?.administrador?.id_administrador) {
+      datos.id_usuario = user.administrador.id_administrador;
+      console.log('✅ [REGISTRO MANUAL] Enviando como ADMINISTRADOR con id_usuario:', user.administrador.id_administrador);
+    } else if (user?.director?.id_director) {
+      datos.id_usuario = user.director.id_director;
+      console.log('✅ [REGISTRO MANUAL] Enviando como DIRECTOR con id_usuario:', user.director.id_director);
+    } else {
+      console.log('❌ [REGISTRO MANUAL] ERROR: No se pudo determinar el actor del registro');
+    }
 
     if (this.fechaSeleccionada && !this.registroService.esFechaHoy(this.fechaSeleccionada)) {
       datos.fecha = this.fechaSeleccionada;
+      console.log('📅 [REGISTRO MANUAL] Fecha personalizada agregada:', datos.fecha);
     }
 
+    console.log('📤 [REGISTRO MANUAL] Payload final enviado al backend:', datos);
     return datos;
+  }
+
+  // ========================================
+  // VISTA PREVIA DE PAYLOAD (sin logs)
+  // ========================================
+  togglePayload(): void {
+    this.mostrarPayload = !this.mostrarPayload;
+  }
+
+  get payloadPreview(): any {
+    return this.construirDatosRegistro();
   }
 
   private async manejarRegistroExitoso(response: any, datosRegistro: RegistroAsistenciaRequestManual): Promise<void> {

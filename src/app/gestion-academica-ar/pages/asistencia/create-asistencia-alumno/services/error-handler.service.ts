@@ -50,7 +50,7 @@ export class ErrorHandlerService {
       mensaje = 'Error interno del servidor al procesar el registro.\n\nEl equipo técnico ha sido notificado automáticamente.';
     } else if (error.status === 0) {
       titulo = 'Error de Conexión';
-      mensaje = 'Se perdió la conexión durante el registro.\n\n⚠️ Verifique si el registro se completó antes de intentar nuevamente.';
+      mensaje = 'Se perdió la conexión durante el registro.\n\nVerifique si el registro se completó antes de intentar nuevamente.';
     } else {
       titulo = 'Error Inesperado';
       mensaje = `Error ${error.status}: ${error.error?.message || error.message || 'Error desconocido'}`;

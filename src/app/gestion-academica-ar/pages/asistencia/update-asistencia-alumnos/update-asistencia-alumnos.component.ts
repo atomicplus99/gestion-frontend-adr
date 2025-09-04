@@ -29,6 +29,10 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
   isLoadingUpdate = false;
   showUpdateForm = false;
 
+  // Estados para fecha específica
+  fechaSeleccionada: string = '';
+  usarFechaPersonalizada = false;
+
   // Datos del alumno y asistencia
   alumnoData: VerificarAsistenciaResponse | null = null;
 
@@ -59,6 +63,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {
     this.initializeForms();
+    this.inicializarFecha();
   }
 
   ngOnInit(): void {
@@ -101,22 +106,72 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
   }
 
   // ========================================
-  // GETTERS PARA AUXILIAR
+  // GETTERS PARA USUARIO (AUXILIAR/ADMIN/DIRECTOR)
   // ========================================
-  get idAuxiliarActual(): string | null {
-    return this.userStore.idAuxiliar();
-  }
-
-  get nombreAuxiliarActual(): string {
+  get nombreUsuarioActual(): string {
     const user = this.userStore.getUserSilently();
-    if (user?.auxiliar) {
+    const role = this.userStore.userRole();
+    
+    if (role === 'AUXILIAR' && user?.auxiliar) {
       return `${user.auxiliar.nombre} ${user.auxiliar.apellido}`;
+    } else if (role === 'ADMINISTRADOR' && user?.administrador) {
+      return `${user.administrador.nombres} ${user.administrador.apellidos}`;
+    } else if (role === 'DIRECTOR' && user?.director) {
+      return `${user.director.nombres} ${user.director.apellidos}`;
     }
-    return 'Auxiliar no identificado';
+    
+    return 'Usuario no identificado';
   }
 
   get puedeActualizarAsistencias(): boolean {
-    return this.userStore.canRegisterAttendance() && !!this.idAuxiliarActual;
+    return this.userStore.canRegisterAttendance() && this.tieneIdValido();
+  }
+
+  private tieneIdValido(): boolean {
+    const idAux = this.userStore.idAuxiliar();
+    const user = this.userStore.getUserSilently();
+    
+    return !!(idAux || user?.administrador?.id_administrador || user?.director?.id_director);
+  }
+
+  // ========================================
+  // MÉTODOS DE FECHA
+  // ========================================
+  private inicializarFecha(): void {
+    this.fechaSeleccionada = this.asistenciaService.getFechaHoy();
+  }
+
+  get esFechaHoy(): boolean {
+    return this.asistenciaService.esFechaHoy(this.fechaSeleccionada);
+  }
+
+  toggleFechaPersonalizada(): void {
+    this.usarFechaPersonalizada = !this.usarFechaPersonalizada;
+    
+    if (!this.usarFechaPersonalizada) {
+      // Volver a fecha de hoy
+      this.fechaSeleccionada = this.asistenciaService.getFechaHoy();
+    }
+    
+    this.forzarDeteccionCambios();
+  }
+
+  onFechaChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.fechaSeleccionada = target.value;
+    this.forzarDeteccionCambios();
+  }
+
+  establecerFechaRapida(dias: number): void {
+    const fecha = new Date();
+    fecha.setDate(fecha.getDate() + dias);
+    
+    const año = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    
+    this.fechaSeleccionada = `${año}-${mes}-${dia}`;
+    this.forzarDeteccionCambios();
   }
 
   // ========================================
@@ -176,14 +231,18 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.resetUpdateForm();
     
+    console.log('🔍 Buscando alumno con código:', codigo);
+    console.log('📅 Para la fecha:', this.fechaSeleccionada);
+    
     // Forzar actualización del DOM
     this.forzarDeteccionCambios();
 
-    
-
-    this.asistenciaService.verificarAsistenciaPorCodigo(codigo).subscribe({
+    this.asistenciaService.verificarAsistenciaPorCodigo(codigo, this.fechaSeleccionada).subscribe({
       next: (response) => {
         console.log('✅ Respuesta del backend (verificar):', response);
+        console.log('🔍 Datos del alumno:', response.alumno);
+        console.log('🔍 Turno del alumno:', response.alumno?.turno);
+        console.log('🔍 ¿Tiene turno?:', !!response.alumno?.turno);
         console.log('🔍 Verificando datos:', {
           tiene_asistencia: response.tiene_asistencia,
           tiene_asistencia_boolean: !!response.tiene_asistencia,
@@ -205,11 +264,12 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
           // No tiene asistencia - solo mostrar info del alumno
           this.showUpdateForm = false;
           
-          // Mostrar mensaje informativo personalizado
+          // Mostrar mensaje de error específico
+          const nombreCompleto = response.alumno ? `${response.alumno.nombre} ${response.alumno.apellido}` : 'el estudiante';
           this.confirmationMessage = {
-            type: 'info',
+            type: 'error',
             title: 'Sin Asistencia',
-            message: response.mensaje,
+            message: `No se encontró asistencia en la fecha ${this.fechaSeleccionada} para ${nombreCompleto}`,
             show: true
           };
         }
@@ -285,16 +345,16 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
     }
     console.log('✅ Permisos verificados correctamente');
 
-    if (!this.idAuxiliarActual) {
+    if (!this.tieneIdValido()) {
       this.confirmationMessage = {
         type: 'error',
-        title: 'Error de Auxiliar',
-        message: 'No se pudo obtener el ID del auxiliar. Verifica tu sesión.',
+        title: 'Error de Usuario',
+        message: 'No se pudo obtener la información del usuario. Verifica tu sesión.',
         show: true
       };
       return;
     }
-    console.log('✅ ID del auxiliar verificado correctamente');
+    console.log('✅ ID del usuario verificado correctamente');
 
     console.log('🔍 Verificando alumnoData:', {
       alumnoData: this.alumnoData,
@@ -323,9 +383,39 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
 
     const formValues = this.actualizarForm.value;
     const updateData: UpdateAsistenciaRequest = {
-      motivo: formValues.motivo,
-      id_auxiliar: this.idAuxiliarActual // 🔥 Usar ID dinámico del UserStore
+      motivo: formValues.motivo
     };
+
+    // 🔥 LÓGICA DE ROLES DINÁMICOS (igual que registro manual)
+    const idAux = this.userStore.idAuxiliar();
+    const user = this.userStore.getUserSilently();
+    
+    console.log('🔍 [ACTUALIZAR ASISTENCIA] Construyendo payload:');
+    console.log('- Usuario logueado:', user);
+    console.log('- ID Auxiliar disponible:', idAux);
+    console.log('- Rol del usuario:', this.userStore.userRole());
+    
+    if (idAux) {
+      updateData.id_auxiliar = idAux;
+      console.log('✅ [ACTUALIZAR ASISTENCIA] Enviando como AUXILIAR con id_auxiliar:', idAux);
+    } else if (user?.administrador?.id_administrador) {
+      updateData.id_usuario = user.administrador.id_administrador;
+      console.log('✅ [ACTUALIZAR ASISTENCIA] Enviando como ADMINISTRADOR con id_usuario:', user.administrador.id_administrador);
+    } else if (user?.director?.id_director) {
+      updateData.id_usuario = user.director.id_director;
+      console.log('✅ [ACTUALIZAR ASISTENCIA] Enviando como DIRECTOR con id_usuario:', user.director.id_director);
+    } else {
+      console.error('❌ [ACTUALIZAR ASISTENCIA] ERROR: No se pudo determinar el actor de la actualización');
+      this.confirmationMessage = {
+        type: 'error',
+        title: 'Error de Usuario',
+        message: 'No se pudo determinar los permisos del usuario. Verifica tu sesión.',
+        show: true
+      };
+      this.isLoadingUpdate = false;
+      this.forzarDeteccionCambios();
+      return;
+    }
 
     // Solo incluir campos que han cambiado o tienen valor
     if (formValues.hora_de_llegada && formValues.hora_de_llegada.trim()) {
@@ -340,6 +430,12 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
       updateData.estado_asistencia = formValues.estado_asistencia;
     }
 
+    // 📅 AGREGAR FECHA SI ES DIFERENTE A HOY
+    if (this.fechaSeleccionada && !this.asistenciaService.esFechaHoy(this.fechaSeleccionada)) {
+      updateData.fecha = this.fechaSeleccionada;
+      console.log('📅 [ACTUALIZAR ASISTENCIA] Fecha personalizada agregada:', updateData.fecha);
+    }
+
     // Obtener el código del alumno del formulario de búsqueda
     const codigo = this.buscarForm.get('codigo')?.value?.trim();
     if (!codigo) {
@@ -351,7 +447,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
     console.log('🔄 Actualizando asistencia para alumno:', codigo);
     console.log('📝 Datos que se enviarán al backend:', updateData);
     console.log('🌐 Endpoint que se llamará:', `${this.asistenciaService['baseUrl']}/actualizar/${codigo}`);
-    console.log('👤 ID del auxiliar que realiza la actualización:', this.idAuxiliarActual);
+    console.log('👤 Usuario que realiza la actualización - Rol:', this.userStore.userRole());
 
     console.log('🚀 ANTES DE LLAMAR AL SERVICIO - Intentando enviar petición HTTP...');
 
@@ -517,37 +613,30 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
    * Verifica si el formulario de actualización es válido
    */
   get isActualizarFormValid(): boolean {
-    const isValid = this.actualizarForm.valid && this.puedeActualizarAsistencias && !!this.idAuxiliarActual;
+    const isValid = this.actualizarForm.valid && this.puedeActualizarAsistencias && this.tieneIdValido();
     console.log('🔍 Validación del formulario de actualización:', {
       formValid: this.actualizarForm.valid,
       puedeActualizar: this.puedeActualizarAsistencias,
-      idAuxiliar: this.idAuxiliarActual,
+      tieneIdValido: this.tieneIdValido(),
       resultado: isValid
     });
     return isValid;
   }
 
-  /**
-   * Obtiene información del turno formateada
-   */
-  get turnoInfo(): string {
-    if (!this.alumnoData?.alumno?.turno) return '';
-    const turno = this.alumnoData.alumno.turno;
-    return `${turno.turno} (${turno.hora_inicio} - ${turno.hora_fin})`;
-  }
+
 
   /**
    * Obtiene el texto del estado de los botones
    */
   get estadoBuscarTexto(): string {
-    if (!this.puedeActualizarAsistencias) return 'Sin permisos de auxiliar';
+    if (!this.puedeActualizarAsistencias) return 'Sin permisos para actualizar';
     if (this.isLoading) return 'Buscando...';
     return 'Buscar Alumno';
   }
 
   get estadoActualizarTexto(): string {
-    if (!this.puedeActualizarAsistencias) return 'Sin permisos de auxiliar';
-    if (!this.idAuxiliarActual) return 'ID auxiliar no disponible';
+    if (!this.puedeActualizarAsistencias) return 'Sin permisos para actualizar';
+    if (!this.tieneIdValido()) return 'Usuario no autorizado';
     if (this.isLoadingUpdate) return 'Actualizando...';
     return 'Actualizar Asistencia';
   }

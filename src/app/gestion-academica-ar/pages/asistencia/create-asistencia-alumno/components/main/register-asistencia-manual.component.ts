@@ -16,8 +16,8 @@ import { FormularioRegistroComponent } from '../formulario-registro/formulario-r
     FormularioRegistroComponent
   ],
   template: `
-    <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-      <div class="max-w-7xl mx-auto">
+    <div class="min-h-screen bg-white w-full">
+      <div class="w-full px-6 py-8">
         
         <!-- Header Principal -->
         <div class="text-center mb-8">
@@ -30,21 +30,21 @@ import { FormularioRegistroComponent } from '../formulario-registro/formulario-r
           <p class="text-lg text-gray-600">Sistema de gestión manual para estudiantes</p>
         </div>
 
-        <!-- Layout Principal: 3 Columnas -->
-        <div class="grid grid-cols-12 gap-6 h-full">
+        <!-- Layout Principal: TODO EL ANCHO DE LA PANTALLA -->
+        <div class="grid grid-cols-12 gap-6 w-full">
           
-          <!-- COLUMNA 1: Búsqueda (4 columnas) -->
-          <div class="col-span-12 lg:col-span-4">
+          <!-- COLUMNA 1: Búsqueda (3 columnas) -->
+          <div class="col-span-12 lg:col-span-3">
             <app-buscar-estudiante></app-buscar-estudiante>
           </div>
 
-          <!-- COLUMNA 2: Información del Estudiante (4 columnas) -->
-          <div class="col-span-12 lg:col-span-4">
+          <!-- COLUMNA 2: Información del Estudiante (3 columnas) -->
+          <div class="col-span-12 lg:col-span-3">
             <app-info-estudiante></app-info-estudiante>
           </div>
 
-          <!-- COLUMNA 3: Formulario de Registro (4 columnas) -->
-          <div class="col-span-12 lg:col-span-4">
+          <!-- COLUMNA 3: Formulario de Registro (6 columnas - TODO EL ESPACIO RESTANTE) -->
+          <div class="col-span-12 lg:col-span-6">
             <app-formulario-registro></app-formulario-registro>
           </div>
         </div>

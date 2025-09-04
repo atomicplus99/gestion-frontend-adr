@@ -46,8 +46,10 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
   mensajeExito = '';
   mensajeError = '';
 
-  // Fecha
+  // ✅ PROPIEDADES PARA FECHAS
   fechaHoy = '';
+  fechaSeleccionada!: string;
+  usarFechaPersonalizada = false;
 
   // Subject para manejo de suscripciones
   private destroy$ = new Subject<void>();
@@ -56,7 +58,9 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
     private asistenciaService: AsistenciaService,
     private userStore: UserStoreService, // 🆕 INYECTAR USERSTORE
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    this.inicializarFecha();
+  }
 
   ngOnInit() {
     this.fechaHoy = this.asistenciaService.obtenerFechaHoy();
@@ -68,7 +72,7 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
     this.setupUserSubscription();
     
     console.log('🚀 Componente de anulaciones inicializado para:', this.fechaHoy);
-    console.log('👤 Auxiliar actual:', this.nombreAuxiliarActual, '- ID:', this.idAuxiliarActual);
+    console.log('👤 Usuario actual:', this.nombreUsuarioActual, '- Rol:', this.userStore.userRole());
   }
 
   ngOnDestroy(): void {
@@ -108,24 +112,96 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
   // GETTERS PARA AUXILIAR Y PERMISOS
   // ========================================
   
-  get idAuxiliarActual(): string | null {
-    return this.userStore.idAuxiliar();
-  }
-
-  get nombreAuxiliarActual(): string {
+  get nombreUsuarioActual(): string {
     const user = this.userStore.getUserSilently();
-    if (user?.auxiliar) {
+    const role = this.userStore.userRole();
+    
+    if (role === 'AUXILIAR' && user?.auxiliar) {
       return `${user.auxiliar.nombre} ${user.auxiliar.apellido}`;
+    } else if (role === 'ADMINISTRADOR' && user?.administrador) {
+      return `${user.administrador.nombres} ${user.administrador.apellidos}`;
+    } else if (role === 'DIRECTOR' && user?.director) {
+      return `${user.director.nombres} ${user.director.apellidos}`;
     }
-    return 'Auxiliar no identificado';
-  }
-
-  get idAuxiliar(): string | null {
-    return this.userStore.idAuxiliar();
+    
+    return 'Usuario no identificado';
   }
 
   get puedeAnularAsistencias(): boolean {
-    return this.userStore.canRegisterAttendance() && !!this.idAuxiliarActual;
+    return this.userStore.canRegisterAttendance() && this.tieneIdValido();
+  }
+
+  private tieneIdValido(): boolean {
+    const idAux = this.userStore.idAuxiliar();
+    const user = this.userStore.getUserSilently();
+    
+    return !!(idAux || user?.administrador?.id_administrador || user?.director?.id_director);
+  }
+
+  get rolUsuarioActual(): string {
+    return this.userStore.userRole() || 'Sin rol';
+  }
+
+  get fechaMaxima(): string {
+    return this.asistenciaService.getFechaHoy();
+  }
+
+  // ========================================
+  // MÉTODOS DE MANEJO DE FECHAS
+  // ========================================
+
+  private inicializarFecha(): void {
+    // Obtener fecha y hora peruana real
+    const ahora = new Date();
+    
+    // Crear fecha en zona horaria de Perú (UTC-5)
+    // Usar toLocaleDateString con timezone específico
+    const fechaPeru = new Date(ahora.toLocaleString("en-US", {timeZone: "America/Lima"}));
+    
+    // Formatear fecha en formato YYYY-MM-DD
+    const año = fechaPeru.getFullYear();
+    const mes = String(fechaPeru.getMonth() + 1).padStart(2, '0');
+    const dia = String(fechaPeru.getDate()).padStart(2, '0');
+    
+    this.fechaSeleccionada = `${año}-${mes}-${dia}`;
+  }
+
+  get esFechaHoy(): boolean {
+    return this.asistenciaService.esFechaHoy(this.fechaSeleccionada);
+  }
+
+  toggleFechaPersonalizada(): void {
+    this.usarFechaPersonalizada = !this.usarFechaPersonalizada;
+    if (!this.usarFechaPersonalizada) {
+      this.inicializarFecha();
+    }
+    this.limpiarBusqueda();
+    this.forzarDeteccionCambios();
+  }
+
+  onFechaChange(): void {
+    this.limpiarBusqueda();
+    this.forzarDeteccionCambios();
+  }
+
+  establecerFechaRapida(tipo: 'ayer' | 'hoy'): void {
+    // Obtener fecha y hora peruana real
+    const ahora = new Date();
+    
+    // Crear fecha en zona horaria de Perú (UTC-5)
+    const fechaPeru = new Date(ahora.toLocaleString("en-US", {timeZone: "America/Lima"}));
+    
+    if (tipo === 'ayer') {
+      fechaPeru.setDate(fechaPeru.getDate() - 1);
+    }
+    
+    // Formatear fecha en formato YYYY-MM-DD
+    const año = fechaPeru.getFullYear();
+    const mes = String(fechaPeru.getMonth() + 1).padStart(2, '0');
+    const dia = String(fechaPeru.getDate()).padStart(2, '0');
+    
+    this.fechaSeleccionada = `${año}-${mes}-${dia}`;
+    this.onFechaChange();
   }
 
   // ========================================
@@ -164,14 +240,14 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
     this.forzarDeteccionCambios();
 
     console.log('🔍 Buscando estudiante:', this.codigoBusqueda.trim());
-    console.log('👤 Auxiliar actual:', this.nombreAuxiliarActual, '- ID:', this.idAuxiliarActual);
+    console.log('👤 Usuario actual:', this.nombreUsuarioActual, '- Rol:', this.userStore.userRole());
 
     this.asistenciaService.buscarAlumnoPorCodigo(this.codigoBusqueda.trim()).subscribe({
       next: (alumno) => {
         console.log('✅ Estudiante encontrado:', alumno);
         this.estudianteSeleccionado = alumno;
         this.buscandoEstudiante = false;
-        this.cargarAsistenciasHoy();
+        this.cargarAsistencias();
         this.forzarDeteccionCambios();
       },
       error: (error) => {
@@ -204,16 +280,16 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
   // FUNCIONES DE ASISTENCIAS
   // ===============================
 
-  cargarAsistenciasHoy() {
+  cargarAsistencias() {
     if (!this.estudianteSeleccionado) return;
 
     this.cargandoAsistencias = true;
     this.errorAsistencias = '';
     this.forzarDeteccionCambios();
 
-    this.asistenciaService.obtenerAsistenciasHoyAlumno(this.estudianteSeleccionado.codigo).subscribe({
+    this.asistenciaService.obtenerAsistenciasAlumno(this.estudianteSeleccionado.codigo, this.fechaSeleccionada).subscribe({
       next: (asistencias: Asistencia[]) => {
-        console.log('✅ Asistencias de hoy cargadas:', asistencias.length);
+        console.log(`✅ Asistencias de ${this.fechaSeleccionada} cargadas:`, asistencias.length);
         this.asistenciasHoy = asistencias.sort((a, b) => 
           a.hora_de_llegada.localeCompare(b.hora_de_llegada)
         );
@@ -221,11 +297,11 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
         this.forzarDeteccionCambios();
       },
       error: (error) => {
-        console.error('❌ Error cargando asistencias de hoy:', error);
+        console.error(`❌ Error cargando asistencias de ${this.fechaSeleccionada}:`, error);
         this.cargandoAsistencias = false;
         
         if (error.status === 404) {
-          this.errorAsistencias = 'Este estudiante no tiene asistencias registradas para hoy';
+          this.errorAsistencias = `Este estudiante no tiene asistencias registradas para el ${this.fechaSeleccionada}`;
           this.asistenciasHoy = [];
         } else {
           this.errorAsistencias = 'Error al cargar las asistencias. Intente nuevamente.';
@@ -302,11 +378,12 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.idAuxiliarActual) {
+    // Verificar que el usuario tenga ID válido para anular
+    if (!this.tieneIdValido()) {
       Swal.fire({
         icon: 'error',
-        title: 'Error de Auxiliar',
-        text: 'No se pudo obtener el ID del auxiliar. Verifica tu sesión.',
+        title: 'Error de Usuario',
+        text: 'No se pudo obtener la información del usuario. Verifica tu sesión.',
         confirmButtonText: 'Cerrar',
         confirmButtonColor: '#d33'
       });
@@ -327,15 +404,41 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
     this.procesandoAnulacion = true;
     this.forzarDeteccionCambios();
 
-    // 🆕 Usar ID dinámico del UserStore
+    // 🔥 LÓGICA DE ROLES DINÁMICOS (igual que registro manual)
     const request: AnularAsistenciaRequest = {
       codigo_estudiante: this.estudianteSeleccionado.codigo,
-      motivo: this.motivoAnulacion.trim(),
-      id_auxiliar: this.idAuxiliarActual // 🆕 ID dinámico
+      motivo: this.motivoAnulacion.trim()
     };
 
+    // ✅ AGREGAR FECHA SI NO ES HOY
+    if (!this.esFechaHoy) {
+      request.fecha = this.fechaSeleccionada;
+      console.log('📅 [ANULAR ASISTENCIA] Fecha específica agregada:', request.fecha);
+    }
+
+    const idAux = this.userStore.idAuxiliar();
+    const user = this.userStore.getUserSilently();
+    
+    console.log('🔍 [ANULAR ASISTENCIA] Construyendo payload:');
+    console.log('- Usuario logueado:', user);
+    console.log('- ID Auxiliar disponible:', idAux);
+    console.log('- Rol del usuario:', this.userStore.userRole());
+    console.log('- Fecha seleccionada:', this.fechaSeleccionada);
+    console.log('- Es fecha de hoy:', this.esFechaHoy);
+    
+    if (idAux) {
+      request.id_auxiliar = idAux;
+      console.log('✅ [ANULAR ASISTENCIA] Enviando como AUXILIAR con id_auxiliar:', idAux);
+    } else if (user?.administrador?.id_administrador) {
+      request.id_usuario = user.administrador.id_administrador;
+      console.log('✅ [ANULAR ASISTENCIA] Enviando como ADMINISTRADOR con id_usuario:', user.administrador.id_administrador);
+    } else if (user?.director?.id_director) {
+      request.id_usuario = user.director.id_director;
+      console.log('✅ [ANULAR ASISTENCIA] Enviando como DIRECTOR con id_usuario:', user.director.id_director);
+    }
+
     console.log('🗑️ Enviando solicitud de anulación para hoy:', request);
-    console.log('👤 Auxiliar responsable:', this.nombreAuxiliarActual);
+    console.log('👤 Usuario responsable:', this.nombreUsuarioActual);
 
     this.asistenciaService.anularAsistencia(request).subscribe({
       next: (response) => {
@@ -353,16 +456,17 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
         this.procesandoAnulacion = false;
         this.cerrarModal();
         
-        // 🆕 Mostrar éxito con información del auxiliar
+        // Mostrar éxito con información del auxiliar
         Swal.fire({
           icon: 'success',
-          title: '¡Anulación Exitosa!',
+          title: 'Anulación Exitosa',
           html: `
-            <div style="text-align: left; font-size: 14px;">
-              <p><strong>📝 Mensaje:</strong> ${response.message || 'Asistencia anulada correctamente'}</p>
-              <p><strong>👤 Auxiliar:</strong> ${this.nombreAuxiliarActual}</p>
-              <p><strong>🆔 ID Auxiliar:</strong> ${this.idAuxiliarActual}</p>
-              <p><strong>📅 Fecha:</strong> ${new Date().toLocaleString()}</p>
+            <div style="text-align: left; font-size: 14px; line-height: 1.6;">
+              <h4 style="color: #059669; margin-bottom: 15px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">Confirmación de Anulación</h4>
+              <p><strong>Mensaje:</strong> ${response.message || 'Asistencia anulada correctamente'}</p>
+              <p><strong>Usuario:</strong> ${this.nombreUsuarioActual}</p>
+              <p><strong>Rol:</strong> ${this.userStore.userRole()}</p>
+              <p><strong>Fecha y hora:</strong> ${new Date().toLocaleString()}</p>
             </div>
           `,
           timer: 5000,
@@ -412,14 +516,14 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
    * Obtiene el texto del estado de los botones
    */
   get estadoBuscarTexto(): string {
-    if (!this.puedeAnularAsistencias) return 'Sin permisos de auxiliar';
+    if (!this.puedeAnularAsistencias) return 'Sin permisos para anular';
     if (this.buscandoEstudiante) return 'Buscando...';
     return 'Buscar';
   }
 
   get estadoAnularTexto(): string {
-    if (!this.puedeAnularAsistencias) return 'Sin permisos de auxiliar';
-    if (!this.idAuxiliarActual) return 'ID auxiliar no disponible';
+    if (!this.puedeAnularAsistencias) return 'Sin permisos para anular';
+    if (!this.tieneIdValido()) return 'Usuario no autorizado';
     if (this.procesandoAnulacion) return 'Procesando...';
     return 'Confirmar Anulación';
   }
@@ -442,7 +546,7 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
 
   getReasonCannotCancel(estado: EstadoAsistencia): string {
     if (!this.puedeAnularAsistencias) {
-      return 'Sin permisos de auxiliar';
+      return 'Sin permisos para anular';
     }
 
     switch (estado) {

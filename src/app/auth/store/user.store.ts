@@ -72,6 +72,7 @@ export class UserStoreService {
       if (storedUser) {
         const user = JSON.parse(storedUser);
         this._user.set(user);
+        console.log('🧠 [USER STORE] Payload recuperado de localStorage:', user);
       }
     } catch (error) {
       console.error('Error al recuperar usuario del localStorage:', error);
@@ -92,6 +93,7 @@ export class UserStoreService {
   }
 
   setUser(user: UserInfo): void {
+    console.log('🧠 [USER STORE] Payload recibido en setUser:', user);
     this._user.set(user);
     this.storeUser(user);
   }

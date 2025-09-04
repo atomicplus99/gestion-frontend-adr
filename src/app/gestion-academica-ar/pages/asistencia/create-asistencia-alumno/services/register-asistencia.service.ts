@@ -77,22 +77,52 @@ export class RegistroAsistenciaServiceManual {
     );
   }
 
-  // Métodos de utilidad
-  getFechaHoy(): string {
-    // Obtener fecha actual en zona horaria local (Perú)
+  // Métodos de utilidad para fechas con zona horaria de Perú
+  private getFechaPeruana(): Date {
+    // Obtener fecha y hora actual en zona horaria de Perú (UTC-5)
     const ahora = new Date();
+    const offsetPeru = -5; // UTC-5 (Perú)
+    const offsetLocal = ahora.getTimezoneOffset() / 60; // Offset local en horas
+    const diferenciaHoras = offsetPeru - (-offsetLocal); // Diferencia entre Perú y local
     
-    // Obtener componentes de fecha en zona horaria local
-    const año = ahora.getFullYear();
-    const mes = String(ahora.getMonth() + 1).padStart(2, '0');
-    const dia = String(ahora.getDate()).padStart(2, '0');
+    // Crear nueva fecha ajustada a zona horaria de Perú
+    const fechaPeruana = new Date(ahora.getTime() + (diferenciaHoras * 60 * 60 * 1000));
+    return fechaPeruana;
+  }
+
+  getFechaHoy(): string {
+    // Obtener fecha actual en zona horaria de Perú (UTC-5)
+    const fechaPeruana = this.getFechaPeruana();
+    
+    // Obtener componentes de fecha en zona horaria de Perú
+    const año = fechaPeruana.getFullYear();
+    const mes = String(fechaPeruana.getMonth() + 1).padStart(2, '0');
+    const dia = String(fechaPeruana.getDate()).padStart(2, '0');
+    
+    console.log('📅 [FECHA PERÚ] Fecha actual Perú:', `${año}-${mes}-${dia}`);
+    console.log('📅 [FECHA PERÚ] Fecha original UTC:', new Date().toISOString());
+    console.log('📅 [FECHA PERÚ] Fecha ajustada Perú:', fechaPeruana.toISOString());
     
     // Formatear como YYYY-MM-DD
     return `${año}-${mes}-${dia}`;
   }
 
   esFechaHoy(fecha: string): boolean {
-    return fecha === this.getFechaHoy();
+    const fechaHoyPeru = this.getFechaHoy();
+    console.log('📅 [FECHA PERÚ] Comparando:', fecha, 'vs', fechaHoyPeru);
+    return fecha === fechaHoyPeru;
+  }
+
+  // Método para obtener fecha con días de diferencia (para fechas rápidas)
+  getFechaConDias(dias: number): string {
+    const fechaPeruana = this.getFechaPeruana();
+    fechaPeruana.setDate(fechaPeruana.getDate() + dias);
+    
+    const año = fechaPeruana.getFullYear();
+    const mes = String(fechaPeruana.getMonth() + 1).padStart(2, '0');
+    const dia = String(fechaPeruana.getDate()).padStart(2, '0');
+    
+    return `${año}-${mes}-${dia}`;
   }
 
   obtenerInfoEstado(estado: string): EstadoInfoManualAsistencia {
@@ -131,12 +161,23 @@ export class RegistroAsistenciaServiceManual {
   }
 
   validarFecha(fecha: string): { valida: boolean; mensaje?: string } {
-    const fechaSeleccionada = new Date(fecha);
-    const hoy = new Date();
-    const hace30Dias = new Date();
-    hace30Dias.setDate(hoy.getDate() - 30);
+    // Crear fecha seleccionada (formato YYYY-MM-DD)
+    const fechaSeleccionada = new Date(fecha + 'T00:00:00');
     
-    if (fechaSeleccionada > hoy) {
+    // Obtener fecha actual en zona horaria de Perú
+    const fechaPeruana = this.getFechaPeruana();
+    const hoyPeru = new Date(fechaPeruana.getFullYear(), fechaPeruana.getMonth(), fechaPeruana.getDate());
+    
+    // Calcular fecha límite (30 días atrás desde hoy en Perú)
+    const hace30Dias = new Date(hoyPeru);
+    hace30Dias.setDate(hace30Dias.getDate() - 30);
+    
+    console.log('📅 [VALIDACIÓN FECHA] Validando:', fecha);
+    console.log('📅 [VALIDACIÓN FECHA] Fecha seleccionada:', fechaSeleccionada.toISOString());
+    console.log('📅 [VALIDACIÓN FECHA] Hoy en Perú:', hoyPeru.toISOString());
+    console.log('📅 [VALIDACIÓN FECHA] Hace 30 días:', hace30Dias.toISOString());
+    
+    if (fechaSeleccionada > hoyPeru) {
       return {
         valida: false,
         mensaje: 'No se pueden registrar asistencias para fechas futuras.'
@@ -150,6 +191,7 @@ export class RegistroAsistenciaServiceManual {
       };
     }
     
+    console.log('📅 [VALIDACIÓN FECHA] Fecha válida ✅');
     return { valida: true };
   }
 

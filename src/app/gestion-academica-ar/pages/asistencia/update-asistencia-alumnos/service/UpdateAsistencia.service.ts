@@ -22,12 +22,10 @@ export interface VerificarAsistenciaResponse {
     codigo: string;
     nombre: string;
     apellido: string;
-    turno: {
-      id_turno: string;
-      hora_inicio: string;
-      hora_fin: string;
-      turno: string;
-    };
+    seccion: string;
+    grado: number;
+    nivel: string;
+    turno?: string; // Turno como string directo, no objeto
   };
 }
 
@@ -36,7 +34,9 @@ export interface UpdateAsistenciaRequest {
   hora_salida?: string;
   estado_asistencia?: EstadoAsistencia;
   motivo: string;
-  id_auxiliar: string;
+  id_auxiliar?: string; // Para auxiliares
+  id_usuario?: string; // Para administrador o director
+  fecha?: string; // Para fechas específicas diferentes a hoy
 }
 
 export interface UpdateAsistenciaResponse {
@@ -88,12 +88,12 @@ export class AsistenciaService {
 
   constructor(private http: HttpClient) {}
 
-  verificarAsistenciaPorCodigo(codigo: string): Observable<VerificarAsistenciaResponse> {
-    // Obtener fecha actual en zona horaria de Perú (UTC-5)
-    const fechaActual = this.obtenerFechaActualPeru();
-    const url = `${this.baseUrl}/verificar/${codigo}?fecha=${fechaActual}`;
+  verificarAsistenciaPorCodigo(codigo: string, fecha?: string): Observable<VerificarAsistenciaResponse> {
+    // Usar fecha proporcionada o fecha actual si no se proporciona
+    const fechaConsulta = fecha || this.obtenerFechaActualPeru();
+    const url = `${this.baseUrl}/verificar/${codigo}?fecha=${fechaConsulta}`;
     
-    console.log('🔍 Verificando asistencia para fecha:', fechaActual);
+    console.log('🔍 Verificando asistencia para fecha:', fechaConsulta);
     console.log('🌐 URL de verificación:', url);
     
     return this.http.get<BackendResponse<VerificarAsistenciaResponse>>(url)
@@ -142,6 +142,20 @@ export class AsistenciaService {
     
     // Formatear como YYYY-MM-DD
     return `${año}-${mes}-${dia}`;
+  }
+
+  /**
+   * Verifica si una fecha es el día de hoy
+   */
+  esFechaHoy(fecha: string): boolean {
+    return fecha === this.obtenerFechaActualPeru();
+  }
+
+  /**
+   * Obtiene la fecha de hoy en formato YYYY-MM-DD
+   */
+  getFechaHoy(): string {
+    return this.obtenerFechaActualPeru();
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {
