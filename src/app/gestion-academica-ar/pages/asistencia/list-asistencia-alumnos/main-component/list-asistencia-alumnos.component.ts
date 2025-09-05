@@ -51,7 +51,7 @@ export class ListaAsistenciaComponent implements OnInit {
     { campo: 'alumno.codigo', label: 'Código' },
     { campo: 'alumno.nombre', label: 'Alumno' },
     { campo: 'alumno.nivel', label: 'Nivel/Grado' },
-    { campo: 'alumno.turno.turno', label: 'Turno' },
+    { campo: 'alumno.turno', label: 'Turno' },
     { campo: 'fecha', label: 'Fecha' },
     { campo: 'hora_de_llegada', label: 'Hora Llegada' },
     { campo: 'hora_salida', label: 'Hora Salida' },
@@ -63,6 +63,46 @@ export class ListaAsistenciaComponent implements OnInit {
   alumnoDetalle: AsistenciaConAlumno | null = null;
 
   constructor(private asistenciaService: AsistenciaService,  private cdr: ChangeDetectorRef) { }
+
+  // Helper para obtener el turno de forma segura (puede ser string o objeto Turno)
+  getTurnoDisplay(turno: any): string {
+    if (!turno) return 'Sin turno';
+    if (typeof turno === 'string') return turno;
+    if (typeof turno === 'object' && turno.turno) return turno.turno;
+    if (typeof turno === 'object' && turno.nombre) return turno.nombre; // Posible propiedad alternativa
+    if (typeof turno === 'object' && turno.descripcion) return turno.descripcion; // Posible propiedad alternativa
+    
+    return 'Sin turno';
+  }
+
+  // Helper para obtener el turno desde las asistencias del alumno (para el modal de detalles)
+  getTurnoDesdeAsistencias(alumnoDetalle: AsistenciaConAlumno | null): any {
+    if (!alumnoDetalle || !alumnoDetalle.asistencias || alumnoDetalle.asistencias.length === 0) {
+      return null;
+    }
+    
+    // Buscar la primera asistencia que tenga turno
+    const asistenciaConTurno = alumnoDetalle.asistencias.find(asistencia => 
+      asistencia.alumno.turno && 
+      typeof asistencia.alumno.turno === 'object' && 
+      asistencia.alumno.turno.turno
+    );
+    
+    if (asistenciaConTurno) {
+      return asistenciaConTurno.alumno.turno;
+    }
+    
+    return null;
+  }
+
+  // Helper para obtener las horas del turno de forma segura
+  getTurnoHoras(turno: any): string {
+    if (!turno) return '';
+    if (typeof turno === 'object' && turno.hora_inicio && turno.hora_fin) {
+      return `${turno.hora_inicio} - ${turno.hora_fin}`;
+    }
+    return '';
+  }
 
   ngOnInit() {
     this.cargarAsistencias();
@@ -109,8 +149,9 @@ export class ListaAsistenciaComponent implements OnInit {
   extraerTurnosDeAsistencias() {
     const turnos = new Set<string>();
     this.asistencias.forEach(asistencia => {
-      if (asistencia.alumno.turno?.turno) {
-        turnos.add(asistencia.alumno.turno.turno);
+      const turnoDisplay = this.getTurnoDisplay(asistencia.alumno.turno);
+      if (turnoDisplay !== 'Sin turno') {
+        turnos.add(turnoDisplay);
       }
     });
     this.turnosUnicos = Array.from(turnos).sort();
@@ -157,7 +198,7 @@ export class ListaAsistenciaComponent implements OnInit {
       }
 
       // Filtro por turno
-      if (this.filtros.turno && asistencia.alumno.turno?.turno !== this.filtros.turno) {
+              if (this.filtros.turno && this.getTurnoDisplay(asistencia.alumno.turno) !== this.filtros.turno) {
         return false;
       }
 
@@ -247,8 +288,8 @@ export class ListaAsistenciaComponent implements OnInit {
           valorB = `${b.alumno.nivel} ${b.alumno.grado}${b.alumno.seccion}`;
           break;
         case 'alumno.turno.turno':
-          valorA = a.alumno.turno?.turno || '';
-          valorB = b.alumno.turno?.turno || '';
+          valorA = this.getTurnoDisplay(a.alumno.turno);
+          valorB = this.getTurnoDisplay(b.alumno.turno);
           break;
         case 'fecha':
           valorA = new Date(a.fecha);
@@ -372,9 +413,9 @@ export class ListaAsistenciaComponent implements OnInit {
       'Nivel': asistencia.alumno.nivel,
       'Grado': asistencia.alumno.grado,
       'Sección': asistencia.alumno.seccion,
-      'Turno': asistencia.alumno.turno?.turno || 'Sin turno',
-      'Hora Inicio Turno': asistencia.alumno.turno?.hora_inicio || '',
-      'Hora Fin Turno': asistencia.alumno.turno?.hora_fin || '',
+              'Turno': this.getTurnoDisplay(asistencia.alumno.turno),
+        'Hora Inicio Turno': this.getTurnoHoras(asistencia.alumno.turno),
+        'Hora Fin Turno': this.getTurnoHoras(asistencia.alumno.turno),
       'Fecha': this.formatearFecha(asistencia.fecha),
       'Hora Llegada': asistencia.hora_de_llegada,
       'Hora Salida': asistencia.hora_salida || 'No registrada',
@@ -410,7 +451,7 @@ export class ListaAsistenciaComponent implements OnInit {
       asistencia.alumno.codigo,
       `${asistencia.alumno.nombre} ${asistencia.alumno.apellido}`,
       `${asistencia.alumno.nivel} ${asistencia.alumno.grado}°${asistencia.alumno.seccion}`,
-      asistencia.alumno.turno?.turno || 'Sin turno',
+              this.getTurnoDisplay(asistencia.alumno.turno),
       this.formatearFecha(asistencia.fecha),
       asistencia.hora_de_llegada,
       asistencia.hora_salida || 'No reg.',
@@ -572,6 +613,22 @@ export class ListaAsistenciaComponent implements OnInit {
   getTardanzas(): number {
     if (!this.alumnoDetalle?.asistencias) return 0;
     return this.alumnoDetalle.asistencias.filter(a => a.estado_asistencia === 'TARDANZA').length;
+  }
+
+  // Métodos para los nuevos estados de asistencia
+  getAusenciasModal(): number {
+    if (!this.alumnoDetalle?.asistencias) return 0;
+    return this.alumnoDetalle.asistencias.filter(a => a.estado_asistencia === 'AUSENTE').length;
+  }
+
+  getAnuladosModal(): number {
+    if (!this.alumnoDetalle?.asistencias) return 0;
+    return this.alumnoDetalle.asistencias.filter(a => a.estado_asistencia === 'ANULADO').length;
+  }
+
+  getJustificadosModal(): number {
+    if (!this.alumnoDetalle?.asistencias) return 0;
+    return this.alumnoDetalle.asistencias.filter(a => a.estado_asistencia === 'JUSTIFICADO').length;
   }
   getItemsShown(): number {
     return Math.min(this.paginaActual * this.itemsPorPagina, this.asistenciasFiltradas.length);

@@ -31,7 +31,7 @@ export interface Alumno {
   nivel: string;
   grado: number;
   seccion: string;
-  turno?: Turno;
+  turno?: Turno | string; // Puede ser objeto Turno o string directo
   usuario?: Usuario;
 }
 
@@ -39,7 +39,7 @@ export interface Asistencia {
   id_asistencia: string;
   hora_de_llegada: string;
   hora_salida?: string;
-  estado_asistencia: 'PUNTUAL' | 'TARDANZA';
+  estado_asistencia: 'PUNTUAL' | 'TARDANZA' | 'AUSENTE' | 'ANULADO' | 'JUSTIFICADO';
   fecha: Date;
   alumno: Alumno;
 }
@@ -82,8 +82,15 @@ export class AsistenciaService {
   getAsistenciaPorCodigoAlumno(codigo: string): Observable<AsistenciaConAlumno> {
     return this.http.get<BackendResponse<AsistenciaConAlumno>>(`${this.baseUrl}/list/alumno/${codigo}`).pipe(
       map(response => {
-        console.log('Respuesta getAsistenciaPorCodigoAlumno:', response);
+        console.log('🔍 [SERVICIO] Respuesta completa del backend:', response);
         if (response && response.success && response.data) {
+          console.log('🔍 [SERVICIO] Datos del alumno:', response.data.alumno);
+          console.log('🔍 [SERVICIO] Turno del alumno:', response.data.alumno.turno);
+          console.log('🔍 [SERVICIO] Tipo del turno:', typeof response.data.alumno.turno);
+          if (response.data.alumno.turno && typeof response.data.alumno.turno === 'object') {
+            console.log('🔍 [SERVICIO] Propiedades del turno:', Object.keys(response.data.alumno.turno));
+            console.log('🔍 [SERVICIO] Contenido del turno:', response.data.alumno.turno);
+          }
           return response.data;
         }
         // Si la respuesta no tiene la estructura esperada, devolver objeto vacío

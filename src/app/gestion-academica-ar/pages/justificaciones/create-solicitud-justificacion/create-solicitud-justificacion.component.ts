@@ -26,7 +26,8 @@ interface Alumno {
 
 interface CreateJustificacionDto {
   id_alumno: string;
-  id_auxiliar: string;
+  id_auxiliar?: string; // Para auxiliares
+  id_usuario?: string; // Para administrador o director
   fecha_de_justificacion: string[];
   tipo_justificacion: 'MEDICA' | 'FAMILIAR' | 'ACADEMICA' | 'PERSONAL' | 'EMERGENCIA';
   motivo: string;
@@ -86,18 +87,41 @@ export class SolicitudJustificacionComponent implements OnInit {
     show: false
   };
 
-  // Propiedades del auxiliar autenticado
+  // Propiedades del usuario autenticado (auxiliar, administrador o director)
   get puedeCrearJustificaciones(): boolean {
-    return this.userStore.isAuxiliar();
+    return this.userStore.canRegisterAttendance();
   }
 
   get idAuxiliarActual(): string | null {
     return this.userStore.idAuxiliar();
   }
 
-  get nombreAuxiliarActual(): string | null {
-    const auxiliar = this.userStore.user()?.auxiliar;
-    return auxiliar ? `${auxiliar.nombre} ${auxiliar.apellido}` : null;
+  get idUsuarioActual(): string | null {
+    const user = this.userStore.user();
+    if (user?.administrador?.id_administrador) {
+      return user.administrador.id_administrador;
+    } else if (user?.director?.id_director) {
+      return user.director.id_director;
+    }
+    return null;
+  }
+
+  get nombreUsuarioActual(): string | null {
+    const user = this.userStore.user();
+    if (user?.auxiliar) {
+      return `${user.auxiliar.nombre} ${user.auxiliar.apellido}`;
+    } else if (user?.username) {
+      return user.username;
+    } else if (user?.administrador) {
+      return `${user.administrador.nombres} ${user.administrador.apellidos}`;
+    } else if (user?.director) {
+      return `${user.director.nombres} ${user.director.apellidos}`;
+    }
+    return null;
+  }
+
+  get rolUsuarioActual(): string | null {
+    return this.userStore.userRole();
   }
 
   constructor(
@@ -109,7 +133,7 @@ export class SolicitudJustificacionComponent implements OnInit {
 
   ngOnInit() {
     this.initForm();
-    this.verificarPermisosAuxiliar();
+    this.verificarPermisosUsuario();
     this.setupUserSubscription();
   }
 
@@ -122,19 +146,19 @@ export class SolicitudJustificacionComponent implements OnInit {
   // MÉTODOS DE INICIALIZACIÓN Y PERMISOS
   // ========================================
   
-  private verificarPermisosAuxiliar(): void {
+  private verificarPermisosUsuario(): void {
     if (!this.puedeCrearJustificaciones) {
       this.confirmationMessage = {
         type: 'error',
         title: 'Sin Permisos',
-        message: 'No tienes permisos de auxiliar para crear justificaciones.',
+        message: 'No tienes permisos para crear justificaciones.',
         show: true
       };
     }
   }
 
   private setupUserSubscription(): void {
-    // Observar cambios en el usuario para mantener actualizado el ID del auxiliar
+    // Observar cambios en el usuario para mantener actualizado el ID del usuario
     // Si userStore.user() es un signal, no necesitas suscripción
     // Si es un observable, descomenta la línea siguiente:
     
@@ -428,32 +452,45 @@ export class SolicitudJustificacionComponent implements OnInit {
     const documentosFiltrados = formData.documentos_adjuntos
       .filter((doc: string) => doc && doc.trim());
 
-    // Verificar que el auxiliar esté autenticado
-    if (!this.idAuxiliarActual) {
+    // Verificar que el usuario esté autenticado y tenga un ID válido
+    const tieneIdValido = this.idAuxiliarActual || this.idUsuarioActual;
+    if (!tieneIdValido) {
       this.isLoading = false;
       this.confirmationMessage = {
         type: 'error',
         title: 'Error de Autenticación',
-        message: 'No se pudo obtener el ID del auxiliar. Verifica tu sesión y que tengas permisos de auxiliar.',
+        message: 'No se pudo obtener el ID del usuario. Verifica tu sesión y que tengas permisos.',
         show: true
       };
       return;
     }
 
+    // Construir payload según el rol del usuario
     const payload: CreateJustificacionDto = {
       id_alumno: this.alumnoEncontrado.id_alumno,
-      id_auxiliar: this.idAuxiliarActual,
       fecha_de_justificacion: fechasParaEnviar,
       tipo_justificacion: formData.tipo_justificacion,
       motivo: formData.motivo,
       documentos_adjuntos: documentosFiltrados.length > 0 ? documentosFiltrados : undefined
     };
 
-    console.log('🔍 DIAGNÓSTICO DEL AUXILIAR:');
+    // Asignar el ID correcto según el rol
+    if (this.idAuxiliarActual) {
+      payload.id_auxiliar = this.idAuxiliarActual;
+      console.log('✅ [JUSTIFICACIONES] Enviando como AUXILIAR con id_auxiliar:', this.idAuxiliarActual);
+    } else if (this.idUsuarioActual) {
+      payload.id_usuario = this.idUsuarioActual;
+      console.log('✅ [JUSTIFICACIONES] Enviando como ADMIN/DIRECTOR con id_usuario:', this.idUsuarioActual);
+    }
+
+    console.log('🔍 DIAGNÓSTICO DEL USUARIO:');
     console.log('- Usuario actual:', this.userStore.user());
-    console.log('- Es auxiliar?:', this.userStore.isAuxiliar());
-    console.log('- ID auxiliar obtenido:', this.idAuxiliarActual);
-    console.log('- Nombre auxiliar:', this.nombreAuxiliarActual);
+    console.log('- Rol del usuario:', this.rolUsuarioActual);
+    console.log('- ID auxiliar disponible:', this.idAuxiliarActual);
+    console.log('- ID administrador disponible:', this.userStore.user()?.administrador?.id_administrador);
+    console.log('- ID director disponible:', this.userStore.user()?.director?.id_director);
+    console.log('- ID usuario final seleccionado:', this.idUsuarioActual);
+    console.log('- Nombre usuario:', this.nombreUsuarioActual);
     console.log('📦 Payload a enviar:', payload);
 
     this.http.post<JustificacionResponse>(`${environment.apiUrl}/detalle-justificaciones`, payload)
@@ -469,7 +506,7 @@ export class SolicitudJustificacionComponent implements OnInit {
             message: response.message || 'Solicitud de justificación registrada exitosamente',
             details: [
               `Alumno: ${this.alumnoEncontrado?.nombre} ${this.alumnoEncontrado?.apellido}`,
-              `Auxiliar: ${this.nombreAuxiliarActual}`,
+              `${this.rolUsuarioActual}: ${this.nombreUsuarioActual}`,
               `Fechas: ${fechasParaEnviar.length} día(s)`,
               `Tipo: ${formData.tipo_justificacion}`
             ],

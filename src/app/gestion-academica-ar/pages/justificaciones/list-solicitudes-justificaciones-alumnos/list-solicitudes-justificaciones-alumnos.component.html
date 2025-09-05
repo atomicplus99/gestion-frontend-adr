@@ -1,5 +1,5 @@
-<div class="min-h-screen bg-gray-50 py-8 px-4">
-  <div class="max-w-7xl mx-auto">
+<div class="min-h-screen bg-white py-8 px-4">
+  <div class="w-full">
     <!-- Header -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -298,16 +298,36 @@
                     
                     <!-- Información del auxiliar y documentos -->
                     <div>
-                      <h4 class="text-sm font-medium text-gray-900 mb-3">Auxiliar Encargado</h4>
+                      <h4 class="text-sm font-medium text-gray-900 mb-3">Responsable</h4>
                       <dl class="space-y-2">
-                        <div>
+                        <div *ngIf="justificacion.responsable; else noResponsable">
                           <dt class="text-xs font-medium text-gray-500">Nombre:</dt>
-                          <dd class="text-sm text-gray-900">{{ justificacion.auxiliar_encargado.nombre }} {{ justificacion.auxiliar_encargado.apellido }}</dd>
+                          <dd class="text-sm text-gray-900">{{ (justificacion.responsable.nombre || 'Sin nombre') + ' ' + (justificacion.responsable.apellido || '') }}</dd>
                         </div>
-                        <div>
+                        <div *ngIf="justificacion.responsable">
                           <dt class="text-xs font-medium text-gray-500">Correo:</dt>
-                          <dd class="text-sm text-gray-900">{{ justificacion.auxiliar_encargado.correo_electronico }}</dd>
+                          <dd class="text-sm text-gray-900">{{ justificacion.responsable.correo_electronico || 'Sin email' }}</dd>
                         </div>
+                        <div *ngIf="justificacion.responsable">
+                          <dt class="text-xs font-medium text-gray-500">Tipo:</dt>
+                          <dd class="text-sm text-gray-900">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" 
+                                  [ngClass]="obtenerClaseTipoResponsable(justificacion.responsable.tipo)">
+                              {{ justificacion.responsable.tipo | titlecase }}
+                            </span>
+                          </dd>
+                        </div>
+                        
+                        <ng-template #noResponsable>
+                          <div>
+                            <dt class="text-xs font-medium text-gray-500">Nombre:</dt>
+                            <dd class="text-sm text-gray-500 italic">Sin información del responsable</dd>
+                          </div>
+                          <div>
+                            <dt class="text-xs font-medium text-gray-500">Correo:</dt>
+                            <dd class="text-sm text-gray-500 italic">No disponible</dd>
+                          </div>
+                        </ng-template>
                       </dl>
                       
                       <div *ngIf="justificacion.documentos_adjuntos && justificacion.documentos_adjuntos.length > 0" class="mt-4">
@@ -388,12 +408,16 @@
                 <p class="text-sm text-gray-900">{{ justificacion.observaciones_solicitante }}</p>
               </div>
               
-              <div>
-                <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Auxiliar Encargado</h4>
+              <div *ngIf="justificacion.responsable">
+                <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Responsable</h4>
                 <p class="text-sm text-gray-900">
-                  {{ justificacion.auxiliar_encargado.nombre }} {{ justificacion.auxiliar_encargado.apellido }}
+                  {{ (justificacion.responsable.nombre || 'Sin nombre') + ' ' + (justificacion.responsable.apellido || '') }}
                 </p>
-                <p class="text-xs text-gray-600">{{ justificacion.auxiliar_encargado.correo_electronico }}</p>
+                <p class="text-xs text-gray-600">{{ justificacion.responsable.correo_electronico || 'Sin email' }}</p>
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1" 
+                      [ngClass]="obtenerClaseTipoResponsable(justificacion.responsable.tipo)">
+                  {{ (justificacion.responsable.tipo || 'desconocido') | titlecase }}
+                </span>
               </div>
               
               <div *ngIf="justificacion.documentos_adjuntos && justificacion.documentos_adjuntos.length > 0">

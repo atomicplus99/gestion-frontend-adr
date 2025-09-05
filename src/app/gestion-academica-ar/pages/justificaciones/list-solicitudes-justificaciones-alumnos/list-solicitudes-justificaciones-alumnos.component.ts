@@ -25,11 +25,12 @@ interface JustificacionResponseDto {
     grado: number;
     seccion: string;
   };
-  auxiliar_encargado: {
-    id_auxiliar: string;
-    nombre: string;
-    apellido: string;
-    correo_electronico: string;
+  responsable?: {
+    tipo?: string;
+    id?: string;
+    nombre?: string;
+    apellido?: string;
+    correo_electronico?: string;
   };
   asistencias_creadas?: number;
 }
@@ -467,6 +468,25 @@ export class ListaJustificacionesComponent implements OnInit {
         return 'bg-pink-100 text-pink-800';
       case 'EMERGENCIA':
         return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  obtenerClaseTipoResponsable(tipo: string | undefined): string {
+    if (!tipo) {
+      return 'bg-gray-100 text-gray-800';
+    }
+    
+    switch (tipo) {
+      case 'auxiliar':
+        return 'bg-blue-100 text-blue-800';
+      case 'administrador':
+        return 'bg-green-100 text-green-800';
+      case 'director':
+        return 'bg-purple-100 text-purple-800';
+      case 'desconocido':
+        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
