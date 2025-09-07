@@ -19,25 +19,19 @@ export class AuthService {
   ) { }
 
   async isAuthenticated(): Promise<boolean> {
-    console.log('🔍 [AUTH] Verificando autenticación...');
     try {
       if (!this.tokenService.isTokenValid()) {
-        console.log('❌ [AUTH] Token no válido o expirado');
         return false;
       }
-      console.log('✅ [AUTH] Token válido, verificando con backend...');
 
       await firstValueFrom(
         this.http.get(`${environment.apiUrl}/auth/me`)
       );
-      console.log('✅ [AUTH] Sesión verificada exitosamente con backend');
       return true;
     } catch (error) {
-      console.error('❌ [AUTH] Error al verificar autenticación:', error);
       if (error && typeof error === 'object' && 'status' in error) {
         const httpError = error as any;
         if (httpError.status === 401) {
-          console.log('🚫 [AUTH] Error 401 - Token inválido, limpiando...');
           this.clearToken();
         }
       }
@@ -56,8 +50,6 @@ export class AuthService {
   }
 
   clearToken() {
-    console.log('🧹 [AUTH] Limpiando token...');
     this.tokenService.clearToken();
-    console.log('✅ [AUTH] Token limpiado');
   }
 }

@@ -63,12 +63,9 @@ export class FormContainerComponent {
     }
 
     const { username, password } = this.formLogin.value;
-    console.log('🚀 [FORM] Iniciando login desde formulario...');
-    console.log('🚀 [FORM] Username:', username);
   
     this.loginService.login(username!, password!).subscribe({
       next: (response) => {
-        console.log('✅ [FORM] Login exitoso, estableciendo usuario en store...');
         if (response && response.data && response.data.user) {
           this.userStore.setUser(response.data.user);
           
@@ -82,7 +79,6 @@ export class FormContainerComponent {
         }
       },
       error: (err) => {
-        console.error('❌ [FORM] Error en login:', err);
         const errorMessage = err?.error?.message || err?.message || 'Error de autenticación';
         this.alertsService.error(errorMessage);
       }
@@ -104,7 +100,6 @@ export class FormContainerComponent {
         }
       },
       error: (error: any) => {
-        console.error('Error al cargar foto después del login:', error);
       }
     });
   }

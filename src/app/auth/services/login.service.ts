@@ -14,26 +14,14 @@ export class LoginService {
     ) { }
 
     login(username: string, password: string): Observable<LoginResponse> {
-        console.log('🔐 [LOGIN] Environment completo:', environment);
-        console.log('🔐 [LOGIN] Environment API URL:', environment.apiUrl);
-        console.log('🔐 [LOGIN] Tipo de environment.apiUrl:', typeof environment.apiUrl);
-        console.log('🔐 [LOGIN] Ruta del environment importado:', '../../../environments/environment');
         const url = `${environment.apiUrl}/auth/login`;
-        console.log('🔐 [LOGIN] URL construida:', url);
-        console.log('🔐 [LOGIN] Credenciales:', { username, password: '***' });
         
         return this.httpClient.post<LoginResponse>(url,
             { username, password }
         ).pipe(
             tap(response => {
-                console.log('✅ [LOGIN] Respuesta exitosa del backend:', response);
                 if (response && response.data && response.data.access_token) {
-                    console.log('🔑 [LOGIN] Token recibido, guardando en localStorage...');
                     this.tokenService.storeToken(response.data.access_token);
-                    console.log('✅ [LOGIN] Token guardado exitosamente');
-                    console.log('👤 [LOGIN] Usuario autenticado:', response.data.user);
-                } else {
-                    console.warn('⚠️ [LOGIN] Respuesta sin token:', response);
                 }
             })
         );

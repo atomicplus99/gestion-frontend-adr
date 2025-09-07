@@ -67,7 +67,6 @@ export class ForgotPasswordComponent implements OnInit, OnDestroy {
       },
       error: (error: any) => {
         this.loading = false;
-        console.error('Error al solicitar restablecimiento:', error);
         
         let errorMessage = 'Error al enviar el enlace de restablecimiento';
         

@@ -107,7 +107,6 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
       },
       error: (error: any) => {
         this.loading = false;
-        console.error('Error al restablecer contraseña:', error);
         
         let errorMessage = 'Error al restablecer la contraseña';
         
