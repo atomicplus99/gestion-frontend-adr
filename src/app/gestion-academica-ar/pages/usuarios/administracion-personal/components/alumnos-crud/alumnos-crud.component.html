@@ -1,10 +1,9 @@
 <div class="p-6">
-  
   <!-- Header con botón crear -->
   <div class="flex justify-between items-center mb-6">
     <div>
-      <h2 class="text-2xl font-bold text-gray-900">Gestión de Directores</h2>
-      <p class="text-gray-600">Administra la información de los directores del colegio</p>
+      <h2 class="text-2xl font-bold text-gray-900">Gestión de Alumnos</h2>
+      <p class="text-gray-600">Administra la información de los alumnos del colegio</p>
     </div>
     <button
       (click)="mostrarCrearFormulario()"
@@ -12,7 +11,7 @@
       <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
       </svg>
-      Nuevo Director
+      Nuevo Alumno
     </button>
   </div>
 
@@ -35,7 +34,7 @@
     </div>
   </div>
 
-  <!-- Lista de directores -->
+  <!-- Lista de alumnos -->
   <div *ngIf="!showCreateForm && !showEditForm && !showDeleteModal">
     
     <!-- Loading -->
@@ -49,9 +48,9 @@
             </svg>
           </div>
         </div>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">Cargando directores...</h3>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Cargando alumnos...</h3>
         <p class="text-gray-600 mb-4">
-          Estamos obteniendo la información de los directores del sistema
+          Estamos obteniendo la información de los alumnos del sistema
         </p>
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div class="flex items-center text-sm text-blue-800">
@@ -65,12 +64,12 @@
     </div>
 
     <!-- Lista vacía -->
-    <div *ngIf="!loading && directores.length === 0" class="text-center py-16">
+    <div *ngIf="!loading && alumnos.length === 0" class="text-center py-16">
       <div class="max-w-md mx-auto">
-        <div class="text-gray-400 text-8xl mb-6">👨‍💼</div>
-        <h3 class="text-2xl font-semibold text-gray-900 mb-3">No hay directores registrados</h3>
+        <div class="text-gray-400 text-8xl mb-6">👨‍🎓</div>
+        <h3 class="text-2xl font-semibold text-gray-900 mb-3">No hay alumnos registrados</h3>
         <p class="text-gray-600 mb-6 leading-relaxed">
-          Aún no se han registrado directores en el sistema. Los directores son responsables de la gestión académica y administrativa del colegio.
+          Aún no se han registrado alumnos en el sistema. Los alumnos son los estudiantes del colegio que requieren seguimiento académico y de asistencia.
         </p>
         
         <!-- Información adicional -->
@@ -79,13 +78,13 @@
             <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
             </svg>
-            ¿Qué puedes hacer con los directores?
+            ¿Qué puedes hacer con los alumnos?
           </h4>
           <ul class="text-sm text-blue-800 space-y-1">
-            <li>• Crear y gestionar cuentas de directores</li>
-            <li>• Asignar usuarios a directores específicos</li>
-            <li>• Editar información personal y de contacto</li>
-            <li>• Eliminar directores (con validaciones de seguridad)</li>
+            <li>• Crear y gestionar cuentas de alumnos</li>
+            <li>• Asignar usuarios a alumnos específicos</li>
+            <li>• Editar información personal y académica</li>
+            <li>• Eliminar alumnos (con validaciones de seguridad)</li>
           </ul>
         </div>
         
@@ -95,13 +94,13 @@
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
           </svg>
-          Crear Primer Director
+          Crear Primer Alumno
         </button>
       </div>
     </div>
 
-    <!-- Lista de directores -->
-    <div *ngIf="!loading && directores.length > 0">
+    <!-- Lista de alumnos -->
+    <div *ngIf="!loading && alumnos.length > 0">
       <!-- Header con estadísticas -->
       <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6">
         <div class="flex items-center justify-between">
@@ -115,16 +114,16 @@
             </div>
             <div>
               <h3 class="text-lg font-semibold text-blue-900">
-                {{ numeroDirectoresFiltrados }} de {{ directores.length }} Director{{ directores.length !== 1 ? 'es' : '' }}
+                {{ numeroAlumnosFiltrados }} de {{ alumnos.length }} Alumno{{ alumnos.length !== 1 ? 's' : '' }}
                 <span *ngIf="tieneFiltrosActivos" class="text-sm font-normal text-blue-600">(filtrados)</span>
               </h3>
               <p class="text-sm text-blue-700">
-                Gestiona la información y usuarios asignados a cada director
+                Gestiona la información y usuarios asignados a cada alumno
               </p>
             </div>
           </div>
           <div class="text-right">
-            <div class="text-2xl font-bold text-blue-600">{{ numeroDirectoresFiltrados }}</div>
+            <div class="text-2xl font-bold text-blue-600">{{ numeroAlumnosFiltrados }}</div>
             <div class="text-xs text-blue-500 uppercase tracking-wide">
               {{ tieneFiltrosActivos ? 'Filtrados' : 'Total' }}
             </div>
@@ -135,7 +134,7 @@
       <!-- Filtros -->
       <div class="bg-white border border-gray-200 rounded-lg p-4 mb-6">
         <div class="flex items-center justify-between mb-4">
-          <h4 class="text-sm font-medium text-gray-900">Filtrar Directores</h4>
+          <h4 class="text-sm font-medium text-gray-900">Filtrar Alumnos</h4>
           <button
             *ngIf="tieneFiltrosActivos"
             (click)="limpiarFiltros()"
@@ -153,17 +152,17 @@
             type="text"
             [(ngModel)]="filtroTexto"
             (input)="aplicarFiltros()"
-            placeholder="Buscar por nombre, apellido, email, teléfono, dirección o usuario..."
+            placeholder="Buscar por nombre, apellido, código, DNI, nivel, grado, sección, turno o usuario..."
             class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
         </div>
         <div *ngIf="tieneFiltrosActivos" class="mt-2 text-sm text-gray-600">
-          Mostrando {{ numeroDirectoresFiltrados }} de {{ directores.length }} directores
+          Mostrando {{ numeroAlumnosFiltrados }} de {{ alumnos.length }} alumnos
         </div>
       </div>
 
-      <!-- Grid de directores -->
+      <!-- Grid de alumnos -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div *ngFor="let director of directoresFiltrados" class="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200">
+        <div *ngFor="let alumno of alumnosFiltrados" class="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200">
           <!-- Header de la tarjeta -->
           <div class="p-6 border-b border-gray-100">
             <div class="flex items-center justify-between">
@@ -171,25 +170,25 @@
                 <div class="flex-shrink-0 h-12 w-12">
                   <div class="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm">
                     <span class="text-white font-semibold text-lg">
-                      {{ director.nombres.charAt(0) }}{{ director.apellidos.charAt(0) }}
+                      {{ alumno.nombre.charAt(0) }}{{ alumno.apellido.charAt(0) }}
                     </span>
                   </div>
                 </div>
                 <div class="ml-4">
                   <h4 class="text-lg font-semibold text-gray-900">
-                    {{ director.nombres }} {{ director.apellidos }}
+                    {{ alumno.nombre }} {{ alumno.apellido }}
                   </h4>
-                  <p class="text-sm text-gray-600">Director</p>
+                  <p class="text-sm text-gray-600">Alumno</p>
                 </div>
               </div>
               <div class="flex items-center space-x-1">
-                <span *ngIf="director.usuario" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <span *ngIf="alumno.usuario" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                   <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
                   </svg>
                   Con Usuario
                 </span>
-                <span *ngIf="!director.usuario" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                <span *ngIf="!alumno.usuario" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                   <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
                   </svg>
@@ -199,29 +198,30 @@
             </div>
           </div>
 
-          <!-- Información de contacto -->
+          <!-- Información académica -->
           <div class="p-6">
             <div class="space-y-3">
               <div class="flex items-center text-sm text-gray-600">
                 <svg class="w-4 h-4 mr-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                  <path fill-rule="evenodd" d="M10 2L3 7v11a1 1 0 001 1h12a1 1 0 001-1V7l-7-5zM8 15v-4h4v4H8z" clip-rule="evenodd"/>
                 </svg>
-                <span class="truncate">{{ director.email }}</span>
+                <span class="font-medium">Código:</span>
+                <span class="ml-2">{{ alumno.codigo }}</span>
               </div>
               
-              <div *ngIf="director.telefono" class="flex items-center text-sm text-gray-600">
+              <div class="flex items-center text-sm text-gray-600">
                 <svg class="w-4 h-4 mr-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <span>{{ director.telefono }}</span>
+                <span class="font-medium">Nivel:</span>
+                <span class="ml-2">{{ alumno.nivel }}</span>
               </div>
               
-              <div *ngIf="director.direccion" class="flex items-start text-sm text-gray-600">
-                <svg class="w-4 h-4 mr-3 mt-0.5 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+              <div class="flex items-center text-sm text-gray-600">
+                <svg class="w-4 h-4 mr-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
                 </svg>
-                <span class="line-clamp-2">{{ director.direccion }}</span>
+                <span class="font-medium">Grado {{ alumno.grado }} - Sección {{ alumno.seccion }}</span>
               </div>
             </div>
           </div>
@@ -230,22 +230,22 @@
           <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-lg">
             <div class="flex items-center justify-between">
               <div class="text-xs text-gray-500">
-                ID: {{ director.id_director.substring(0, 8) }}...
+                ID: {{ alumno.id_alumno.substring(0, 8) }}...
               </div>
               <div class="flex items-center space-x-2">
                 <button
-                  (click)="mostrarAsignarModal(director)"
-                  [class]="getAssignButtonClass(director)">
-                  <svg *ngIf="!tieneUsuarioAsignado(director)" class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  (click)="mostrarAsignarModal(alumno)"
+                  [class]="getAssignButtonClass(alumno)">
+                  <svg *ngIf="!tieneUsuarioAsignado(alumno)" class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                   </svg>
-                  <svg *ngIf="tieneUsuarioAsignado(director)" class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg *ngIf="tieneUsuarioAsignado(alumno)" class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                   </svg>
-                  {{ getAssignButtonText(director) }}
+                  {{ getAssignButtonText(alumno) }}
                 </button>
                 <button
-                  (click)="mostrarEditarFormulario(director)"
+                  (click)="mostrarEditarFormulario(alumno)"
                   class="inline-flex items-center px-3 py-1.5 border border-blue-300 rounded-md text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
                   <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -253,7 +253,7 @@
                   Editar
                 </button>
                 <button
-                  (click)="mostrarEliminarModal(director)"
+                  (click)="mostrarEliminarModal(alumno)"
                   class="inline-flex items-center px-3 py-1.5 border border-red-300 rounded-md text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
                   <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -268,124 +268,10 @@
     </div>
   </div>
 
-  <!-- Formulario de creación -->
-  <div *ngIf="showCreateForm" class="bg-white shadow rounded-lg p-6">
-    <div class="flex justify-between items-center mb-6">
-      <h3 class="text-lg font-medium text-gray-900">Crear Nuevo Director</h3>
-      <button
-        (click)="cerrarModales()"
-        class="text-gray-400 hover:text-gray-600">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
-      </button>
-    </div>
-
-    <form [formGroup]="createForm" (ngSubmit)="crearDirector()" class="space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label for="nombres" class="block text-sm font-medium text-gray-700 mb-1">
-            Nombres *
-          </label>
-          <input
-            type="text"
-            id="nombres"
-            formControlName="nombres"
-            placeholder="Ingresa los nombres"
-            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(createForm, 'nombres')">
-          <div *ngIf="hasFieldError(createForm, 'nombres')" class="mt-1 text-sm text-red-600">
-            {{ getFieldError(createForm, 'nombres') }}
-          </div>
-        </div>
-
-        <div>
-          <label for="apellidos" class="block text-sm font-medium text-gray-700 mb-1">
-            Apellidos *
-          </label>
-          <input
-            type="text"
-            id="apellidos"
-            formControlName="apellidos"
-            placeholder="Ingresa los apellidos"
-            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(createForm, 'apellidos')">
-          <div *ngIf="hasFieldError(createForm, 'apellidos')" class="mt-1 text-sm text-red-600">
-            {{ getFieldError(createForm, 'apellidos') }}
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
-          Email *
-        </label>
-        <input
-          type="email"
-          id="email"
-          formControlName="email"
-          placeholder="Ingresa el email"
-          [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(createForm, 'email')">
-        <div *ngIf="hasFieldError(createForm, 'email')" class="mt-1 text-sm text-red-600">
-          {{ getFieldError(createForm, 'email') }}
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label for="telefono" class="block text-sm font-medium text-gray-700 mb-1">
-            Teléfono
-          </label>
-          <input
-            type="tel"
-            id="telefono"
-            formControlName="telefono"
-            placeholder="Ingresa el teléfono"
-            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(createForm, 'telefono')">
-          <div *ngIf="hasFieldError(createForm, 'telefono')" class="mt-1 text-sm text-red-600">
-            {{ getFieldError(createForm, 'telefono') }}
-          </div>
-        </div>
-
-        <div>
-          <label for="direccion" class="block text-sm font-medium text-gray-700 mb-1">
-            Dirección
-          </label>
-          <input
-            type="text"
-            id="direccion"
-            formControlName="direccion"
-            placeholder="Ingresa la dirección"
-            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(createForm, 'direccion')">
-          <div *ngIf="hasFieldError(createForm, 'direccion')" class="mt-1 text-sm text-red-600">
-            {{ getFieldError(createForm, 'direccion') }}
-          </div>
-        </div>
-      </div>
-
-      <div class="flex justify-end space-x-3 pt-4">
-        <button
-          type="button"
-          (click)="cerrarModales()"
-          class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          [disabled]="createForm.invalid || formLoading"
-          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50">
-          <svg *ngIf="formLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          {{ formLoading ? 'Creando...' : 'Crear Director' }}
-        </button>
-      </div>
-    </form>
-  </div>
-
   <!-- Formulario de edición -->
   <div *ngIf="showEditForm" class="bg-white shadow rounded-lg p-6">
     <div class="flex justify-between items-center mb-6">
-      <h3 class="text-lg font-medium text-gray-900">Editar Director</h3>
+      <h3 class="text-lg font-medium text-gray-900">Editar Alumno</h3>
       <button
         (click)="cerrarModales()"
         class="text-gray-400 hover:text-gray-600">
@@ -395,82 +281,152 @@
       </button>
     </div>
 
-    <form [formGroup]="editForm" (ngSubmit)="actualizarDirector()" class="space-y-4">
+    <form [formGroup]="editForm" (ngSubmit)="actualizarAlumno()" class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label for="edit-nombres" class="block text-sm font-medium text-gray-700 mb-1">
-            Nombres *
+          <label for="edit-nombre" class="block text-sm font-medium text-gray-700 mb-1">
+            Nombre *
           </label>
           <input
             type="text"
-            id="edit-nombres"
-            formControlName="nombres"
-            placeholder="Ingresa los nombres"
-            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(editForm, 'nombres')">
-          <div *ngIf="hasFieldError(editForm, 'nombres')" class="mt-1 text-sm text-red-600">
-            {{ getFieldError(editForm, 'nombres') }}
+            id="edit-nombre"
+            formControlName="nombre"
+            placeholder="Ingresa el nombre"
+            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(editForm, 'nombre')">
+          <div *ngIf="hasFieldError(editForm, 'nombre')" class="mt-1 text-sm text-red-600">
+            {{ getFieldError(editForm, 'nombre') }}
           </div>
         </div>
 
         <div>
-          <label for="edit-apellidos" class="block text-sm font-medium text-gray-700 mb-1">
-            Apellidos *
+          <label for="edit-apellido" class="block text-sm font-medium text-gray-700 mb-1">
+            Apellido *
           </label>
           <input
             type="text"
-            id="edit-apellidos"
-            formControlName="apellidos"
-            placeholder="Ingresa los apellidos"
-            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(editForm, 'apellidos')">
-          <div *ngIf="hasFieldError(editForm, 'apellidos')" class="mt-1 text-sm text-red-600">
-            {{ getFieldError(editForm, 'apellidos') }}
+            id="edit-apellido"
+            formControlName="apellido"
+            placeholder="Ingresa el apellido"
+            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(editForm, 'apellido')">
+          <div *ngIf="hasFieldError(editForm, 'apellido')" class="mt-1 text-sm text-red-600">
+            {{ getFieldError(editForm, 'apellido') }}
           </div>
-        </div>
-      </div>
-
-      <div>
-        <label for="edit-email" class="block text-sm font-medium text-gray-700 mb-1">
-          Email *
-        </label>
-        <input
-          type="email"
-          id="edit-email"
-          formControlName="email"
-          placeholder="Ingresa el email"
-          [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(editForm, 'email')">
-        <div *ngIf="hasFieldError(editForm, 'email')" class="mt-1 text-sm text-red-600">
-          {{ getFieldError(editForm, 'email') }}
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label for="edit-telefono" class="block text-sm font-medium text-gray-700 mb-1">
-            Teléfono
+          <label for="edit-codigo" class="block text-sm font-medium text-gray-700 mb-1">
+            Código *
           </label>
           <input
-            type="tel"
-            id="edit-telefono"
-            formControlName="telefono"
-            placeholder="Ingresa el teléfono"
-            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(editForm, 'telefono')">
-          <div *ngIf="hasFieldError(editForm, 'telefono')" class="mt-1 text-sm text-red-600">
-            {{ getFieldError(editForm, 'telefono') }}
+            type="text"
+            id="edit-codigo"
+            formControlName="codigo"
+            placeholder="Ingresa el código"
+            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(editForm, 'codigo')">
+          <div *ngIf="hasFieldError(editForm, 'codigo')" class="mt-1 text-sm text-red-600">
+            {{ getFieldError(editForm, 'codigo') }}
           </div>
         </div>
 
         <div>
-          <label for="edit-direccion" class="block text-sm font-medium text-gray-700 mb-1">
-            Dirección
+          <label for="edit-dni" class="block text-sm font-medium text-gray-700 mb-1">
+            DNI *
           </label>
           <input
             type="text"
-            id="edit-direccion"
-            formControlName="direccion"
-            placeholder="Ingresa la dirección"
-            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(editForm, 'direccion')">
-          <div *ngIf="hasFieldError(editForm, 'direccion')" class="mt-1 text-sm text-red-600">
-            {{ getFieldError(editForm, 'direccion') }}
+            id="edit-dni"
+            formControlName="dni_alumno"
+            placeholder="Ingresa el DNI"
+            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(editForm, 'dni_alumno')">
+          <div *ngIf="hasFieldError(editForm, 'dni_alumno')" class="mt-1 text-sm text-red-600">
+            {{ getFieldError(editForm, 'dni_alumno') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label for="edit-nivel" class="block text-sm font-medium text-gray-700 mb-1">
+            Nivel *
+          </label>
+          <select
+            id="edit-nivel"
+            formControlName="nivel"
+            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(editForm, 'nivel')">
+            <option value="">Selecciona el nivel</option>
+            <option value="Primaria">Primaria</option>
+            <option value="Secundaria">Secundaria</option>
+          </select>
+          <div *ngIf="hasFieldError(editForm, 'nivel')" class="mt-1 text-sm text-red-600">
+            {{ getFieldError(editForm, 'nivel') }}
+          </div>
+        </div>
+
+        <div>
+          <label for="edit-grado" class="block text-sm font-medium text-gray-700 mb-1">
+            Grado *
+          </label>
+          <input
+            type="number"
+            id="edit-grado"
+            formControlName="grado"
+            placeholder="Grado"
+            min="1"
+            max="6"
+            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(editForm, 'grado')">
+          <div *ngIf="hasFieldError(editForm, 'grado')" class="mt-1 text-sm text-red-600">
+            {{ getFieldError(editForm, 'grado') }}
+          </div>
+        </div>
+
+        <div>
+          <label for="edit-seccion" class="block text-sm font-medium text-gray-700 mb-1">
+            Sección *
+          </label>
+          <input
+            type="text"
+            id="edit-seccion"
+            formControlName="seccion"
+            placeholder="Sección"
+            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(editForm, 'seccion')">
+          <div *ngIf="hasFieldError(editForm, 'seccion')" class="mt-1 text-sm text-red-600">
+            {{ getFieldError(editForm, 'seccion') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="edit-fecha-nacimiento" class="block text-sm font-medium text-gray-700 mb-1">
+            Fecha de Nacimiento *
+          </label>
+          <input
+            type="date"
+            id="edit-fecha-nacimiento"
+            formControlName="fecha_nacimiento"
+            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(editForm, 'fecha_nacimiento')">
+          <div *ngIf="hasFieldError(editForm, 'fecha_nacimiento')" class="mt-1 text-sm text-red-600">
+            {{ getFieldError(editForm, 'fecha_nacimiento') }}
+          </div>
+        </div>
+
+        <div>
+          <label for="edit-turno" class="block text-sm font-medium text-gray-700 mb-1">
+            Turno *
+          </label>
+          <select
+            id="edit-turno"
+            formControlName="id_turno"
+            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(editForm, 'id_turno')">
+            <option value="">Selecciona el turno</option>
+            <option *ngFor="let turno of turnos" [value]="turno.id_turno">
+              {{ turno.turno }} ({{ turno.hora_inicio }} - {{ turno.hora_fin }})
+            </option>
+          </select>
+          <div *ngIf="hasFieldError(editForm, 'id_turno')" class="mt-1 text-sm text-red-600">
+            {{ getFieldError(editForm, 'id_turno') }}
           </div>
         </div>
       </div>
@@ -490,7 +446,7 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          {{ formLoading ? 'Actualizando...' : 'Actualizar Director' }}
+          {{ formLoading ? 'Actualizando...' : 'Actualizar Alumno' }}
         </button>
       </div>
     </form>
@@ -505,10 +461,10 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
           </svg>
         </div>
-        <h3 class="text-lg font-medium text-gray-900 mt-4">¿Eliminar Director?</h3>
+        <h3 class="text-lg font-medium text-gray-900 mt-4">¿Eliminar Alumno?</h3>
         <div class="mt-2 px-7 py-3">
           <p class="text-sm text-gray-500">
-            ¿Estás seguro de que quieres eliminar a <strong>{{ selectedDirector?.nombres }} {{ selectedDirector?.apellidos }}</strong>?
+            ¿Estás seguro de que quieres eliminar a <strong>{{ selectedAlumno?.nombre }} {{ selectedAlumno?.apellido }}</strong>?
             Esta acción no se puede deshacer.
           </p>
         </div>
@@ -525,7 +481,7 @@
         </div>
 
         <!-- Información importante para el usuario -->
-        <div *ngIf="!verificandoUsuarios && tieneUsuarioAsignado(selectedDirector!)" class="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-md">
+        <div *ngIf="!verificandoUsuarios && tieneUsuarioAsignado(selectedAlumno!)" class="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-md">
           <div class="flex items-start">
             <svg class="h-5 w-5 text-orange-400 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
@@ -535,7 +491,7 @@
                 ⚠️ Información Importante
               </h4>
               <p class="text-sm text-orange-700 mb-3">
-                Este director tiene una cuenta de usuario asociada:
+                Este alumno tiene una cuenta de usuario asociada:
               </p>
               <div class="bg-white p-3 rounded border border-orange-200 mb-3">
                 <div class="flex items-center">
@@ -543,7 +499,7 @@
                     <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
                   </svg>
                   <div>
-                    <div class="text-sm font-medium text-gray-900">{{ selectedDirector?.usuario?.nombre_usuario }}</div>
+                    <div class="text-sm font-medium text-gray-900">{{ selectedAlumno?.usuario?.nombre_usuario }}</div>
                     <div class="text-xs text-gray-500">Cuenta de acceso al sistema</div>
                   </div>
                 </div>
@@ -551,7 +507,7 @@
               <div class="bg-orange-100 p-3 rounded border border-orange-300">
                 <p class="text-sm text-orange-800 font-medium">
                   💡 <strong>¿Qué pasará?</strong><br>
-                  Si eliminas este director, también se borrará su cuenta de usuario y ya no podrá acceder al sistema.
+                  Si eliminas este alumno, también se borrará su cuenta de usuario y ya no podrá acceder al sistema.
                 </p>
               </div>
             </div>
@@ -559,7 +515,7 @@
         </div>
 
         <!-- Sin usuarios asignados -->
-        <div *ngIf="!verificandoUsuarios && !tieneUsuarioAsignado(selectedDirector!)" class="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
+        <div *ngIf="!verificandoUsuarios && !tieneUsuarioAsignado(selectedAlumno!)" class="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
           <div class="flex items-start">
             <svg class="h-5 w-5 text-green-400 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
@@ -569,7 +525,7 @@
                 ✅ Todo en orden
               </h4>
               <p class="text-sm text-green-700">
-                Este director no tiene una cuenta de usuario asociada. Puedes eliminarlo sin problemas.
+                Este alumno no tiene una cuenta de usuario asociada. Puedes eliminarlo sin problemas.
               </p>
             </div>
           </div>
@@ -583,14 +539,14 @@
             Cancelar
           </button>
           <button
-            (click)="eliminarDirector()"
+            (click)="eliminarAlumno()"
             [disabled]="formLoading || verificandoUsuarios"
             class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed">
             <svg *ngIf="formLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            {{ formLoading ? 'Eliminando...' : 'Eliminar Director' }}
+            {{ formLoading ? 'Eliminando...' : 'Eliminar Alumno' }}
           </button>
         </div>
       </div>
@@ -613,10 +569,10 @@
             </div>
             <div>
               <h3 class="text-lg font-semibold text-gray-900">
-                {{ tieneUsuarioAsignado(selectedDirector!) ? 'Cambiar Usuario' : 'Asignar Usuario' }}
+                {{ tieneUsuarioAsignado(selectedAlumno!) ? 'Cambiar Usuario' : 'Asignar Usuario' }}
               </h3>
               <p class="text-sm text-gray-600">
-                {{ selectedDirector?.nombres }} {{ selectedDirector?.apellidos }}
+                {{ selectedAlumno?.nombre }} {{ selectedAlumno?.apellido }}
               </p>
             </div>
           </div>
@@ -629,27 +585,34 @@
           </button>
         </div>
 
-        <!-- Información del director -->
+        <!-- Información del alumno -->
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h4 class="text-sm font-medium text-blue-900 mb-2">Información del Director</h4>
+          <h4 class="text-sm font-medium text-blue-900 mb-2">Información del Alumno</h4>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             <div>
-              <span class="text-blue-700 font-medium">Email:</span>
-              <span class="text-blue-600 ml-2">{{ selectedDirector?.email }}</span>
+              <span class="text-blue-700 font-medium">Código:</span>
+              <span class="text-blue-600 ml-2">{{ selectedAlumno?.codigo }}</span>
             </div>
-            <div *ngIf="selectedDirector?.telefono">
-              <span class="text-blue-700 font-medium">Teléfono:</span>
-              <span class="text-blue-600 ml-2">{{ selectedDirector?.telefono }}</span>
+            <div>
+              <span class="text-blue-700 font-medium">DNI:</span>
+              <span class="text-blue-600 ml-2">{{ selectedAlumno?.dni_alumno }}</span>
             </div>
-            <div *ngIf="selectedDirector?.direccion" class="md:col-span-2">
-              <span class="text-blue-700 font-medium">Dirección:</span>
-              <span class="text-blue-600 ml-2">{{ selectedDirector?.direccion }}</span>
+            <div>
+              <span class="text-blue-700 font-medium">Nivel:</span>
+              <span class="text-blue-600 ml-2">{{ selectedAlumno?.nivel }}</span>
+            </div>
+            <div>
+              <span class="text-blue-700 font-medium">Grado {{ selectedAlumno?.grado }} - Sección {{ selectedAlumno?.seccion }}</span>
+            </div>
+            <div *ngIf="selectedAlumno?.turno" class="md:col-span-2">
+              <span class="text-blue-700 font-medium">Turno:</span>
+              <span class="text-blue-600 ml-2">{{ selectedAlumno?.turno?.turno }}</span>
             </div>
           </div>
         </div>
 
         <!-- Estado actual del usuario -->
-        <div *ngIf="tieneUsuarioAsignado(selectedDirector!)" class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+        <div *ngIf="tieneUsuarioAsignado(selectedAlumno!)" class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
           <div class="flex items-center">
             <svg class="w-5 h-5 text-orange-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
@@ -657,7 +620,7 @@
             <div>
               <h4 class="text-sm font-medium text-orange-800">Usuario Actualmente Asignado</h4>
               <p class="text-sm text-orange-700">
-                {{ selectedDirector?.usuario?.nombre_usuario }} ({{ selectedDirector?.usuario?.rol_usuario }})
+                {{ selectedAlumno?.usuario?.nombre_usuario }} ({{ selectedAlumno?.usuario?.rol_usuario }})
               </p>
             </div>
           </div>
@@ -697,7 +660,7 @@
                     </svg>
                     <div>
                       <div class="text-sm font-medium text-gray-900">Sin Usuario</div>
-                      <div class="text-sm text-gray-500">Desasignar usuario del director</div>
+                      <div class="text-sm text-gray-500">Desasignar usuario del alumno</div>
                     </div>
                   </div>
                 </label>
@@ -736,7 +699,7 @@
               </svg>
               <h4 class="text-sm font-medium text-gray-900 mb-1">No hay usuarios disponibles</h4>
               <p class="text-sm text-gray-500">
-                No se encontraron usuarios con rol DIRECTOR disponibles para asignar.
+                No se encontraron usuarios con rol ALUMNO disponibles para asignar.
               </p>
             </div>
 
@@ -763,7 +726,7 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              {{ formLoading ? 'Procesando...' : getAssignButtonText(selectedDirector!) }}
+              {{ formLoading ? 'Procesando...' : getAssignButtonText(selectedAlumno!) }}
             </button>
           </div>
         </form>
@@ -782,5 +745,4 @@
       </div>
     </div>
   </div>
-
 </div>

@@ -1,5 +1,5 @@
-<div class="min-h-screen bg-gray-50 py-8">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-white py-8">
+  <div class="w-full px-4 sm:px-6 lg:px-8">
     
     <!-- Header -->
     <div class="mb-8">
@@ -14,11 +14,9 @@
           <button
             *ngFor="let tab of tabs"
             (click)="cambiarTab(tab.id)"
-            [disabled]="tab.disabled"
-            [class]="getTabClass(tab.id, tab.disabled || false)">
+            [class]="getTabClass(tab.id, false)">
             <span class="mr-2">{{ tab.icon }}</span>
             {{ tab.label }}
-            <span *ngIf="tab.disabled" class="ml-2 text-xs text-gray-400">(Próximamente)</span>
           </button>
         </nav>
       </div>
@@ -64,23 +62,38 @@
         </app-directores-crud>
       </div>
 
-      <!-- Pestañas futuras -->
-      <div *ngIf="selectedTab === 'auxiliares'" class="p-8 text-center">
-        <div class="text-gray-400 text-6xl mb-4">👩‍💼</div>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">Gestión de Auxiliares</h3>
-        <p class="text-gray-500">Esta funcionalidad estará disponible próximamente</p>
+      <!-- Pestaña Auxiliares -->
+      <div *ngIf="selectedTab === 'auxiliares'">
+        <app-auxiliares-crud
+          [auxiliares]="auxiliares"
+          [loading]="loading"
+          (auxiliarCreado)="onAuxiliarCreado()"
+          (auxiliarActualizado)="onAuxiliarActualizado()"
+          (auxiliarEliminado)="onAuxiliarEliminado()">
+        </app-auxiliares-crud>
       </div>
 
-      <div *ngIf="selectedTab === 'administradores'" class="p-8 text-center">
-        <div class="text-gray-400 text-6xl mb-4">👨‍💻</div>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">Gestión de Administradores</h3>
-        <p class="text-gray-500">Esta funcionalidad estará disponible próximamente</p>
+      <!-- Pestaña Administradores -->
+      <div *ngIf="selectedTab === 'administradores'">
+        <app-administradores-crud
+          [administradores]="administradores"
+          [loading]="loading"
+          (administradorCreado)="onAdministradorCreado()"
+          (administradorActualizado)="onAdministradorActualizado()"
+          (administradorEliminado)="onAdministradorEliminado()">
+        </app-administradores-crud>
       </div>
 
-      <div *ngIf="selectedTab === 'alumnos'" class="p-8 text-center">
-        <div class="text-gray-400 text-6xl mb-4">👨‍🎓</div>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">Gestión de Alumnos</h3>
-        <p class="text-gray-500">Esta funcionalidad estará disponible próximamente</p>
+      <!-- Pestaña Alumnos -->
+      <div *ngIf="selectedTab === 'alumnos'">
+        <app-alumnos-crud
+          [alumnos]="alumnos"
+          [loading]="loading"
+          [turnos]="turnos"
+          (alumnoCreado)="onAlumnoCreado()"
+          (alumnoActualizado)="onAlumnoActualizado()"
+          (alumnoEliminado)="onAlumnoEliminado()">
+        </app-alumnos-crud>
       </div>
 
     </div>

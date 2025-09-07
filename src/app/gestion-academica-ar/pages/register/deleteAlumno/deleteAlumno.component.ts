@@ -177,7 +177,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
   
   // Validaciones
   codigoInvalido(): boolean {
-    return this.codigo.length > 0 && this.codigo.length !== 14;
+    return this.codigo.length > 0 && this.codigo.length < 10;
   }
 
   observacionInvalida(): boolean {
@@ -200,8 +200,8 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
   // El endpoint /alumnos/codigo/{codigo} ahora incluye estado_actual
 
   buscarAlumno(): void {
-    if (!this.codigo || this.codigo.length !== 14) {
-      this.alerts.error('El código debe tener 10 dígitos');
+    if (!this.codigo || this.codigo.length < 10) {
+      this.alerts.error('El código debe tener al menos 10 dígitos');
       return;
     }
 

@@ -14,7 +14,7 @@
   <!-- Search Form with Keyboard Shortcut -->
   <div class="mb-6 search-form-container">
     <label for="codigo-input" class="block text-sm font-medium text-gray-700 mb-1">
-      Código del Alumno <span class="text-xs text-gray-500">(14 dígitos)</span>
+      Código del Alumno <span class="text-xs text-gray-500">(mínimo 10 dígitos)</span>
     </label>
     <div class="flex gap-3">
       <div class="relative flex-grow">
@@ -24,8 +24,8 @@
           [(ngModel)]="codigo"
           (keyup.enter)="buscarAlumno()"
           (input)="onCodigoChange($event)"
-          maxlength="14"
-          placeholder="Ingrese código de 14 dígitos"
+          maxlength="20"
+          placeholder="Ingrese código de al menos 10 dígitos"
           class="w-full border border-gray-300 px-4 py-3 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           [class.border-red-500]="codigoInvalido()"
           [class.input-with-icon]="true"
@@ -36,19 +36,19 @@
           <i *ngIf="codigoInvalido()" class="material-icons text-red-500 text-sm">error</i>
         </div>
         <span *ngIf="codigoInvalido()" class="text-xs text-red-500 mt-1 block">
-          El código debe tener 14 dígitos
+          El código debe tener al menos 10 dígitos
         </span>
         <div class="flex justify-between mt-1">
           <span class="text-xs text-gray-500">Presione Enter para buscar</span>
-          <span class="text-xs text-gray-500">{{codigo.length}}/10</span>
+          <span class="text-xs text-gray-500">{{codigo.length}}/20</span>
         </div>
       </div>
       <button
         class="search-button bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
         (click)="buscarAlumno()"
-        [disabled]="!codigo || codigo.length !== 14"
-        [class.opacity-50]="!codigo || codigo.length !== 14"
-        [attr.title]="'Buscar alumno' + (!codigo || codigo.length !== 14 ? ' (Ingrese un código válido primero)' : '')"
+        [disabled]="!codigo || codigo.length < 10"
+        [class.opacity-50]="!codigo || codigo.length < 10"
+        [attr.title]="'Buscar alumno' + (!codigo || codigo.length < 10 ? ' (Ingrese un código válido primero)' : '')"
       >
         <i class="material-icons mr-1">search</i>
         Buscar
@@ -272,7 +272,7 @@
   <div *ngIf="!mostrarFormulario() && !cargando() && !errorMensaje() && !codigo" class="my-8 text-center p-6 border border-dashed border-gray-300 rounded-lg">
     <i class="material-icons text-gray-400" style="font-size: 48px;">search</i>
     <p class="mt-2 text-gray-600">Ingrese un código de alumno para comenzar</p>
-    <p class="mt-1 text-sm text-gray-500">El código debe tener 14 dígitos</p>
+    <p class="mt-1 text-sm text-gray-500">El código debe tener al menos 10 dígitos</p>
   </div>
   
   <!-- Help Tooltip -->

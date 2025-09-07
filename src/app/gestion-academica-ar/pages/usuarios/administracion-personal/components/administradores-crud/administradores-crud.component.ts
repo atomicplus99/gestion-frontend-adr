@@ -2,27 +2,27 @@ import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, S
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { DirectorService } from '../../../services/director.service';
-import { Director, CreateDirectorDto, UpdateDirectorDto, UsuarioDisponible, AsignarUsuarioDto, CambiarUsuarioDto } from '../../../interfaces/director.interface';
+import { AdministradorService } from '../../../services/administrador.service';
+import { Administrador, CreateAdministradorDto, UpdateAdministradorDto, UsuarioDisponible, AsignarUsuarioDto, CambiarUsuarioDto } from '../../../interfaces/administrador.interface';
 import { ErrorHandlerService, ErrorType } from '../../../../../../shared/services/error-handler.service';
 import { UserStoreService } from '../../../../../../auth/store/user.store';
 
 @Component({
-  selector: 'app-directores-crud',
+  selector: 'app-administradores-crud',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
-  templateUrl: './directores-crud.component.html',
-  styleUrls: ['./directores-crud.component.css']
+  templateUrl: './administradores-crud.component.html',
+  styleUrls: ['./administradores-crud.component.css']
 })
-export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
-  @Input() directores: Director[] = [];
+export class AdministradoresCrudComponent implements OnInit, OnDestroy, OnChanges {
+  @Input() administradores: Administrador[] = [];
   @Input() loading = false;
   
-  @Output() directorCreado = new EventEmitter<void>();
-  @Output() directorActualizado = new EventEmitter<void>();
-  @Output() directorEliminado = new EventEmitter<void>();
+  @Output() administradorCreado = new EventEmitter<void>();
+  @Output() administradorActualizado = new EventEmitter<void>();
+  @Output() administradorEliminado = new EventEmitter<void>();
 
-  private directorService = inject(DirectorService);
+  private administradorService = inject(AdministradorService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
   private errorHandler = inject(ErrorHandlerService);
@@ -34,11 +34,11 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   showEditForm = false;
   showDeleteModal = false;
   showAssignModal = false;
-  selectedDirector: Director | null = null;
+  selectedAdministrador: Administrador | null = null;
   formLoading = false;
   
   // Validación de eliminación
-  directorUsuarios: any[] = [];
+  administradorUsuarios: any[] = [];
   verificandoUsuarios = false;
 
   // Asignación de usuarios
@@ -56,23 +56,23 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
 
   // Filtros
   filtroTexto = '';
-  directoresFiltrados: Director[] = [];
+  administradoresFiltrados: Administrador[] = [];
 
   constructor() {
     this.createForm = this.fb.group({
-      nombres: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      apellidos: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      nombres: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      apellidos: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       email: ['', [Validators.required, Validators.email, Validators.maxLength(100)]],
-      telefono: ['', [Validators.maxLength(15)]],
-      direccion: ['', [Validators.maxLength(200)]]
+      telefono: ['', [Validators.maxLength(20)]],
+      direccion: ['', [Validators.maxLength(255)]]
     });
 
     this.editForm = this.fb.group({
-      nombres: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      apellidos: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      nombres: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      apellidos: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       email: ['', [Validators.required, Validators.email, Validators.maxLength(100)]],
-      telefono: ['', [Validators.maxLength(15)]],
-      direccion: ['', [Validators.maxLength(200)]]
+      telefono: ['', [Validators.maxLength(20)]],
+      direccion: ['', [Validators.maxLength(255)]]
     });
 
     this.assignForm = this.fb.group({
@@ -81,7 +81,7 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnInit(): void {
-    // El componente ya recibe los directores como input
+    // El componente ya recibe los administradores como input
     this.aplicarFiltros();
   }
 
@@ -91,7 +91,7 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['directores']) {
+    if (changes['administradores']) {
       this.aplicarFiltros();
     }
   }
@@ -110,18 +110,18 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   /**
    * Mostrar formulario de edición
    */
-  mostrarEditarFormulario(director: Director): void {
-    this.selectedDirector = director;
+  mostrarEditarFormulario(administrador: Administrador): void {
+    this.selectedAdministrador = administrador;
     this.showEditForm = true;
     this.showCreateForm = false;
     this.showDeleteModal = false;
     
     this.editForm.patchValue({
-      nombres: director.nombres,
-      apellidos: director.apellidos,
-      email: director.email,
-      telefono: director.telefono || '',
-      direccion: director.direccion || ''
+      nombres: administrador.nombres,
+      apellidos: administrador.apellidos,
+      email: administrador.email,
+      telefono: administrador.telefono || '',
+      direccion: administrador.direccion || ''
     });
     
     this.clearMessages();
@@ -130,15 +130,15 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   /**
    * Mostrar modal de eliminación
    */
-  mostrarEliminarModal(director: Director): void {
-    this.selectedDirector = director;
+  mostrarEliminarModal(administrador: Administrador): void {
+    this.selectedAdministrador = administrador;
     this.showDeleteModal = true;
     this.showCreateForm = false;
     this.showEditForm = false;
     this.clearMessages();
     
-    // Verificar si el director tiene usuarios asignados
-    this.verificarUsuariosAsignados(director.id_director);
+    // Verificar si el administrador tiene usuarios asignados
+    this.verificarUsuariosAsignados(administrador.id_administrador);
   }
 
   /**
@@ -149,8 +149,8 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
     this.showEditForm = false;
     this.showDeleteModal = false;
     this.showAssignModal = false;
-    this.selectedDirector = null;
-    this.directorUsuarios = [];
+    this.selectedAdministrador = null;
+    this.administradorUsuarios = [];
     this.verificandoUsuarios = false;
     this.usuariosDisponibles = [];
     this.assignForm.reset();
@@ -158,49 +158,49 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Crear director
+   * Crear administrador
    */
-  crearDirector(): void {
+  crearAdministrador(): void {
     if (this.createForm.valid) {
       this.formLoading = true;
       this.errorMessage = '';
 
-      const directorData: CreateDirectorDto = this.createForm.value;
+      const administradorData: CreateAdministradorDto = this.createForm.value;
 
-      this.directorService.crearDirector(directorData)
+      this.administradorService.crearAdministrador(administradorData)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.formLoading = false;
             if (response.success) {
-              this.successMessage = 'Director creado exitosamente';
+              this.successMessage = 'Administrador creado exitosamente';
               this.cerrarModales();
-              this.directorCreado.emit();
+              this.administradorCreado.emit();
             } else {
-              this.errorMessage = response.message || 'Error al crear director';
+              this.errorMessage = response.message || 'Error al crear administrador';
             }
             this.cdr.detectChanges();
           },
-                  error: (error) => {
-          this.formLoading = false;
-          this.errorHandler.addError({
-            type: ErrorType.SERVER,
-            title: 'Error al Crear Director',
-            message: error.error?.message || 'No se pudo crear el director',
-            retryable: true,
-            action: {
-              label: 'Reintentar',
-              action: () => this.retryCrearDirector(),
-              type: 'primary'
-            }
-          });
-          this.cdr.detectChanges();
-          
-          // Forzar detección de cambios adicional
-          setTimeout(() => {
+          error: (error) => {
+            this.formLoading = false;
+            this.errorHandler.addError({
+              type: ErrorType.SERVER,
+              title: 'Error al Crear Administrador',
+              message: error.error?.message || 'No se pudo crear el administrador',
+              retryable: true,
+              action: {
+                label: 'Reintentar',
+                action: () => this.retryCrearAdministrador(),
+                type: 'primary'
+              }
+            });
             this.cdr.detectChanges();
-          }, 100);
-        }
+            
+            // Forzar detección de cambios adicional
+            setTimeout(() => {
+              this.cdr.detectChanges();
+            }, 100);
+          }
         });
     } else {
       this.markFormGroupTouched(this.createForm);
@@ -208,32 +208,32 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Actualizar director
+   * Actualizar administrador
    */
-  actualizarDirector(): void {
-    if (this.editForm.valid && this.selectedDirector) {
+  actualizarAdministrador(): void {
+    if (this.editForm.valid && this.selectedAdministrador) {
       this.formLoading = true;
       this.errorMessage = '';
 
-      const directorData: UpdateDirectorDto = this.editForm.value;
+      const administradorData: UpdateAdministradorDto = this.editForm.value;
 
-      this.directorService.actualizarDirector(this.selectedDirector.id_director, directorData)
+      this.administradorService.actualizarAdministrador(this.selectedAdministrador.id_administrador, administradorData)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.formLoading = false;
             if (response.success) {
-              this.successMessage = 'Director actualizado exitosamente';
+              this.successMessage = 'Administrador actualizado exitosamente';
               this.cerrarModales();
-              this.directorActualizado.emit();
+              this.administradorActualizado.emit();
             } else {
-              this.errorMessage = response.message || 'Error al actualizar director';
+              this.errorMessage = response.message || 'Error al actualizar administrador';
             }
             this.cdr.detectChanges();
           },
           error: (error) => {
             this.formLoading = false;
-            this.errorHandler.handleHttpError(error, 'Actualizar Director');
+            this.errorHandler.handleHttpError(error, 'Actualizar Administrador');
             this.cdr.detectChanges();
             
             // Forzar detección de cambios adicional
@@ -248,62 +248,62 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Verificar usuarios asignados al director
+   * Verificar usuarios asignados al administrador
    */
-  verificarUsuariosAsignados(idDirector: string): void {
+  verificarUsuariosAsignados(idAdministrador: string): void {
     this.verificandoUsuarios = true;
-    this.directorUsuarios = [];
+    this.administradorUsuarios = [];
 
-    this.directorService.verificarUsuariosAsignados(idDirector)
+    this.administradorService.verificarUsuariosAsignados(idAdministrador)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           this.verificandoUsuarios = false;
           if (response.success && response.data) {
-            this.directorUsuarios = response.data.usuarios || [];
+            this.administradorUsuarios = response.data.usuarios || [];
           }
           this.cdr.detectChanges();
         },
         error: (error) => {
           this.verificandoUsuarios = false;
-          this.directorUsuarios = [];
+          this.administradorUsuarios = [];
           this.cdr.detectChanges();
         }
       });
   }
 
   /**
-   * Verificar si el director tiene usuarios asignados
+   * Verificar si el administrador tiene usuarios asignados
    */
   tieneUsuariosAsignados(): boolean {
-    return this.directorUsuarios.length > 0;
+    return this.administradorUsuarios.length > 0;
   }
 
   /**
-   * Eliminar director (el backend maneja la eliminación en cascada del usuario)
+   * Eliminar administrador (el backend maneja la eliminación en cascada del usuario)
    */
-  eliminarDirector(): void {
-    if (this.selectedDirector) {
+  eliminarAdministrador(): void {
+    if (this.selectedAdministrador) {
       this.formLoading = true;
       this.errorMessage = '';
 
-      this.directorService.eliminarDirector(this.selectedDirector.id_director)
+      this.administradorService.eliminarAdministrador(this.selectedAdministrador.id_administrador)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.formLoading = false;
             if (response.success) {
-              this.successMessage = 'Director eliminado exitosamente';
+              this.successMessage = 'Administrador eliminado exitosamente';
               this.cerrarModales();
-              this.directorEliminado.emit();
+              this.administradorEliminado.emit();
             } else {
-              this.errorMessage = response.message || 'Error al eliminar director';
+              this.errorMessage = response.message || 'Error al eliminar administrador';
             }
             this.cdr.detectChanges();
           },
           error: (error) => {
             this.formLoading = false;
-            this.errorHandler.handleHttpError(error, 'Eliminar Director');
+            this.errorHandler.handleHttpError(error, 'Eliminar Administrador');
             this.cdr.detectChanges();
             
             // Forzar detección de cambios adicional
@@ -391,8 +391,8 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   /**
    * Mostrar modal de asignación de usuario
    */
-  mostrarAsignarModal(director: Director): void {
-    this.selectedDirector = director;
+  mostrarAsignarModal(administrador: Administrador): void {
+    this.selectedAdministrador = administrador;
     this.showAssignModal = true;
     this.showCreateForm = false;
     this.showEditForm = false;
@@ -402,9 +402,9 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
     
     // Marcar automáticamente el usuario actualmente asignado
     setTimeout(() => {
-      if (director.usuario?.id_user) {
+      if (administrador.usuario?.id_user) {
         this.assignForm.patchValue({
-          id_user: director.usuario.id_user
+          id_user: administrador.usuario.id_user
         });
       } else {
         // Si no tiene usuario asignado, marcar "Sin Usuario"
@@ -421,20 +421,20 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
    */
   cerrarAsignarModal(): void {
     this.showAssignModal = false;
-    this.selectedDirector = null;
+    this.selectedAdministrador = null;
     this.assignForm.reset();
     this.usuariosDisponibles = [];
     this.clearMessages();
   }
 
   /**
-   * Cargar usuarios disponibles con rol DIRECTOR
+   * Cargar usuarios disponibles con rol ADMINISTRADOR
    */
   cargarUsuariosDisponibles(): void {
     this.cargandoUsuarios = true;
     this.usuariosDisponibles = [];
 
-    this.directorService.obtenerUsuariosDisponibles()
+    this.administradorService.obtenerUsuariosDisponibles()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
@@ -461,10 +461,10 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Asignar usuario al director (primer usuario, cambiar usuario existente, o desasignar)
+   * Asignar usuario al administrador (primer usuario, cambiar usuario existente, o desasignar)
    */
   asignarUsuario(): void {
-    if (this.assignForm.valid && this.selectedDirector) {
+    if (this.assignForm.valid && this.selectedAdministrador) {
       this.formLoading = true;
       this.errorMessage = '';
 
@@ -475,19 +475,19 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
         id_user: selectedUserId === 'sin_usuario' ? null : selectedUserId
       };
 
-      this.directorService.cambiarUsuario(this.selectedDirector.id_director, datosCambio)
+      this.administradorService.cambiarUsuario(this.selectedAdministrador.id_administrador, datosCambio)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.formLoading = false;
             if (response.success) {
               if (selectedUserId === 'sin_usuario') {
-                this.successMessage = 'Usuario desasignado exitosamente del director';
+                this.successMessage = 'Usuario desasignado exitosamente del administrador';
               } else {
-                this.successMessage = 'Usuario asignado exitosamente al director';
+                this.successMessage = 'Usuario asignado exitosamente al administrador';
               }
               this.cerrarAsignarModal();
-              this.directorActualizado.emit();
+              this.administradorActualizado.emit();
             } else {
               this.errorMessage = response.message || 'Error al procesar asignación';
             }
@@ -508,70 +508,21 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Cambiar usuario asignado al director
+   * Verificar si el administrador tiene usuario asignado
    */
-  cambiarUsuario(): void {
-    if (this.assignForm.valid && this.selectedDirector) {
-      this.formLoading = true;
-      this.errorMessage = '';
-
-      const datosCambio: CambiarUsuarioDto = {
-        id_user: this.assignForm.value.id_user
-      };
-
-      this.directorService.cambiarUsuario(this.selectedDirector.id_director, datosCambio)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            this.formLoading = false;
-            if (response.success) {
-              this.successMessage = 'Usuario cambiado exitosamente';
-              this.cerrarAsignarModal();
-              this.directorActualizado.emit();
-            } else {
-              this.errorMessage = response.message || 'Error al cambiar usuario';
-            }
-            this.cdr.detectChanges();
-          },
-          error: (error) => {
-            this.formLoading = false;
-            this.errorHandler.handleHttpError(error, 'Cambiar Usuario');
-            this.cdr.detectChanges();
-            
-            // Forzar detección de cambios adicional
-            setTimeout(() => {
-              this.cdr.detectChanges();
-            }, 100);
-          }
-        });
-    }
-  }
-
-  /**
-   * Desasignar usuario del director (eliminar director)
-   */
-  desasignarUsuario(): void {
-    if (this.selectedDirector) {
-      this.mostrarEliminarModal(this.selectedDirector);
-    }
-  }
-
-  /**
-   * Verificar si el director tiene usuario asignado
-   */
-  tieneUsuarioAsignado(director: Director): boolean {
-    return !!(director.usuario && director.usuario.id_user);
+  tieneUsuarioAsignado(administrador: Administrador): boolean {
+    return !!(administrador.usuario && administrador.usuario.id_user);
   }
 
   /**
    * Obtener texto del botón de asignación
    */
-  getAssignButtonText(director: Director): string {
+  getAssignButtonText(administrador: Administrador): string {
     const selectedUserId = this.assignForm.get('id_user')?.value;
     
     if (selectedUserId === 'sin_usuario') {
       return 'Desasignar Usuario';
-    } else if (this.tieneUsuarioAsignado(director)) {
+    } else if (this.tieneUsuarioAsignado(administrador)) {
       return 'Cambiar Usuario';
     } else {
       return 'Asignar Usuario';
@@ -581,8 +532,8 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   /**
    * Obtener clase del botón de asignación
    */
-  getAssignButtonClass(director: Director): string {
-    return this.tieneUsuarioAsignado(director) 
+  getAssignButtonClass(administrador: Administrador): string {
+    return this.tieneUsuarioAsignado(administrador) 
       ? 'inline-flex items-center px-3 py-1.5 border border-orange-300 rounded-md text-xs font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors duration-200'
       : 'inline-flex items-center px-3 py-1.5 border border-green-300 rounded-md text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200';
   }
@@ -590,29 +541,29 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   // ==================== MÉTODOS DE REINTENTO ====================
 
   /**
-   * Reintentar operación de crear director
+   * Reintentar operación de crear administrador
    */
-  retryCrearDirector(): void {
+  retryCrearAdministrador(): void {
     if (this.createForm.valid) {
-      this.crearDirector();
+      this.crearAdministrador();
     }
   }
 
   /**
-   * Reintentar operación de actualizar director
+   * Reintentar operación de actualizar administrador
    */
-  retryActualizarDirector(): void {
-    if (this.editForm.valid && this.selectedDirector) {
-      this.actualizarDirector();
+  retryActualizarAdministrador(): void {
+    if (this.editForm.valid && this.selectedAdministrador) {
+      this.actualizarAdministrador();
     }
   }
 
   /**
-   * Reintentar operación de eliminar director
+   * Reintentar operación de eliminar administrador
    */
-  retryEliminarDirector(): void {
-    if (this.selectedDirector) {
-      this.eliminarDirector();
+  retryEliminarAdministrador(): void {
+    if (this.selectedAdministrador) {
+      this.eliminarAdministrador();
     }
   }
 
@@ -620,12 +571,8 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
    * Reintentar operación de asignar usuario
    */
   retryAsignarUsuario(): void {
-    if (this.assignForm.valid && this.selectedDirector) {
-      if (this.tieneUsuarioAsignado(this.selectedDirector)) {
-        this.cambiarUsuario();
-      } else {
-        this.asignarUsuario();
-      }
+    if (this.assignForm.valid && this.selectedAdministrador) {
+      this.asignarUsuario();
     }
   }
 
@@ -639,36 +586,36 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   // ==================== MÉTODOS DE FILTRADO ====================
 
   /**
-   * Verificar si un director es el usuario autenticado
+   * Verificar si un administrador es el usuario autenticado
    */
-  private esUsuarioAutenticado(director: Director): boolean {
+  private esUsuarioAutenticado(administrador: Administrador): boolean {
     const user = this.userStore.user();
-    if (!user || user.role !== 'DIRECTOR' || !user.director) {
+    if (!user || (user.role !== 'ADMINISTRADOR' && user.role !== 'ADMIN') || !user.administrador) {
       return false;
     }
-    return director.id_director === user.director.id_director;
+    return administrador.id_administrador === user.administrador.id_administrador;
   }
 
   /**
-   * Aplicar filtros a la lista de directores
+   * Aplicar filtros a la lista de administradores
    */
   aplicarFiltros(): void {
     // Filtrar el usuario autenticado primero
-    const directoresSinUsuarioAutenticado = this.directores.filter(director => 
-      !this.esUsuarioAutenticado(director)
+    const administradoresSinUsuarioAutenticado = this.administradores.filter(administrador => 
+      !this.esUsuarioAutenticado(administrador)
     );
 
     if (!this.filtroTexto.trim()) {
-      this.directoresFiltrados = [...directoresSinUsuarioAutenticado];
+      this.administradoresFiltrados = [...administradoresSinUsuarioAutenticado];
     } else {
       const textoFiltro = this.filtroTexto.toLowerCase().trim();
-      this.directoresFiltrados = directoresSinUsuarioAutenticado.filter(director => 
-        director.nombres.toLowerCase().includes(textoFiltro) ||
-        director.apellidos.toLowerCase().includes(textoFiltro) ||
-        director.email.toLowerCase().includes(textoFiltro) ||
-        (director.telefono && director.telefono.includes(textoFiltro)) ||
-        (director.direccion && director.direccion.toLowerCase().includes(textoFiltro)) ||
-        (director.usuario && director.usuario.nombre_usuario.toLowerCase().includes(textoFiltro))
+      this.administradoresFiltrados = administradoresSinUsuarioAutenticado.filter(administrador => 
+        administrador.nombres.toLowerCase().includes(textoFiltro) ||
+        administrador.apellidos.toLowerCase().includes(textoFiltro) ||
+        administrador.email.toLowerCase().includes(textoFiltro) ||
+        (administrador.telefono && administrador.telefono.includes(textoFiltro)) ||
+        (administrador.direccion && administrador.direccion.toLowerCase().includes(textoFiltro)) ||
+        (administrador.usuario && administrador.usuario.nombre_usuario.toLowerCase().includes(textoFiltro))
       );
     }
   }
@@ -682,10 +629,10 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Obtener el número de directores filtrados
+   * Obtener el número de administradores filtrados
    */
-  get numeroDirectoresFiltrados(): number {
-    return this.directoresFiltrados.length;
+  get numeroAdministradoresFiltrados(): number {
+    return this.administradoresFiltrados.length;
   }
 
   /**

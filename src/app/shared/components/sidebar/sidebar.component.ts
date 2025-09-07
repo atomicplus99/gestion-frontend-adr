@@ -112,7 +112,7 @@ export class SidebarComponent {
           link: '#',
           allowedRoles: ['DIRECTOR', 'ADMINISTRADOR', 'ADMIN'],
           children: [
-            { label: 'Directores', link: '/home/usuarios/administracion-personal' },
+            { label: 'Staff', link: '/home/usuarios/administracion-personal' },
           ]
         },
         {

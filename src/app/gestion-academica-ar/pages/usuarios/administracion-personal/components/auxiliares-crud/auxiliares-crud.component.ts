@@ -2,27 +2,27 @@ import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, S
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { DirectorService } from '../../../services/director.service';
-import { Director, CreateDirectorDto, UpdateDirectorDto, UsuarioDisponible, AsignarUsuarioDto, CambiarUsuarioDto } from '../../../interfaces/director.interface';
+import { AuxiliarService } from '../../../services/auxiliar.service';
+import { Auxiliar, CreateAuxiliarDto, UpdateAuxiliarDto, UsuarioDisponible, AsignarUsuarioDto, CambiarUsuarioDto } from '../../../interfaces/auxiliar.interface';
 import { ErrorHandlerService, ErrorType } from '../../../../../../shared/services/error-handler.service';
 import { UserStoreService } from '../../../../../../auth/store/user.store';
 
 @Component({
-  selector: 'app-directores-crud',
+  selector: 'app-auxiliares-crud',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
-  templateUrl: './directores-crud.component.html',
-  styleUrls: ['./directores-crud.component.css']
+  templateUrl: './auxiliares-crud.component.html',
+  styleUrls: ['./auxiliares-crud.component.css']
 })
-export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
-  @Input() directores: Director[] = [];
+export class AuxiliaresCrudComponent implements OnInit, OnDestroy, OnChanges {
+  @Input() auxiliares: Auxiliar[] = [];
   @Input() loading = false;
   
-  @Output() directorCreado = new EventEmitter<void>();
-  @Output() directorActualizado = new EventEmitter<void>();
-  @Output() directorEliminado = new EventEmitter<void>();
+  @Output() auxiliarCreado = new EventEmitter<void>();
+  @Output() auxiliarActualizado = new EventEmitter<void>();
+  @Output() auxiliarEliminado = new EventEmitter<void>();
 
-  private directorService = inject(DirectorService);
+  private auxiliarService = inject(AuxiliarService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
   private errorHandler = inject(ErrorHandlerService);
@@ -34,11 +34,11 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   showEditForm = false;
   showDeleteModal = false;
   showAssignModal = false;
-  selectedDirector: Director | null = null;
+  selectedAuxiliar: Auxiliar | null = null;
   formLoading = false;
   
   // Validación de eliminación
-  directorUsuarios: any[] = [];
+  auxiliarUsuarios: any[] = [];
   verificandoUsuarios = false;
 
   // Asignación de usuarios
@@ -56,23 +56,23 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
 
   // Filtros
   filtroTexto = '';
-  directoresFiltrados: Director[] = [];
+  auxiliaresFiltrados: Auxiliar[] = [];
 
   constructor() {
     this.createForm = this.fb.group({
-      nombres: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      apellidos: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      email: ['', [Validators.required, Validators.email, Validators.maxLength(100)]],
-      telefono: ['', [Validators.maxLength(15)]],
-      direccion: ['', [Validators.maxLength(200)]]
+      nombre: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      apellido: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      correo_electronico: ['', [Validators.required, Validators.email, Validators.maxLength(100)]],
+      telefono: ['', [Validators.maxLength(20)]],
+      direccion: ['', [Validators.maxLength(255)]]
     });
 
     this.editForm = this.fb.group({
-      nombres: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      apellidos: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      email: ['', [Validators.required, Validators.email, Validators.maxLength(100)]],
-      telefono: ['', [Validators.maxLength(15)]],
-      direccion: ['', [Validators.maxLength(200)]]
+      nombre: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      apellido: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      correo_electronico: ['', [Validators.required, Validators.email, Validators.maxLength(100)]],
+      telefono: ['', [Validators.maxLength(20)]],
+      direccion: ['', [Validators.maxLength(255)]]
     });
 
     this.assignForm = this.fb.group({
@@ -81,7 +81,7 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnInit(): void {
-    // El componente ya recibe los directores como input
+    // El componente ya recibe los auxiliares como input
     this.aplicarFiltros();
   }
 
@@ -91,7 +91,7 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['directores']) {
+    if (changes['auxiliares']) {
       this.aplicarFiltros();
     }
   }
@@ -110,18 +110,18 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   /**
    * Mostrar formulario de edición
    */
-  mostrarEditarFormulario(director: Director): void {
-    this.selectedDirector = director;
+  mostrarEditarFormulario(auxiliar: Auxiliar): void {
+    this.selectedAuxiliar = auxiliar;
     this.showEditForm = true;
     this.showCreateForm = false;
     this.showDeleteModal = false;
     
     this.editForm.patchValue({
-      nombres: director.nombres,
-      apellidos: director.apellidos,
-      email: director.email,
-      telefono: director.telefono || '',
-      direccion: director.direccion || ''
+      nombre: auxiliar.nombre,
+      apellido: auxiliar.apellido,
+      correo_electronico: auxiliar.correo_electronico,
+      telefono: auxiliar.telefono || '',
+      direccion: auxiliar.direccion || ''
     });
     
     this.clearMessages();
@@ -130,15 +130,15 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   /**
    * Mostrar modal de eliminación
    */
-  mostrarEliminarModal(director: Director): void {
-    this.selectedDirector = director;
+  mostrarEliminarModal(auxiliar: Auxiliar): void {
+    this.selectedAuxiliar = auxiliar;
     this.showDeleteModal = true;
     this.showCreateForm = false;
     this.showEditForm = false;
     this.clearMessages();
     
-    // Verificar si el director tiene usuarios asignados
-    this.verificarUsuariosAsignados(director.id_director);
+    // Verificar si el auxiliar tiene usuarios asignados
+    this.verificarUsuariosAsignados(auxiliar.id_auxiliar);
   }
 
   /**
@@ -149,8 +149,8 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
     this.showEditForm = false;
     this.showDeleteModal = false;
     this.showAssignModal = false;
-    this.selectedDirector = null;
-    this.directorUsuarios = [];
+    this.selectedAuxiliar = null;
+    this.auxiliarUsuarios = [];
     this.verificandoUsuarios = false;
     this.usuariosDisponibles = [];
     this.assignForm.reset();
@@ -158,49 +158,49 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Crear director
+   * Crear auxiliar
    */
-  crearDirector(): void {
+  crearAuxiliar(): void {
     if (this.createForm.valid) {
       this.formLoading = true;
       this.errorMessage = '';
 
-      const directorData: CreateDirectorDto = this.createForm.value;
+      const auxiliarData: CreateAuxiliarDto = this.createForm.value;
 
-      this.directorService.crearDirector(directorData)
+      this.auxiliarService.crearAuxiliar(auxiliarData)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.formLoading = false;
             if (response.success) {
-              this.successMessage = 'Director creado exitosamente';
+              this.successMessage = 'Auxiliar creado exitosamente';
               this.cerrarModales();
-              this.directorCreado.emit();
+              this.auxiliarCreado.emit();
             } else {
-              this.errorMessage = response.message || 'Error al crear director';
+              this.errorMessage = response.message || 'Error al crear auxiliar';
             }
             this.cdr.detectChanges();
           },
-                  error: (error) => {
-          this.formLoading = false;
-          this.errorHandler.addError({
-            type: ErrorType.SERVER,
-            title: 'Error al Crear Director',
-            message: error.error?.message || 'No se pudo crear el director',
-            retryable: true,
-            action: {
-              label: 'Reintentar',
-              action: () => this.retryCrearDirector(),
-              type: 'primary'
-            }
-          });
-          this.cdr.detectChanges();
-          
-          // Forzar detección de cambios adicional
-          setTimeout(() => {
+          error: (error) => {
+            this.formLoading = false;
+            this.errorHandler.addError({
+              type: ErrorType.SERVER,
+              title: 'Error al Crear Auxiliar',
+              message: error.error?.message || 'No se pudo crear el auxiliar',
+              retryable: true,
+              action: {
+                label: 'Reintentar',
+                action: () => this.retryCrearAuxiliar(),
+                type: 'primary'
+              }
+            });
             this.cdr.detectChanges();
-          }, 100);
-        }
+            
+            // Forzar detección de cambios adicional
+            setTimeout(() => {
+              this.cdr.detectChanges();
+            }, 100);
+          }
         });
     } else {
       this.markFormGroupTouched(this.createForm);
@@ -208,32 +208,32 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Actualizar director
+   * Actualizar auxiliar
    */
-  actualizarDirector(): void {
-    if (this.editForm.valid && this.selectedDirector) {
+  actualizarAuxiliar(): void {
+    if (this.editForm.valid && this.selectedAuxiliar) {
       this.formLoading = true;
       this.errorMessage = '';
 
-      const directorData: UpdateDirectorDto = this.editForm.value;
+      const auxiliarData: UpdateAuxiliarDto = this.editForm.value;
 
-      this.directorService.actualizarDirector(this.selectedDirector.id_director, directorData)
+      this.auxiliarService.actualizarAuxiliar(this.selectedAuxiliar.id_auxiliar, auxiliarData)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.formLoading = false;
             if (response.success) {
-              this.successMessage = 'Director actualizado exitosamente';
+              this.successMessage = 'Auxiliar actualizado exitosamente';
               this.cerrarModales();
-              this.directorActualizado.emit();
+              this.auxiliarActualizado.emit();
             } else {
-              this.errorMessage = response.message || 'Error al actualizar director';
+              this.errorMessage = response.message || 'Error al actualizar auxiliar';
             }
             this.cdr.detectChanges();
           },
           error: (error) => {
             this.formLoading = false;
-            this.errorHandler.handleHttpError(error, 'Actualizar Director');
+            this.errorHandler.handleHttpError(error, 'Actualizar Auxiliar');
             this.cdr.detectChanges();
             
             // Forzar detección de cambios adicional
@@ -248,62 +248,62 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Verificar usuarios asignados al director
+   * Verificar usuarios asignados al auxiliar
    */
-  verificarUsuariosAsignados(idDirector: string): void {
+  verificarUsuariosAsignados(idAuxiliar: string): void {
     this.verificandoUsuarios = true;
-    this.directorUsuarios = [];
+    this.auxiliarUsuarios = [];
 
-    this.directorService.verificarUsuariosAsignados(idDirector)
+    this.auxiliarService.verificarUsuariosAsignados(idAuxiliar)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           this.verificandoUsuarios = false;
           if (response.success && response.data) {
-            this.directorUsuarios = response.data.usuarios || [];
+            this.auxiliarUsuarios = response.data.usuarios || [];
           }
           this.cdr.detectChanges();
         },
         error: (error) => {
           this.verificandoUsuarios = false;
-          this.directorUsuarios = [];
+          this.auxiliarUsuarios = [];
           this.cdr.detectChanges();
         }
       });
   }
 
   /**
-   * Verificar si el director tiene usuarios asignados
+   * Verificar si el auxiliar tiene usuarios asignados
    */
   tieneUsuariosAsignados(): boolean {
-    return this.directorUsuarios.length > 0;
+    return this.auxiliarUsuarios.length > 0;
   }
 
   /**
-   * Eliminar director (el backend maneja la eliminación en cascada del usuario)
+   * Eliminar auxiliar (el backend maneja la eliminación en cascada del usuario)
    */
-  eliminarDirector(): void {
-    if (this.selectedDirector) {
+  eliminarAuxiliar(): void {
+    if (this.selectedAuxiliar) {
       this.formLoading = true;
       this.errorMessage = '';
 
-      this.directorService.eliminarDirector(this.selectedDirector.id_director)
+      this.auxiliarService.eliminarAuxiliar(this.selectedAuxiliar.id_auxiliar)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.formLoading = false;
             if (response.success) {
-              this.successMessage = 'Director eliminado exitosamente';
+              this.successMessage = 'Auxiliar eliminado exitosamente';
               this.cerrarModales();
-              this.directorEliminado.emit();
+              this.auxiliarEliminado.emit();
             } else {
-              this.errorMessage = response.message || 'Error al eliminar director';
+              this.errorMessage = response.message || 'Error al eliminar auxiliar';
             }
             this.cdr.detectChanges();
           },
           error: (error) => {
             this.formLoading = false;
-            this.errorHandler.handleHttpError(error, 'Eliminar Director');
+            this.errorHandler.handleHttpError(error, 'Eliminar Auxiliar');
             this.cdr.detectChanges();
             
             // Forzar detección de cambios adicional
@@ -352,9 +352,9 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
    */
   private getFieldLabel(fieldName: string): string {
     const labels: { [key: string]: string } = {
-      'nombres': 'Nombres',
-      'apellidos': 'Apellidos',
-      'email': 'Email',
+      'nombre': 'Nombre',
+      'apellido': 'Apellido',
+      'correo_electronico': 'Correo Electrónico',
       'telefono': 'Teléfono',
       'direccion': 'Dirección'
     };
@@ -391,8 +391,8 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   /**
    * Mostrar modal de asignación de usuario
    */
-  mostrarAsignarModal(director: Director): void {
-    this.selectedDirector = director;
+  mostrarAsignarModal(auxiliar: Auxiliar): void {
+    this.selectedAuxiliar = auxiliar;
     this.showAssignModal = true;
     this.showCreateForm = false;
     this.showEditForm = false;
@@ -402,9 +402,9 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
     
     // Marcar automáticamente el usuario actualmente asignado
     setTimeout(() => {
-      if (director.usuario?.id_user) {
+      if (auxiliar.usuario?.id_user) {
         this.assignForm.patchValue({
-          id_user: director.usuario.id_user
+          id_user: auxiliar.usuario.id_user
         });
       } else {
         // Si no tiene usuario asignado, marcar "Sin Usuario"
@@ -421,20 +421,20 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
    */
   cerrarAsignarModal(): void {
     this.showAssignModal = false;
-    this.selectedDirector = null;
+    this.selectedAuxiliar = null;
     this.assignForm.reset();
     this.usuariosDisponibles = [];
     this.clearMessages();
   }
 
   /**
-   * Cargar usuarios disponibles con rol DIRECTOR
+   * Cargar usuarios disponibles con rol AUXILIAR
    */
   cargarUsuariosDisponibles(): void {
     this.cargandoUsuarios = true;
     this.usuariosDisponibles = [];
 
-    this.directorService.obtenerUsuariosDisponibles()
+    this.auxiliarService.obtenerUsuariosDisponibles()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
@@ -461,10 +461,10 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Asignar usuario al director (primer usuario, cambiar usuario existente, o desasignar)
+   * Asignar usuario al auxiliar (primer usuario, cambiar usuario existente, o desasignar)
    */
   asignarUsuario(): void {
-    if (this.assignForm.valid && this.selectedDirector) {
+    if (this.assignForm.valid && this.selectedAuxiliar) {
       this.formLoading = true;
       this.errorMessage = '';
 
@@ -475,19 +475,19 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
         id_user: selectedUserId === 'sin_usuario' ? null : selectedUserId
       };
 
-      this.directorService.cambiarUsuario(this.selectedDirector.id_director, datosCambio)
+      this.auxiliarService.cambiarUsuario(this.selectedAuxiliar.id_auxiliar, datosCambio)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.formLoading = false;
             if (response.success) {
               if (selectedUserId === 'sin_usuario') {
-                this.successMessage = 'Usuario desasignado exitosamente del director';
+                this.successMessage = 'Usuario desasignado exitosamente del auxiliar';
               } else {
-                this.successMessage = 'Usuario asignado exitosamente al director';
+                this.successMessage = 'Usuario asignado exitosamente al auxiliar';
               }
               this.cerrarAsignarModal();
-              this.directorActualizado.emit();
+              this.auxiliarActualizado.emit();
             } else {
               this.errorMessage = response.message || 'Error al procesar asignación';
             }
@@ -508,70 +508,21 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Cambiar usuario asignado al director
+   * Verificar si el auxiliar tiene usuario asignado
    */
-  cambiarUsuario(): void {
-    if (this.assignForm.valid && this.selectedDirector) {
-      this.formLoading = true;
-      this.errorMessage = '';
-
-      const datosCambio: CambiarUsuarioDto = {
-        id_user: this.assignForm.value.id_user
-      };
-
-      this.directorService.cambiarUsuario(this.selectedDirector.id_director, datosCambio)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            this.formLoading = false;
-            if (response.success) {
-              this.successMessage = 'Usuario cambiado exitosamente';
-              this.cerrarAsignarModal();
-              this.directorActualizado.emit();
-            } else {
-              this.errorMessage = response.message || 'Error al cambiar usuario';
-            }
-            this.cdr.detectChanges();
-          },
-          error: (error) => {
-            this.formLoading = false;
-            this.errorHandler.handleHttpError(error, 'Cambiar Usuario');
-            this.cdr.detectChanges();
-            
-            // Forzar detección de cambios adicional
-            setTimeout(() => {
-              this.cdr.detectChanges();
-            }, 100);
-          }
-        });
-    }
-  }
-
-  /**
-   * Desasignar usuario del director (eliminar director)
-   */
-  desasignarUsuario(): void {
-    if (this.selectedDirector) {
-      this.mostrarEliminarModal(this.selectedDirector);
-    }
-  }
-
-  /**
-   * Verificar si el director tiene usuario asignado
-   */
-  tieneUsuarioAsignado(director: Director): boolean {
-    return !!(director.usuario && director.usuario.id_user);
+  tieneUsuarioAsignado(auxiliar: Auxiliar): boolean {
+    return !!(auxiliar.usuario && auxiliar.usuario.id_user);
   }
 
   /**
    * Obtener texto del botón de asignación
    */
-  getAssignButtonText(director: Director): string {
+  getAssignButtonText(auxiliar: Auxiliar): string {
     const selectedUserId = this.assignForm.get('id_user')?.value;
     
     if (selectedUserId === 'sin_usuario') {
       return 'Desasignar Usuario';
-    } else if (this.tieneUsuarioAsignado(director)) {
+    } else if (this.tieneUsuarioAsignado(auxiliar)) {
       return 'Cambiar Usuario';
     } else {
       return 'Asignar Usuario';
@@ -581,8 +532,8 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   /**
    * Obtener clase del botón de asignación
    */
-  getAssignButtonClass(director: Director): string {
-    return this.tieneUsuarioAsignado(director) 
+  getAssignButtonClass(auxiliar: Auxiliar): string {
+    return this.tieneUsuarioAsignado(auxiliar) 
       ? 'inline-flex items-center px-3 py-1.5 border border-orange-300 rounded-md text-xs font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors duration-200'
       : 'inline-flex items-center px-3 py-1.5 border border-green-300 rounded-md text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200';
   }
@@ -590,29 +541,29 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   // ==================== MÉTODOS DE REINTENTO ====================
 
   /**
-   * Reintentar operación de crear director
+   * Reintentar operación de crear auxiliar
    */
-  retryCrearDirector(): void {
+  retryCrearAuxiliar(): void {
     if (this.createForm.valid) {
-      this.crearDirector();
+      this.crearAuxiliar();
     }
   }
 
   /**
-   * Reintentar operación de actualizar director
+   * Reintentar operación de actualizar auxiliar
    */
-  retryActualizarDirector(): void {
-    if (this.editForm.valid && this.selectedDirector) {
-      this.actualizarDirector();
+  retryActualizarAuxiliar(): void {
+    if (this.editForm.valid && this.selectedAuxiliar) {
+      this.actualizarAuxiliar();
     }
   }
 
   /**
-   * Reintentar operación de eliminar director
+   * Reintentar operación de eliminar auxiliar
    */
-  retryEliminarDirector(): void {
-    if (this.selectedDirector) {
-      this.eliminarDirector();
+  retryEliminarAuxiliar(): void {
+    if (this.selectedAuxiliar) {
+      this.eliminarAuxiliar();
     }
   }
 
@@ -620,12 +571,8 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
    * Reintentar operación de asignar usuario
    */
   retryAsignarUsuario(): void {
-    if (this.assignForm.valid && this.selectedDirector) {
-      if (this.tieneUsuarioAsignado(this.selectedDirector)) {
-        this.cambiarUsuario();
-      } else {
-        this.asignarUsuario();
-      }
+    if (this.assignForm.valid && this.selectedAuxiliar) {
+      this.asignarUsuario();
     }
   }
 
@@ -639,36 +586,36 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   // ==================== MÉTODOS DE FILTRADO ====================
 
   /**
-   * Verificar si un director es el usuario autenticado
+   * Verificar si un auxiliar es el usuario autenticado
    */
-  private esUsuarioAutenticado(director: Director): boolean {
+  private esUsuarioAutenticado(auxiliar: Auxiliar): boolean {
     const user = this.userStore.user();
-    if (!user || user.role !== 'DIRECTOR' || !user.director) {
+    if (!user || user.role !== 'AUXILIAR' || !user.auxiliar) {
       return false;
     }
-    return director.id_director === user.director.id_director;
+    return auxiliar.id_auxiliar === user.auxiliar.id_auxiliar;
   }
 
   /**
-   * Aplicar filtros a la lista de directores
+   * Aplicar filtros a la lista de auxiliares
    */
   aplicarFiltros(): void {
     // Filtrar el usuario autenticado primero
-    const directoresSinUsuarioAutenticado = this.directores.filter(director => 
-      !this.esUsuarioAutenticado(director)
+    const auxiliaresSinUsuarioAutenticado = this.auxiliares.filter(auxiliar => 
+      !this.esUsuarioAutenticado(auxiliar)
     );
 
     if (!this.filtroTexto.trim()) {
-      this.directoresFiltrados = [...directoresSinUsuarioAutenticado];
+      this.auxiliaresFiltrados = [...auxiliaresSinUsuarioAutenticado];
     } else {
       const textoFiltro = this.filtroTexto.toLowerCase().trim();
-      this.directoresFiltrados = directoresSinUsuarioAutenticado.filter(director => 
-        director.nombres.toLowerCase().includes(textoFiltro) ||
-        director.apellidos.toLowerCase().includes(textoFiltro) ||
-        director.email.toLowerCase().includes(textoFiltro) ||
-        (director.telefono && director.telefono.includes(textoFiltro)) ||
-        (director.direccion && director.direccion.toLowerCase().includes(textoFiltro)) ||
-        (director.usuario && director.usuario.nombre_usuario.toLowerCase().includes(textoFiltro))
+      this.auxiliaresFiltrados = auxiliaresSinUsuarioAutenticado.filter(auxiliar => 
+        auxiliar.nombre.toLowerCase().includes(textoFiltro) ||
+        auxiliar.apellido.toLowerCase().includes(textoFiltro) ||
+        auxiliar.correo_electronico.toLowerCase().includes(textoFiltro) ||
+        (auxiliar.telefono && auxiliar.telefono.includes(textoFiltro)) ||
+        (auxiliar.direccion && auxiliar.direccion.toLowerCase().includes(textoFiltro)) ||
+        (auxiliar.usuario && auxiliar.usuario.nombre_usuario.toLowerCase().includes(textoFiltro))
       );
     }
   }
@@ -682,10 +629,10 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Obtener el número de directores filtrados
+   * Obtener el número de auxiliares filtrados
    */
-  get numeroDirectoresFiltrados(): number {
-    return this.directoresFiltrados.length;
+  get numeroAuxiliaresFiltrados(): number {
+    return this.auxiliaresFiltrados.length;
   }
 
   /**

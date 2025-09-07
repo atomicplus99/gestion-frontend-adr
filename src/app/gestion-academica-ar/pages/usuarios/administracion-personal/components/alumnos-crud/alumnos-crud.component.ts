@@ -2,27 +2,28 @@ import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, S
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { DirectorService } from '../../../services/director.service';
-import { Director, CreateDirectorDto, UpdateDirectorDto, UsuarioDisponible, AsignarUsuarioDto, CambiarUsuarioDto } from '../../../interfaces/director.interface';
+import { AlumnoService } from '../../../services/alumno.service';
+import { Alumno, CreateAlumnoDto, UpdateAlumnoDto, UsuarioDisponible, AsignarUsuarioDto, CambiarUsuarioDto, Turno } from '../../../interfaces/alumno.interface';
 import { ErrorHandlerService, ErrorType } from '../../../../../../shared/services/error-handler.service';
 import { UserStoreService } from '../../../../../../auth/store/user.store';
 
 @Component({
-  selector: 'app-directores-crud',
+  selector: 'app-alumnos-crud',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
-  templateUrl: './directores-crud.component.html',
-  styleUrls: ['./directores-crud.component.css']
+  templateUrl: './alumnos-crud.component.html',
+  styleUrls: ['./alumnos-crud.component.css']
 })
-export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
-  @Input() directores: Director[] = [];
+export class AlumnosCrudComponent implements OnInit, OnDestroy, OnChanges {
+  @Input() alumnos: Alumno[] = [];
   @Input() loading = false;
+  @Input() turnos: Turno[] = [];
   
-  @Output() directorCreado = new EventEmitter<void>();
-  @Output() directorActualizado = new EventEmitter<void>();
-  @Output() directorEliminado = new EventEmitter<void>();
+  @Output() alumnoCreado = new EventEmitter<void>();
+  @Output() alumnoActualizado = new EventEmitter<void>();
+  @Output() alumnoEliminado = new EventEmitter<void>();
 
-  private directorService = inject(DirectorService);
+  private alumnoService = inject(AlumnoService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
   private errorHandler = inject(ErrorHandlerService);
@@ -34,11 +35,11 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   showEditForm = false;
   showDeleteModal = false;
   showAssignModal = false;
-  selectedDirector: Director | null = null;
+  selectedAlumno: Alumno | null = null;
   formLoading = false;
   
   // Validación de eliminación
-  directorUsuarios: any[] = [];
+  alumnoUsuarios: any[] = [];
   verificandoUsuarios = false;
 
   // Asignación de usuarios
@@ -56,23 +57,47 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
 
   // Filtros
   filtroTexto = '';
-  directoresFiltrados: Director[] = [];
+  alumnosFiltrados: Alumno[] = [];
+
+  // Niveles educativos
+  nivelesEducativos = [
+    { value: 'Inicial', label: 'Inicial' },
+    { value: 'Primaria', label: 'Primaria' },
+    { value: 'Secundaria', label: 'Secundaria' }
+  ];
+
+  // Grados por nivel
+  gradosPorNivel: { [key: string]: number[] } = {
+    'Inicial': [3, 4, 5],
+    'Primaria': [1, 2, 3, 4, 5, 6],
+    'Secundaria': [1, 2, 3, 4, 5]
+  };
 
   constructor() {
     this.createForm = this.fb.group({
-      nombres: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      apellidos: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      email: ['', [Validators.required, Validators.email, Validators.maxLength(100)]],
-      telefono: ['', [Validators.maxLength(15)]],
-      direccion: ['', [Validators.maxLength(200)]]
+      codigo: ['', [Validators.required, Validators.pattern(/^\d{14}$/)]],
+      dni_alumno: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
+      nombre: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      apellido: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      fecha_nacimiento: ['', [Validators.required]],
+      direccion: ['', [Validators.required, Validators.maxLength(255)]],
+      nivel: ['', [Validators.required]],
+      grado: ['', [Validators.required]],
+      seccion: ['', [Validators.required, Validators.maxLength(10)]],
+      turno_id: ['', [Validators.required]]
     });
 
     this.editForm = this.fb.group({
-      nombres: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      apellidos: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      email: ['', [Validators.required, Validators.email, Validators.maxLength(100)]],
-      telefono: ['', [Validators.maxLength(15)]],
-      direccion: ['', [Validators.maxLength(200)]]
+      codigo: ['', [Validators.required, Validators.pattern(/^\d{14}$/)]],
+      dni_alumno: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
+      nombre: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      apellido: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      fecha_nacimiento: ['', [Validators.required]],
+      direccion: ['', [Validators.required, Validators.maxLength(255)]],
+      nivel: ['', [Validators.required]],
+      grado: ['', [Validators.required]],
+      seccion: ['', [Validators.required, Validators.maxLength(10)]],
+      turno_id: ['', [Validators.required]]
     });
 
     this.assignForm = this.fb.group({
@@ -81,7 +106,7 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnInit(): void {
-    // El componente ya recibe los directores como input
+    // El componente ya recibe los alumnos como input
     this.aplicarFiltros();
   }
 
@@ -91,7 +116,7 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['directores']) {
+    if (changes['alumnos']) {
       this.aplicarFiltros();
     }
   }
@@ -110,18 +135,23 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   /**
    * Mostrar formulario de edición
    */
-  mostrarEditarFormulario(director: Director): void {
-    this.selectedDirector = director;
+  mostrarEditarFormulario(alumno: Alumno): void {
+    this.selectedAlumno = alumno;
     this.showEditForm = true;
     this.showCreateForm = false;
     this.showDeleteModal = false;
     
     this.editForm.patchValue({
-      nombres: director.nombres,
-      apellidos: director.apellidos,
-      email: director.email,
-      telefono: director.telefono || '',
-      direccion: director.direccion || ''
+      codigo: alumno.codigo,
+      dni_alumno: alumno.dni_alumno,
+      nombre: alumno.nombre,
+      apellido: alumno.apellido,
+      fecha_nacimiento: this.formatDateForInput(alumno.fecha_nacimiento),
+      direccion: alumno.direccion,
+      nivel: alumno.nivel,
+      grado: alumno.grado,
+      seccion: alumno.seccion,
+      turno_id: alumno.turno?.id_turno || ''
     });
     
     this.clearMessages();
@@ -130,15 +160,15 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   /**
    * Mostrar modal de eliminación
    */
-  mostrarEliminarModal(director: Director): void {
-    this.selectedDirector = director;
+  mostrarEliminarModal(alumno: Alumno): void {
+    this.selectedAlumno = alumno;
     this.showDeleteModal = true;
     this.showCreateForm = false;
     this.showEditForm = false;
     this.clearMessages();
     
-    // Verificar si el director tiene usuarios asignados
-    this.verificarUsuariosAsignados(director.id_director);
+    // Verificar si el alumno tiene usuarios asignados
+    this.verificarUsuariosAsignados(alumno.id_alumno);
   }
 
   /**
@@ -149,8 +179,8 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
     this.showEditForm = false;
     this.showDeleteModal = false;
     this.showAssignModal = false;
-    this.selectedDirector = null;
-    this.directorUsuarios = [];
+    this.selectedAlumno = null;
+    this.alumnoUsuarios = [];
     this.verificandoUsuarios = false;
     this.usuariosDisponibles = [];
     this.assignForm.reset();
@@ -158,49 +188,52 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Crear director
+   * Crear alumno
    */
-  crearDirector(): void {
+  crearAlumno(): void {
     if (this.createForm.valid) {
       this.formLoading = true;
       this.errorMessage = '';
 
-      const directorData: CreateDirectorDto = this.createForm.value;
+      const alumnoData: CreateAlumnoDto = {
+        ...this.createForm.value,
+        fecha_nacimiento: new Date(this.createForm.value.fecha_nacimiento)
+      };
 
-      this.directorService.crearDirector(directorData)
+      this.alumnoService.crearAlumno(alumnoData)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.formLoading = false;
             if (response.success) {
-              this.successMessage = 'Director creado exitosamente';
+              this.successMessage = 'Alumno creado exitosamente';
               this.cerrarModales();
-              this.directorCreado.emit();
+              this.alumnoCreado.emit();
             } else {
-              this.errorMessage = response.message || 'Error al crear director';
+              this.errorMessage = response.message || 'Error al crear alumno';
             }
             this.cdr.detectChanges();
           },
-                  error: (error) => {
-          this.formLoading = false;
-          this.errorHandler.addError({
-            type: ErrorType.SERVER,
-            title: 'Error al Crear Director',
-            message: error.error?.message || 'No se pudo crear el director',
-            retryable: true,
-            action: {
-              label: 'Reintentar',
-              action: () => this.retryCrearDirector(),
-              type: 'primary'
-            }
-          });
-          this.cdr.detectChanges();
-          
-          // Forzar detección de cambios adicional
-          setTimeout(() => {
+          error: (error) => {
+            this.formLoading = false;
+            this.errorHandler.addError({
+              type: ErrorType.SERVER,
+              title: 'Error al Crear Alumno',
+              message: error.error?.message || 'No se pudo crear el alumno',
+              retryable: true,
+              action: {
+                label: 'Reintentar',
+                action: () => this.retryCrearAlumno(),
+                type: 'primary'
+              }
+            });
             this.cdr.detectChanges();
-          }, 100);
-        }
+            
+            // Forzar detección de cambios adicional
+            setTimeout(() => {
+              this.cdr.detectChanges();
+            }, 100);
+          }
         });
     } else {
       this.markFormGroupTouched(this.createForm);
@@ -208,32 +241,35 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Actualizar director
+   * Actualizar alumno
    */
-  actualizarDirector(): void {
-    if (this.editForm.valid && this.selectedDirector) {
+  actualizarAlumno(): void {
+    if (this.editForm.valid && this.selectedAlumno) {
       this.formLoading = true;
       this.errorMessage = '';
 
-      const directorData: UpdateDirectorDto = this.editForm.value;
+      const alumnoData: UpdateAlumnoDto = {
+        ...this.editForm.value,
+        fecha_nacimiento: new Date(this.editForm.value.fecha_nacimiento)
+      };
 
-      this.directorService.actualizarDirector(this.selectedDirector.id_director, directorData)
+      this.alumnoService.actualizarAlumnoPorCodigo(this.selectedAlumno.codigo, alumnoData)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.formLoading = false;
             if (response.success) {
-              this.successMessage = 'Director actualizado exitosamente';
+              this.successMessage = 'Alumno actualizado exitosamente';
               this.cerrarModales();
-              this.directorActualizado.emit();
+              this.alumnoActualizado.emit();
             } else {
-              this.errorMessage = response.message || 'Error al actualizar director';
+              this.errorMessage = response.message || 'Error al actualizar alumno';
             }
             this.cdr.detectChanges();
           },
           error: (error) => {
             this.formLoading = false;
-            this.errorHandler.handleHttpError(error, 'Actualizar Director');
+            this.errorHandler.handleHttpError(error, 'Actualizar Alumno');
             this.cdr.detectChanges();
             
             // Forzar detección de cambios adicional
@@ -248,62 +284,62 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Verificar usuarios asignados al director
+   * Verificar usuarios asignados al alumno
    */
-  verificarUsuariosAsignados(idDirector: string): void {
+  verificarUsuariosAsignados(idAlumno: string): void {
     this.verificandoUsuarios = true;
-    this.directorUsuarios = [];
+    this.alumnoUsuarios = [];
 
-    this.directorService.verificarUsuariosAsignados(idDirector)
+    this.alumnoService.verificarUsuariosAsignados(idAlumno)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           this.verificandoUsuarios = false;
           if (response.success && response.data) {
-            this.directorUsuarios = response.data.usuarios || [];
+            this.alumnoUsuarios = response.data.usuarios || [];
           }
           this.cdr.detectChanges();
         },
         error: (error) => {
           this.verificandoUsuarios = false;
-          this.directorUsuarios = [];
+          this.alumnoUsuarios = [];
           this.cdr.detectChanges();
         }
       });
   }
 
   /**
-   * Verificar si el director tiene usuarios asignados
+   * Verificar si el alumno tiene usuarios asignados
    */
   tieneUsuariosAsignados(): boolean {
-    return this.directorUsuarios.length > 0;
+    return this.alumnoUsuarios.length > 0;
   }
 
   /**
-   * Eliminar director (el backend maneja la eliminación en cascada del usuario)
+   * Eliminar alumno (el backend maneja la eliminación en cascada del usuario)
    */
-  eliminarDirector(): void {
-    if (this.selectedDirector) {
+  eliminarAlumno(): void {
+    if (this.selectedAlumno) {
       this.formLoading = true;
       this.errorMessage = '';
 
-      this.directorService.eliminarDirector(this.selectedDirector.id_director)
+      this.alumnoService.eliminarAlumno(this.selectedAlumno.id_alumno)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.formLoading = false;
             if (response.success) {
-              this.successMessage = 'Director eliminado exitosamente';
+              this.successMessage = 'Alumno eliminado exitosamente';
               this.cerrarModales();
-              this.directorEliminado.emit();
+              this.alumnoEliminado.emit();
             } else {
-              this.errorMessage = response.message || 'Error al eliminar director';
+              this.errorMessage = response.message || 'Error al eliminar alumno';
             }
             this.cdr.detectChanges();
           },
           error: (error) => {
             this.formLoading = false;
-            this.errorHandler.handleHttpError(error, 'Eliminar Director');
+            this.errorHandler.handleHttpError(error, 'Eliminar Alumno');
             this.cdr.detectChanges();
             
             // Forzar detección de cambios adicional
@@ -313,6 +349,21 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
           }
         });
     }
+  }
+
+  /**
+   * Formatear fecha para input
+   */
+  private formatDateForInput(date: Date | string): string {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toISOString().split('T')[0];
+  }
+
+  /**
+   * Obtener grados disponibles para el nivel seleccionado
+   */
+  getGradosDisponibles(nivel: string): number[] {
+    return this.gradosPorNivel[nivel] || [];
   }
 
   /**
@@ -337,6 +388,14 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
       if (field.errors['email']) {
         return 'Email inválido';
       }
+      if (field.errors['pattern']) {
+        if (fieldName === 'codigo') {
+          return 'El código debe tener exactamente 14 dígitos';
+        }
+        if (fieldName === 'dni_alumno') {
+          return 'El DNI debe tener exactamente 8 dígitos';
+        }
+      }
       if (field.errors['minlength']) {
         return `${this.getFieldLabel(fieldName)} debe tener al menos ${field.errors['minlength'].requiredLength} caracteres`;
       }
@@ -352,11 +411,16 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
    */
   private getFieldLabel(fieldName: string): string {
     const labels: { [key: string]: string } = {
-      'nombres': 'Nombres',
-      'apellidos': 'Apellidos',
-      'email': 'Email',
-      'telefono': 'Teléfono',
-      'direccion': 'Dirección'
+      'codigo': 'Código',
+      'dni_alumno': 'DNI',
+      'nombre': 'Nombre',
+      'apellido': 'Apellido',
+      'fecha_nacimiento': 'Fecha de Nacimiento',
+      'direccion': 'Dirección',
+      'nivel': 'Nivel',
+      'grado': 'Grado',
+      'seccion': 'Sección',
+      'turno_id': 'Turno'
     };
     return labels[fieldName] || fieldName;
   }
@@ -391,8 +455,8 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   /**
    * Mostrar modal de asignación de usuario
    */
-  mostrarAsignarModal(director: Director): void {
-    this.selectedDirector = director;
+  mostrarAsignarModal(alumno: Alumno): void {
+    this.selectedAlumno = alumno;
     this.showAssignModal = true;
     this.showCreateForm = false;
     this.showEditForm = false;
@@ -402,9 +466,9 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
     
     // Marcar automáticamente el usuario actualmente asignado
     setTimeout(() => {
-      if (director.usuario?.id_user) {
+      if (alumno.usuario?.id_user) {
         this.assignForm.patchValue({
-          id_user: director.usuario.id_user
+          id_user: alumno.usuario.id_user
         });
       } else {
         // Si no tiene usuario asignado, marcar "Sin Usuario"
@@ -421,20 +485,20 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
    */
   cerrarAsignarModal(): void {
     this.showAssignModal = false;
-    this.selectedDirector = null;
+    this.selectedAlumno = null;
     this.assignForm.reset();
     this.usuariosDisponibles = [];
     this.clearMessages();
   }
 
   /**
-   * Cargar usuarios disponibles con rol DIRECTOR
+   * Cargar usuarios disponibles con rol ALUMNO
    */
   cargarUsuariosDisponibles(): void {
     this.cargandoUsuarios = true;
     this.usuariosDisponibles = [];
 
-    this.directorService.obtenerUsuariosDisponibles()
+    this.alumnoService.obtenerUsuariosDisponibles()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
@@ -461,10 +525,10 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Asignar usuario al director (primer usuario, cambiar usuario existente, o desasignar)
+   * Asignar usuario al alumno (primer usuario, cambiar usuario existente, o desasignar)
    */
   asignarUsuario(): void {
-    if (this.assignForm.valid && this.selectedDirector) {
+    if (this.assignForm.valid && this.selectedAlumno) {
       this.formLoading = true;
       this.errorMessage = '';
 
@@ -475,19 +539,19 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
         id_user: selectedUserId === 'sin_usuario' ? null : selectedUserId
       };
 
-      this.directorService.cambiarUsuario(this.selectedDirector.id_director, datosCambio)
+      this.alumnoService.cambiarUsuario(this.selectedAlumno.id_alumno, datosCambio)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response) => {
             this.formLoading = false;
             if (response.success) {
               if (selectedUserId === 'sin_usuario') {
-                this.successMessage = 'Usuario desasignado exitosamente del director';
+                this.successMessage = 'Usuario desasignado exitosamente del alumno';
               } else {
-                this.successMessage = 'Usuario asignado exitosamente al director';
+                this.successMessage = 'Usuario asignado exitosamente al alumno';
               }
               this.cerrarAsignarModal();
-              this.directorActualizado.emit();
+              this.alumnoActualizado.emit();
             } else {
               this.errorMessage = response.message || 'Error al procesar asignación';
             }
@@ -508,70 +572,21 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Cambiar usuario asignado al director
+   * Verificar si el alumno tiene usuario asignado
    */
-  cambiarUsuario(): void {
-    if (this.assignForm.valid && this.selectedDirector) {
-      this.formLoading = true;
-      this.errorMessage = '';
-
-      const datosCambio: CambiarUsuarioDto = {
-        id_user: this.assignForm.value.id_user
-      };
-
-      this.directorService.cambiarUsuario(this.selectedDirector.id_director, datosCambio)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            this.formLoading = false;
-            if (response.success) {
-              this.successMessage = 'Usuario cambiado exitosamente';
-              this.cerrarAsignarModal();
-              this.directorActualizado.emit();
-            } else {
-              this.errorMessage = response.message || 'Error al cambiar usuario';
-            }
-            this.cdr.detectChanges();
-          },
-          error: (error) => {
-            this.formLoading = false;
-            this.errorHandler.handleHttpError(error, 'Cambiar Usuario');
-            this.cdr.detectChanges();
-            
-            // Forzar detección de cambios adicional
-            setTimeout(() => {
-              this.cdr.detectChanges();
-            }, 100);
-          }
-        });
-    }
-  }
-
-  /**
-   * Desasignar usuario del director (eliminar director)
-   */
-  desasignarUsuario(): void {
-    if (this.selectedDirector) {
-      this.mostrarEliminarModal(this.selectedDirector);
-    }
-  }
-
-  /**
-   * Verificar si el director tiene usuario asignado
-   */
-  tieneUsuarioAsignado(director: Director): boolean {
-    return !!(director.usuario && director.usuario.id_user);
+  tieneUsuarioAsignado(alumno: Alumno): boolean {
+    return !!(alumno.usuario && alumno.usuario.id_user);
   }
 
   /**
    * Obtener texto del botón de asignación
    */
-  getAssignButtonText(director: Director): string {
+  getAssignButtonText(alumno: Alumno): string {
     const selectedUserId = this.assignForm.get('id_user')?.value;
     
     if (selectedUserId === 'sin_usuario') {
       return 'Desasignar Usuario';
-    } else if (this.tieneUsuarioAsignado(director)) {
+    } else if (this.tieneUsuarioAsignado(alumno)) {
       return 'Cambiar Usuario';
     } else {
       return 'Asignar Usuario';
@@ -581,8 +596,8 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   /**
    * Obtener clase del botón de asignación
    */
-  getAssignButtonClass(director: Director): string {
-    return this.tieneUsuarioAsignado(director) 
+  getAssignButtonClass(alumno: Alumno): string {
+    return this.tieneUsuarioAsignado(alumno) 
       ? 'inline-flex items-center px-3 py-1.5 border border-orange-300 rounded-md text-xs font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors duration-200'
       : 'inline-flex items-center px-3 py-1.5 border border-green-300 rounded-md text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200';
   }
@@ -590,29 +605,29 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   // ==================== MÉTODOS DE REINTENTO ====================
 
   /**
-   * Reintentar operación de crear director
+   * Reintentar operación de crear alumno
    */
-  retryCrearDirector(): void {
+  retryCrearAlumno(): void {
     if (this.createForm.valid) {
-      this.crearDirector();
+      this.crearAlumno();
     }
   }
 
   /**
-   * Reintentar operación de actualizar director
+   * Reintentar operación de actualizar alumno
    */
-  retryActualizarDirector(): void {
-    if (this.editForm.valid && this.selectedDirector) {
-      this.actualizarDirector();
+  retryActualizarAlumno(): void {
+    if (this.editForm.valid && this.selectedAlumno) {
+      this.actualizarAlumno();
     }
   }
 
   /**
-   * Reintentar operación de eliminar director
+   * Reintentar operación de eliminar alumno
    */
-  retryEliminarDirector(): void {
-    if (this.selectedDirector) {
-      this.eliminarDirector();
+  retryEliminarAlumno(): void {
+    if (this.selectedAlumno) {
+      this.eliminarAlumno();
     }
   }
 
@@ -620,12 +635,8 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
    * Reintentar operación de asignar usuario
    */
   retryAsignarUsuario(): void {
-    if (this.assignForm.valid && this.selectedDirector) {
-      if (this.tieneUsuarioAsignado(this.selectedDirector)) {
-        this.cambiarUsuario();
-      } else {
-        this.asignarUsuario();
-      }
+    if (this.assignForm.valid && this.selectedAlumno) {
+      this.asignarUsuario();
     }
   }
 
@@ -639,36 +650,39 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   // ==================== MÉTODOS DE FILTRADO ====================
 
   /**
-   * Verificar si un director es el usuario autenticado
+   * Verificar si un alumno es el usuario autenticado
    */
-  private esUsuarioAutenticado(director: Director): boolean {
+  private esUsuarioAutenticado(alumno: Alumno): boolean {
     const user = this.userStore.user();
-    if (!user || user.role !== 'DIRECTOR' || !user.director) {
+    if (!user || user.role !== 'ALUMNO' || !user.alumno) {
       return false;
     }
-    return director.id_director === user.director.id_director;
+    return alumno.id_alumno === user.alumno.id_alumno;
   }
 
   /**
-   * Aplicar filtros a la lista de directores
+   * Aplicar filtros a la lista de alumnos
    */
   aplicarFiltros(): void {
     // Filtrar el usuario autenticado primero
-    const directoresSinUsuarioAutenticado = this.directores.filter(director => 
-      !this.esUsuarioAutenticado(director)
+    const alumnosSinUsuarioAutenticado = this.alumnos.filter(alumno => 
+      !this.esUsuarioAutenticado(alumno)
     );
 
     if (!this.filtroTexto.trim()) {
-      this.directoresFiltrados = [...directoresSinUsuarioAutenticado];
+      this.alumnosFiltrados = [...alumnosSinUsuarioAutenticado];
     } else {
       const textoFiltro = this.filtroTexto.toLowerCase().trim();
-      this.directoresFiltrados = directoresSinUsuarioAutenticado.filter(director => 
-        director.nombres.toLowerCase().includes(textoFiltro) ||
-        director.apellidos.toLowerCase().includes(textoFiltro) ||
-        director.email.toLowerCase().includes(textoFiltro) ||
-        (director.telefono && director.telefono.includes(textoFiltro)) ||
-        (director.direccion && director.direccion.toLowerCase().includes(textoFiltro)) ||
-        (director.usuario && director.usuario.nombre_usuario.toLowerCase().includes(textoFiltro))
+      this.alumnosFiltrados = alumnosSinUsuarioAutenticado.filter(alumno => 
+        alumno.nombre.toLowerCase().includes(textoFiltro) ||
+        alumno.apellido.toLowerCase().includes(textoFiltro) ||
+        alumno.codigo.toLowerCase().includes(textoFiltro) ||
+        alumno.dni_alumno.includes(textoFiltro) ||
+        alumno.nivel.toLowerCase().includes(textoFiltro) ||
+        alumno.grado.toString().includes(textoFiltro) ||
+        alumno.seccion.toLowerCase().includes(textoFiltro) ||
+        (alumno.turno && alumno.turno.turno.toLowerCase().includes(textoFiltro)) ||
+        (alumno.usuario && alumno.usuario.nombre_usuario.toLowerCase().includes(textoFiltro))
       );
     }
   }
@@ -682,10 +696,10 @@ export class DirectoresCrudComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Obtener el número de directores filtrados
+   * Obtener el número de alumnos filtrados
    */
-  get numeroDirectoresFiltrados(): number {
-    return this.directoresFiltrados.length;
+  get numeroAlumnosFiltrados(): number {
+    return this.alumnosFiltrados.length;
   }
 
   /**
