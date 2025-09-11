@@ -2,18 +2,13 @@
 <div class="fixed top-1/2 right-4 transform -translate-y-1/2 z-40">
   <button 
     (click)="toggleSidebar()"
-    class="w-16 h-16 bg-gradient-to-br from-blue-500 via-purple-600 to-indigo-700 text-white rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-110 flex items-center justify-center group relative overflow-hidden">
-    <!-- Decoración de fondo -->
-    <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-    <div class="absolute top-0 right-0 w-8 h-8 bg-white/20 rounded-full -translate-y-4 translate-x-4 animate-pulse"></div>
-    <div class="absolute bottom-0 left-0 w-6 h-6 bg-white/10 rounded-full translate-y-3 -translate-x-3 animate-pulse delay-1000"></div>
-    
-    <svg class="w-7 h-7 transition-transform duration-500 group-hover:rotate-12 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+    class="w-10 h-10 bg-white border border-gray-300 text-gray-600 rounded-full shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center group">
+    <svg class="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
     </svg>
     
     @if (notes().length > 0) {
-      <span class="absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-r from-red-500 to-pink-600 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse shadow-lg border-2 border-white">
+      <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
         {{ notes().length }}
       </span>
     }

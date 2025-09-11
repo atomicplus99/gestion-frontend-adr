@@ -1,5 +1,5 @@
 // components/apoderado-create-form.component.ts
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -12,7 +12,7 @@ import { ApoderadoService } from '../apoderado.service';
  imports: [CommonModule, ReactiveFormsModule],
  templateUrl: './create-apoderado.component.html'
 })
-export class ApoderadoCreateFormComponent {
+export class ApoderadoCreateFormComponent implements OnInit {
  private apoderadoService = inject(ApoderadoService);
  private fb = inject(FormBuilder);
  private router = inject(Router);
@@ -33,6 +33,13 @@ export class ApoderadoCreateFormComponent {
    relacion_especifica: ['', [Validators.maxLength(100)]],
    activo: [true]
  });
+
+ // Asegurar que activo siempre sea true
+ ngOnInit(): void {
+   // Forzar que activo esté siempre en true
+   this.apoderadoForm.get('activo')?.setValue(true);
+   this.apoderadoForm.get('activo')?.disable();
+ }
 
  onSubmit(): void {
    if (this.apoderadoForm.valid) {
@@ -75,6 +82,7 @@ export class ApoderadoCreateFormComponent {
  resetForm(): void {
    this.apoderadoForm.reset();
    this.apoderadoForm.patchValue({ activo: true });
+   this.apoderadoForm.get('activo')?.disable();
    // ✅ Los mensajes se limpian automáticamente después de 5 segundos
  }
 

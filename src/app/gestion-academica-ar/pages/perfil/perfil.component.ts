@@ -619,7 +619,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
   cambiarPassword(): void {
     if (this.passwordForm.invalid) {
-      this.mostrarNotificacionUsuario('⚠️ Por favor, completa todos los campos correctamente y verifica que las contraseñas coincidan', 'error');
+      this.mostrarNotificacionUsuario('Por favor, completa todos los campos correctamente y verifica que las contraseñas coincidan', 'error');
       return;
     }
 
@@ -642,7 +642,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: (response: any) => {
         if (response.success) {
-          this.mostrarNotificacionUsuario('✅ ¡Contraseña cambiada exitosamente! Tu nueva contraseña ya está activa.', 'success');
+          this.mostrarNotificacionUsuario('¡Contraseña cambiada exitosamente! Tu nueva contraseña ya está activa.', 'success');
           this.passwordForm.reset();
           this.showPasswordForm.set(false);
         } else {
@@ -657,11 +657,11 @@ export class PerfilComponent implements OnInit, OnDestroy {
         if (error?.error?.message) {
           errorMessage = error.error.message;
         } else if (error?.status === 400) {
-          errorMessage = '❌ La contraseña actual es incorrecta. Verifica e intenta nuevamente.';
+          errorMessage = 'La contraseña actual es incorrecta. Verifica e intenta nuevamente.';
         } else if (error?.status === 401) {
-          errorMessage = '❌ No tienes permisos para realizar esta acción.';
+          errorMessage = 'No tienes permisos para realizar esta acción.';
         } else if (error?.status === 500) {
-          errorMessage = '❌ Error del servidor. Intenta nuevamente más tarde.';
+          errorMessage = 'Error del servidor. Intenta nuevamente más tarde.';
         }
         
         this.mostrarNotificacionUsuario(errorMessage, 'error');

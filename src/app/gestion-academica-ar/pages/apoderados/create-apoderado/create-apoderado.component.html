@@ -181,9 +181,10 @@
          <div class="flex items-center">
            <input 
              type="checkbox" 
-             formControlName="activo"
-             class="h-4 w-4 text-blue-600 border-gray-300 rounded">
-           <label class="ml-2 text-sm text-gray-700">
+             [checked]="true"
+             disabled
+             class="h-4 w-4 text-blue-600 border-gray-300 rounded cursor-not-allowed opacity-60">
+           <label class="ml-2 text-sm text-gray-500">
              Apoderado activo
            </label>
          </div>

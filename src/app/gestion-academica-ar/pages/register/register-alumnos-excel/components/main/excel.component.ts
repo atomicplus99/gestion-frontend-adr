@@ -15,7 +15,6 @@ import { ExcelStateService } from '../../services/excel-state.service';
 
 // Componentes del módulo Excel
 import { ExcelWidgetsComponent } from '../excel-widgets/excel-widgets.component';
-import { ExcelTableComponent } from '../excel-table/excel-table.component';
 import { ExcelNotificationService } from '../../services/excel-notificacion.service';
 import { TurnoModuleExcel } from '../../models/turno-excel.model';
 import { AlumnoModuleExcel } from '../../models/alumno-excel.model';
@@ -30,8 +29,7 @@ import { ExcelValidators } from '../../validators/excel.validators';
   imports: [
     FormsModule, 
     CommonModule,
-    ExcelWidgetsComponent,
-    ExcelTableComponent
+    ExcelWidgetsComponent
   ],
   templateUrl: './excel.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -61,12 +59,18 @@ export class ExcelComponent implements OnInit, OnDestroy {
   // Variables del formulario
   selectedFile: File | null = null;
   selectedTurnoId: string | null = null;
-  crearUsuarios = true;
+  private _crearUsuarios = true;
   isLoading = false;
 
-  // Variables de paginación
-  currentPage = 1;
-  itemsPerPage = 10;
+  // Getter para asegurar que crearUsuarios siempre sea true
+  get crearUsuarios(): boolean {
+    return true;
+  }
+
+  set crearUsuarios(value: boolean) {
+    this._crearUsuarios = true; // Siempre forzar a true
+  }
+
   
   // Utilitarios
   Math = Math;
@@ -77,6 +81,8 @@ export class ExcelComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.initializeComponent();
     this.subscribeToStateChanges();
+    // Asegurar que crearUsuarios esté siempre en true
+    this.crearUsuarios = true;
   }
 
   ngOnDestroy(): void {
@@ -125,13 +131,6 @@ export class ExcelComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       });
 
-    this.stateService.getPagination()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(pagination => {
-        this.currentPage = pagination.currentPage;
-        this.itemsPerPage = pagination.itemsPerPage;
-        this.cdr.detectChanges();
-      });
   }
 
   // ====================================
@@ -260,8 +259,6 @@ export class ExcelComponent implements OnInit, OnDestroy {
     );
     this.stateService.setWidgets(widgets);
     
-    // Resetear paginación
-    this.stateService.setPagination(1, this.itemsPerPage);
     
     // Mostrar notificación de éxito
     this.notificationService.importSuccess(response.total || 0);
@@ -272,50 +269,9 @@ export class ExcelComponent implements OnInit, OnDestroy {
     this.notificationService.importError(error.message);
   }
 
-  // ====================================
-  // MÉTODOS DE EXPORTACIÓN
-  // ====================================
-
-  onExportExcel(alumnos: AlumnoModuleExcel[]): void {
-    if (alumnos.length === 0) {
-      this.notificationService.warning(EXCEL_MESSAGES.ERROR.NO_DATA);
-      return;
-    }
-    
-    try {
-      this.excelImportService.exportarAlumnos(alumnos);
-      this.notificationService.exportSuccess(alumnos.length);
-    } catch (error) {
-      console.error('Error al exportar:', error);
-      this.notificationService.error(EXCEL_MESSAGES.ERROR.EXPORT);
-    }
-  }
-
-  // ====================================
-  // MÉTODOS DE PAGINACIÓN
-  // ====================================
-
-  onPageChange(event: {page: number, itemsPerPage: number}): void {
-    this.currentPage = event.page;
-    this.itemsPerPage = event.itemsPerPage;
-    this.stateService.setPagination(event.page, event.itemsPerPage);
-  }
-
-  // ====================================
-  // MÉTODOS DE LIMPIEZA
-  // ====================================
-
-  onClearTable(): void {
-    this.notificationService.clearDataConfirm().then((result) => {
-      if (result.isConfirmed) {
-        this.limpiarResultados();
-      }
-    });
-  }
 
   private limpiarResultados(): void {
     this.stateService.clearResults();
-    this.currentPage = 1;
     this.notificationService.success(
       EXCEL_MESSAGES.SUCCESS.CLEAR,
       'Tabla Limpiada'

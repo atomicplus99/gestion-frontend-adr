@@ -15,6 +15,7 @@ import { Subscription, debounceTime, of, catchError, forkJoin, map } from 'rxjs'
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { environment } from '../../../../../environments/environment';
+import { AlertsService } from '../../../../shared/alerts.service';
 
 interface Turno {
   id_turno: string;
@@ -60,6 +61,7 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
   
   private http = inject(HttpClient);
   private cd = inject(ChangeDetectorRef);
+  private alertsService = inject(AlertsService);
 
   // Estados del componente
   alumnos: Alumno[] = [];
@@ -323,7 +325,7 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
   // Vista previa
   mostrarVistaPrevia() {
     if (this.alumnosSeleccionados.size === 0) {
-      alert('Seleccione al menos un alumno para la vista previa');
+      this.alertsService.warning('Seleccione al menos un alumno para la vista previa');
       return;
     }
     this.vistaPrevia = true;
@@ -338,7 +340,7 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
   // Generar PDF con imágenes Base64
   async generarPDF() {
     if (this.alumnosSeleccionados.size === 0) {
-      alert('Seleccione al menos un alumno para generar el PDF');
+      this.alertsService.warning('Seleccione al menos un alumno para generar el PDF');
       return;
     }
 

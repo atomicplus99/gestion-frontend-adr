@@ -60,6 +60,24 @@ export class AlertsService {
     });
   }
 
+  warning(message: string, title: string = 'Advertencia') {
+    Swal.fire({
+      icon: 'warning',
+      title,
+      toast: true,
+      text: message,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 2500,
+      timerProgressBar: true,
+      background: '#2b2d31',
+      color: '#fff',
+      customClass: {
+        popup: 'rounded-lg shadow-lg border border-[#3a3c40] text-sm',
+      },
+    });
+  }
+
   confirm(message: string, title: string = '¿Estás seguro?'): Promise<boolean> {
     return Swal.fire({
       title,

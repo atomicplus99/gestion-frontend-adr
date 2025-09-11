@@ -44,11 +44,6 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
   searchControl = new FormControl<string>('', { nonNullable: true });
   nivelFiltro = '';
   
-  // Notificaciones
-  mostrarNotificacion = false;
-  tipoNotificacion: 'success' | 'error' | 'info' = 'info';
-  mensajeNotificacion = '';
-  private notificacionTimer?: Subscription;
   
   // Datos
   nivelesEducativos = ['Inicial', 'Primaria', 'Secundaria'];
@@ -64,9 +59,6 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subscriptions.unsubscribe();
-    if (this.notificacionTimer) {
-      this.notificacionTimer.unsubscribe();
-    }
   }
 
   // Búsqueda de alumno
@@ -74,17 +66,17 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
     const codigo = this.searchControl.value.trim();
     
     if (!codigo) {
-      this.mostrarToast('error', 'Ingrese un código de alumno');
+      this.mostrarNotificacionUsuario('Ingrese un código de alumno', 'error');
       return;
     }
 
     if (codigo.length < 1) {
-      this.mostrarToast('error', 'Ingrese un código de alumno válido');
+      this.mostrarNotificacionUsuario('Ingrese un código de alumno válido', 'error');
       return;
     }
 
     if (this.editando) {
-      this.mostrarToast('info', 'Finalice la edición actual antes de buscar otro alumno');
+      this.mostrarNotificacionUsuario('Finalice la edición actual antes de buscar otro alumno', 'info');
       return;
     }
 
@@ -94,7 +86,7 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.http.get<AlumnoSearchResponse>(`${environment.apiUrl}/alumnos/codigo/${codigo}`)
         .pipe(catchError(error => {
-          this.mostrarToast('error', 'No se encontró ningún alumno con ese código');
+          this.mostrarNotificacionUsuario('No se encontró ningún alumno con ese código', 'error');
           return of(null);
         }))
         .subscribe(response => {
@@ -103,7 +95,7 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
           if (response && response.success && response.data) {
             this.alumnoEncontrado = response.data;
             this.selectedCode = codigo;
-            this.mostrarToast('success', `Alumno ${response.data.nombre} ${response.data.apellido} encontrado exitosamente`);
+            this.mostrarNotificacionUsuario(`Alumno ${response.data.nombre} ${response.data.apellido} encontrado exitosamente`, 'success');
           } else {
             this.alumnoEncontrado = null;
             this.selectedCode = '';
@@ -117,7 +109,7 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
   // Limpiar búsqueda
   limpiarBusqueda() {
     if (this.editando) {
-      this.mostrarToast('info', 'Finalice la edición actual antes de limpiar');
+      this.mostrarNotificacionUsuario('Finalice la edición actual antes de limpiar', 'info');
       return;
     }
     
@@ -133,7 +125,7 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
     
     if (state) {
       this.searchControl.disable();
-      this.mostrarToast('info', 'Modo edición activado');
+      this.mostrarNotificacionUsuario('Modo edición activado', 'info');
     } else {
       this.searchControl.enable();
     }
@@ -144,7 +136,7 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
   // Alumno actualizado
   onAlumnoActualizado(alumno: AlumnoUpdateShared) {
     this.alumnoEncontrado = alumno;
-    this.mostrarToast('success', `Alumno ${alumno.nombre} ${alumno.apellido} actualizado exitosamente`);
+    this.mostrarNotificacionUsuario(`Alumno ${alumno.nombre} ${alumno.apellido} actualizado exitosamente`, 'success');
   }
 
   // Filtros
@@ -163,23 +155,18 @@ export class ActualizarAlumnoComponent implements OnInit, OnDestroy {
     this.searchControl.setValue(input.value);
   }
 
-  // Notificaciones
-  mostrarToast(tipo: 'success' | 'error' | 'info', mensaje: string, duracion: number = 4000) {
-    if (this.notificacionTimer) {
-      this.notificacionTimer.unsubscribe();
+  // Notificaciones con SweetAlert
+  private mostrarNotificacionUsuario(mensaje: string, tipo: 'success' | 'error' | 'info'): void {
+    switch (tipo) {
+      case 'success':
+        this.alertSvc.success(mensaje);
+        break;
+      case 'error':
+        this.alertSvc.error(mensaje);
+        break;
+      case 'info':
+        this.alertSvc.info(mensaje);
+        break;
     }
-    this.tipoNotificacion = tipo;
-    this.mensajeNotificacion = mensaje;
-    this.mostrarNotificacion = true;
-    this.cd.markForCheck();
-    
-    this.notificacionTimer = timer(duracion).subscribe(() => {
-      this.cerrarNotificacion();
-    });
-  }
-
-  cerrarNotificacion() {
-    this.mostrarNotificacion = false;
-    this.cd.markForCheck();
   }
 }
