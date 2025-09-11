@@ -128,7 +128,14 @@ export class PhotoService {
    */
   private getCachedPhotoUrl(userId: string): string | null {
     try {
-      return localStorage.getItem(`photo_${userId}`);
+      const cachedUrl = localStorage.getItem(`photo_${userId}`);
+      // Validar que la URL no sea de localhost:3000 (URLs antiguas)
+      if (cachedUrl && cachedUrl.includes('localhost:3000')) {
+        // Limpiar URL inválida
+        localStorage.removeItem(`photo_${userId}`);
+        return null;
+      }
+      return cachedUrl;
     } catch {
       return null;
     }
@@ -178,7 +185,7 @@ export class PhotoService {
   private clearInvalidBlobUrls(): void {
     // Limpiar cache en memoria
     for (const [userId, url] of this.photoCache.entries()) {
-      if (url.startsWith('blob:')) {
+      if (url.startsWith('blob:') || url.includes('localhost:3000')) {
         this.photoCache.delete(userId);
         this.clearCachedPhotoUrl(userId);
       }
@@ -190,7 +197,7 @@ export class PhotoService {
       keys.forEach(key => {
         if (key.startsWith('photo_')) {
           const url = localStorage.getItem(key);
-          if (url && url.startsWith('blob:')) {
+          if (url && (url.startsWith('blob:') || url.includes('localhost:3000'))) {
             localStorage.removeItem(key);
           }
         }

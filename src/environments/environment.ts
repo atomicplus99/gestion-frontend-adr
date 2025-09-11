@@ -1,6 +1,6 @@
 ﻿export const environment = {
   production: false,
-  apiUrl: 'http://localhost:3000',
+  apiUrl: 'https://localhost:443',
   // Claves de API para servicios externos
   weatherApiKey: '8dbb33bce9c64c48a4b101232250209', // https://www.weatherapi.com/
   openWeatherApiKey: 'fc2f4c23d1c04d35f314ec3a135ebe8b', // https://openweathermap.org/api

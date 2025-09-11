@@ -10,7 +10,7 @@ import { AusenciaProgramada } from '../../gestion-academica-ar/pages/ausencias-m
 })
 export class WebSocketService implements OnDestroy {
   private socket: Socket | null = null;
-  private readonly wsUrl = 'ws://localhost:3000';
+  private readonly wsUrl = 'wss://localhost:443';
   
   // Subjects para eventos WebSocket
   private connectionStatusSubject = new BehaviorSubject<boolean>(false);
