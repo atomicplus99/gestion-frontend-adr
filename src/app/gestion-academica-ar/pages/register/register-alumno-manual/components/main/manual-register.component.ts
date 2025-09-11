@@ -83,7 +83,7 @@ export class ManualRegisterAlumnoComponent implements OnInit {
         // Asegurar que turnos sea siempre un array
         if (Array.isArray(turnos)) {
           this.turnos = turnos;
-          console.log('✅ [MANUAL-REGISTER] Turnos asignados correctamente:', this.turnos);
+
         } else {
           console.warn('⚠️ [MANUAL-REGISTER] Respuesta inesperada, asignando array vacío');
           this.turnos = [];
@@ -174,7 +174,7 @@ export class ManualRegisterAlumnoComponent implements OnInit {
       seccion: formData.seccion
     };
 
-    console.log('🔄 [MANUAL-REGISTER] Enviando payload al backend:', payload);
+
 
     this.alumnoService.registrarAlumno(payload).subscribe({
       next: async (response) => {

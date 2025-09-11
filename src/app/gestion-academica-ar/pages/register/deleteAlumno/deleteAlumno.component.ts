@@ -213,7 +213,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
     this.http.get<any>(`${environment.apiUrl}/alumnos/codigo/${this.codigo}`)
       .pipe(
         map(response => {
-          console.log('📋 [ESTADO-ALUMNO] Respuesta del backend:', response);
+
           
           // ✅ Extraer el alumno de la respuesta del backend
           let alumno: Alumno;
@@ -230,14 +230,14 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
           }
           
           // ✅ El alumno ya incluye estado_actual desde el backend
-          console.log('✅ [ESTADO-ALUMNO] Estado del alumno:', alumno.estado_actual);
+
           
           // Simular campo de última actualización si no existe
           if (!alumno.ultimaActualizacion) {
             alumno.ultimaActualizacion = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000);
           }
           
-          console.log('✅ [ESTADO-ALUMNO] Alumno procesado completo:', alumno);
+
           return alumno;
         }),
         delay(200), // ✅ Delay reducido para mejor rendimiento
@@ -259,12 +259,12 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (alumno) => {
-          console.log('✅ [ESTADO-ALUMNO] Alumno encontrado:', alumno);
+
           this.alumnoEncontrado.set(alumno);
           
           // ✅ Usar el estado del backend o establecer por defecto
           const estadoBackend = alumno.estado_actual?.estado || alumno.estado;
-          console.log('🔍 [ESTADO-ALUMNO] Estado del backend:', {
+          console.log('', {
             estado_actual: alumno.estado_actual,
             estado_directo: alumno.estado,
             estadoBackend: estadoBackend
@@ -273,10 +273,10 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
           if (estadoBackend) {
             // Normalizar el estado (ACTIVO -> activo, INACTIVO -> inactivo)
             const estadoNormalizado = estadoBackend.toLowerCase() as 'activo' | 'inactivo';
-            console.log('✅ [ESTADO-ALUMNO] Estado normalizado:', estadoNormalizado);
+
             this.estadoSeleccionado.set(estadoNormalizado);
           } else {
-            console.log('⚠️ [ESTADO-ALUMNO] No se encontró estado, usando por defecto: activo');
+
             this.estadoSeleccionado.set('activo'); // Estado por defecto
           }
           

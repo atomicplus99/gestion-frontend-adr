@@ -167,7 +167,7 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
           
           if (response && response.success && response.data) {
             this.todosLosUsuarios = response.data.usuarios || [];
-            console.log(`Usuarios cargados: ${this.todosLosUsuarios.length}`);
+
             
             // Mostrar notificación de carga exitosa
             if (this.todosLosUsuarios.length > 0) {
@@ -189,7 +189,7 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
             this.usuarios = [];
             this.totalElementos = 0;
             this.totalPaginas = 0;
-            console.log('No se encontraron usuarios en la respuesta');
+
           }
           
           this.cdr.detectChanges();
@@ -298,7 +298,7 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
     
     this.usuarios = this.usuariosFiltrados.slice(inicio, fin);
     
-    console.log(`Usuarios filtrados: ${this.usuariosFiltrados.length}, Usuarios mostrados: ${this.usuarios.length}`);
+
     
     // Cargar fotos de los usuarios de la nueva página
     this.cargarFotosPaginaActual();

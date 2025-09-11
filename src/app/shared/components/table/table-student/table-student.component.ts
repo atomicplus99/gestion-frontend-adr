@@ -67,7 +67,7 @@ export class TableStudentComponent implements OnChanges, OnInit {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['codigoSeleccionado'] && this.codigoSeleccionado && 
         changes['codigoSeleccionado'].currentValue !== changes['codigoSeleccionado'].previousValue) {
-      console.log('📊 [TABLE-STUDENT] Código seleccionado cambió:', this.codigoSeleccionado);
+
       this.fetchAlumno(this.codigoSeleccionado);
     }
     if (changes['nivelFiltro']) {
@@ -80,7 +80,7 @@ export class TableStudentComponent implements OnChanges, OnInit {
     this.cd.markForCheck();
     this.http.get<TurnoShared[]>(`${environment.apiUrl}/turno`).subscribe({
       next: (response) => {
-        console.log('✅ [TABLE-STUDENT] Respuesta de turnos:', response);
+
         
         // Verificar si la respuesta es un array o un objeto con data
         if (Array.isArray(response)) {
@@ -94,7 +94,7 @@ export class TableStudentComponent implements OnChanges, OnInit {
         }
         
         this.cargandoTurnos = false;
-        console.log('✅ [TABLE-STUDENT] Turnos cargados:', this.turnosDisponibles);
+
         this.cd.markForCheck();
       },
       error: (error) => {
@@ -132,11 +132,11 @@ export class TableStudentComponent implements OnChanges, OnInit {
   private fetchAlumno(codigo: string) {
     // Evitar llamadas duplicadas
     if (this.loading) {
-      console.log('⚠️ [TABLE-STUDENT] Ya se está cargando un alumno, ignorando nueva petición');
+
       return;
     }
     
-    console.log('🔍 [TABLE-STUDENT] Iniciando búsqueda de alumno:', codigo);
+
     this.loading = true;
     this.cd.markForCheck();
     this.alumnoSvc.getByCodigo(codigo).subscribe({
@@ -147,7 +147,7 @@ export class TableStudentComponent implements OnChanges, OnInit {
           this.updatePagination();
           this.loading = false;
           this.ultimaActualizacion = new Date();
-          console.log('✅ [TABLE-STUDENT] Alumno cargado exitosamente:', response.data);
+
           this.cd.markForCheck();
         } else {
           console.error('❌ [TABLE-STUDENT] Respuesta inesperada del backend:', response);
@@ -322,9 +322,9 @@ export class TableStudentComponent implements OnChanges, OnInit {
     } else {
       payload.id_turno = null;
     }
-    console.log('📤 [TABLE-STUDENT] Payload a enviar:', payload);
-    console.log('🌐 [TABLE-STUDENT] URL:', `${environment.apiUrl}/alumnos/actualizar/${this.codigoOriginal}`);
-    console.log('🔧 [TABLE-STUDENT] Código original:', this.codigoOriginal);
+
+
+
     
     this.http.put(`${environment.apiUrl}/alumnos/actualizar/${this.codigoOriginal}`, payload).subscribe({
       next: (response: any) => {
@@ -345,7 +345,7 @@ export class TableStudentComponent implements OnChanges, OnInit {
         let mensaje = 'Error desconocido al actualizar';
         
         if (err?.error) {
-          console.log('📋 [TABLE-STUDENT] Error del backend:', err.error);
+
           
           // Manejar diferentes formatos de error del backend
           if (Array.isArray(err.error.message)) {

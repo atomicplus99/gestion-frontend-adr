@@ -148,9 +148,9 @@ export class ListaJustificacionesComponent implements OnInit {
     try {
       const response = await this.http.get<JustificacionesResponse>(`${environment.apiUrl}/detalle-justificaciones`).toPromise();
       
-      console.log('🔍 Respuesta completa del backend:', response);
-      console.log('📊 Datos anidados:', response?.data);
-      console.log('📋 Array de justificaciones:', response?.data?.data);
+
+
+
       
       if (response && response.success && response.data && Array.isArray(response.data.data)) {
         this.justificaciones = response.data.data;

@@ -47,9 +47,9 @@ export class JustificacionesService {
       }
     }
 
-    console.log('🔍 [JUSTIFICACIONES SERVICE] Obteniendo justificaciones con filtros:', filtros);
-    console.log('📡 [JUSTIFICACIONES SERVICE] URL:', this.baseUrl);
-    console.log('📡 [JUSTIFICACIONES SERVICE] Params:', params.toString());
+
+
+
 
     return this.http.get<JustificacionesResponse>(this.baseUrl, { params });
   }

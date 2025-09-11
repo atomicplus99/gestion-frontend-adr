@@ -95,11 +95,11 @@ export class RegistroAusenciasComponent implements OnInit {
     this.errorBusqueda = null;
     this.cdr.markForCheck();
 
-    console.log('🔍 Buscando estudiante con código:', codigo);
+
 
     this.asistenciaService.buscarEstudiantePorCodigo(codigo.trim()).subscribe({
       next: (response: any) => {
-        console.log('✅ Respuesta búsqueda estudiante:', response);
+
         
         // Manejar diferentes estructuras de respuesta
         let estudiante: EstudianteInfo;
@@ -170,8 +170,8 @@ export class RegistroAusenciasComponent implements OnInit {
     }
 
     // Debug: Log de la fecha que se enviará
-    console.log('Fecha que se enviará al backend:', data.fecha);
-    console.log('Zona horaria del navegador:', Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+
 
     // Llamar al servicio
     this.asistenciaService.crearAusenciaAlumno(data).subscribe({
@@ -179,7 +179,7 @@ export class RegistroAusenciasComponent implements OnInit {
         this.loadingPersonal = false;
         
         // Debug: Log de la respuesta completa
-        console.log('Respuesta del backend:', response);
+
         
         // Manejar la estructura real de la respuesta del backend
         if (response && response.success && response.data) {

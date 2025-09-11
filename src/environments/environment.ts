@@ -13,7 +13,7 @@
   worldTimeApiUrl: 'https://worldtimeapi.org/api'
 };
 
-console.log('🚀 [ENVIRONMENT] Cargando environment.ts:', environment);
+
 
 
 

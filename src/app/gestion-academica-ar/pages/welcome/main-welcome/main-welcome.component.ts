@@ -167,7 +167,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
       this.http.get<WeatherData>(`https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=Lima&aqi=no`)
         .subscribe({
           next: (data) => {
-            console.log('✅ [WEATHER] Datos obtenidos de WeatherAPI:', data);
+
             this.weather.set(data);
           },
           error: (error) => {
@@ -187,7 +187,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
       this.http.get<any>(`https://api.openweathermap.org/data/2.5/weather?q=Lima,PE&appid=${apiKey}&units=metric`)
         .subscribe({
           next: (data) => {
-            console.log('✅ [WEATHER] Datos obtenidos de OpenWeatherMap:', data);
+
             const weatherData: WeatherData = {
               location: { name: data.name, country: data.sys.country },
               current: {
@@ -236,7 +236,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     this.http.get<any>('https://api.rss2json.com/v1/api.json?rss_url=https://feeds.bbci.co.uk/mundo/rss.xml')
       .subscribe({
         next: (data) => {
-          console.log('✅ [NEWS] Noticias obtenidas de RSS2JSON:', data);
+
           const articles: NewsItem[] = data.items?.slice(0, 5).map((item: any) => ({
             title: item.title,
             description: item.description?.replace(/<[^>]*>/g, '').substring(0, 100) + '...',
@@ -259,7 +259,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     this.http.get<any[]>('https://jsonplaceholder.typicode.com/posts?_limit=5')
       .subscribe({
         next: (posts) => {
-          console.log('✅ [NEWS] Noticias obtenidas de JSONPlaceholder:', posts);
+
           const articles: NewsItem[] = posts.map(post => ({
             title: post.title.charAt(0).toUpperCase() + post.title.slice(1),
             description: post.body.substring(0, 100) + '...',
@@ -313,7 +313,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     this.http.get<CountryInfo[]>(`${environment.restCountriesApiUrl}/name/peru`)
       .subscribe({
         next: (data) => {
-          console.log('✅ [COUNTRY] Información obtenida de REST Countries:', data);
+
           if (data && data.length > 0) {
             this.countryInfo.set(data[0]);
           }
@@ -343,7 +343,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     this.http.get<HolidayInfo[]>(`${environment.holidaysApiUrl}/PublicHolidays/${currentYear}/PE`)
       .subscribe({
         next: (data) => {
-          console.log('✅ [HOLIDAYS] Días festivos obtenidos de Nager.Date:', data);
+
           const now = new Date();
           const upcoming = data
             .filter(holiday => new Date(holiday.date) > now)
@@ -394,7 +394,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
       this.http.get<any>(`${environment.worldTimeApiUrl}/timezone/${tz.zone}`)
         .subscribe({
           next: (data) => {
-            console.log(`✅ [TIME] Hora obtenida para ${tz.city}:`, data);
+
             const time = new Date(data.datetime).toLocaleTimeString('es-ES', { 
               hour: '2-digit', 
               minute: '2-digit' 

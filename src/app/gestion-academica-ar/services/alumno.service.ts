@@ -15,17 +15,17 @@ export class AlumnoService {
   constructor(private http: HttpClient, private tokenService: TokenService) {}
 
   obtenerTurnos(): Observable<any[]> {
-    console.log('🔄 [ALUMNO-SERVICE] Iniciando petición GET a /turno...');
-    console.log('🔄 [ALUMNO-SERVICE] URL completa:', `${this.apiUrl}/turno`);
+
+
     
     return this.http.get<any[]>(`${this.apiUrl}/turno`).pipe(
       timeout(10000), // 10 segundos de timeout
       retry(2), // Reintentar 2 veces
       tap(response => {
-        console.log('✅ [ALUMNO-SERVICE] Respuesta exitosa de /turno:', response);
-        console.log('✅ [ALUMNO-SERVICE] Tipo de respuesta:', typeof response);
-        console.log('✅ [ALUMNO-SERVICE] Es array:', Array.isArray(response));
-        console.log('✅ [ALUMNO-SERVICE] Cantidad de turnos:', response?.length || 0);
+
+
+
+
       }),
       catchError(error => {
         console.error('❌ [ALUMNO-SERVICE] Error al obtener turnos:', error);
@@ -53,12 +53,12 @@ export class AlumnoService {
       'Content-Type': 'application/json'
     });
     
-    console.log('🔄 [ALUMNO-SERVICE] Registrando alumno en endpoint:', `${this.apiUrl}/alumnos/registrar`);
-    console.log('🔄 [ALUMNO-SERVICE] Datos del alumno:', data);
+
+
     
     return this.http.post<any>(`${this.apiUrl}/alumnos/registrar`, data, { headers }).pipe(
       tap(response => {
-        console.log('✅ [ALUMNO-SERVICE] Alumno registrado exitosamente:', response);
+
       }),
       catchError(error => {
         console.error('❌ [ALUMNO-SERVICE] Error al registrar alumno:', error);

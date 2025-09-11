@@ -103,7 +103,7 @@ export class SelectorFechaComponent implements OnInit, OnDestroy {
   establecerFechaRapida(dias: number): void {
     // Usar el nuevo método que maneja la zona horaria de Perú
     const fechaStr = this.registroService.getFechaConDias(dias);
-    console.log('📅 [FECHA RÁPIDA] Estableciendo fecha:', fechaStr, 'para', dias, 'días');
+
     this.registroService.setFechaSeleccionada(fechaStr);
   }
 
@@ -111,13 +111,13 @@ export class SelectorFechaComponent implements OnInit, OnDestroy {
     const target = event.target as HTMLInputElement;
     const nuevaFecha = target.value;
     
-    console.log('📅 [CAMBIO FECHA] Nueva fecha seleccionada:', nuevaFecha);
+
     
     // Validar fecha antes de establecerla
     const validacion = this.registroService.validarFecha(nuevaFecha);
     
     if (!validacion.valida) {
-      console.log('❌ [CAMBIO FECHA] Fecha inválida:', validacion.mensaje);
+
       Swal.fire({
         icon: 'warning',
         title: 'Fecha Inválida',
@@ -130,13 +130,13 @@ export class SelectorFechaComponent implements OnInit, OnDestroy {
       // Si la fecha es futura, resetear a hoy
       if (validacion.mensaje?.includes('futuras')) {
         const fechaHoy = this.registroService.getFechaHoy();
-        console.log('📅 [CAMBIO FECHA] Reseteando a hoy:', fechaHoy);
+
         this.registroService.setFechaSeleccionada(fechaHoy);
         return;
       }
     }
     
-    console.log('✅ [CAMBIO FECHA] Fecha válida, estableciendo:', nuevaFecha);
+
     this.registroService.setFechaSeleccionada(nuevaFecha);
   }
 }

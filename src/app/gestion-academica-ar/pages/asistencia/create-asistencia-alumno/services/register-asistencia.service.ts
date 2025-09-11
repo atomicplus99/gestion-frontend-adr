@@ -99,9 +99,9 @@ export class RegistroAsistenciaServiceManual {
     const mes = String(fechaPeruana.getMonth() + 1).padStart(2, '0');
     const dia = String(fechaPeruana.getDate()).padStart(2, '0');
     
-    console.log('📅 [FECHA PERÚ] Fecha actual Perú:', `${año}-${mes}-${dia}`);
-    console.log('📅 [FECHA PERÚ] Fecha original UTC:', new Date().toISOString());
-    console.log('📅 [FECHA PERÚ] Fecha ajustada Perú:', fechaPeruana.toISOString());
+
+
+
     
     // Formatear como YYYY-MM-DD
     return `${año}-${mes}-${dia}`;
@@ -109,7 +109,7 @@ export class RegistroAsistenciaServiceManual {
 
   esFechaHoy(fecha: string): boolean {
     const fechaHoyPeru = this.getFechaHoy();
-    console.log('📅 [FECHA PERÚ] Comparando:', fecha, 'vs', fechaHoyPeru);
+
     return fecha === fechaHoyPeru;
   }
 
@@ -172,10 +172,10 @@ export class RegistroAsistenciaServiceManual {
     const hace30Dias = new Date(hoyPeru);
     hace30Dias.setDate(hace30Dias.getDate() - 30);
     
-    console.log('📅 [VALIDACIÓN FECHA] Validando:', fecha);
-    console.log('📅 [VALIDACIÓN FECHA] Fecha seleccionada:', fechaSeleccionada.toISOString());
-    console.log('📅 [VALIDACIÓN FECHA] Hoy en Perú:', hoyPeru.toISOString());
-    console.log('📅 [VALIDACIÓN FECHA] Hace 30 días:', hace30Dias.toISOString());
+
+
+
+
     
     if (fechaSeleccionada > hoyPeru) {
       return {
@@ -191,7 +191,7 @@ export class RegistroAsistenciaServiceManual {
       };
     }
     
-    console.log('📅 [VALIDACIÓN FECHA] Fecha válida ✅');
+
     return { valida: true };
   }
 

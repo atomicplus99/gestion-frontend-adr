@@ -4,7 +4,8 @@ import { NavbarComponent } from '../../../shared/components/navbar/navbar.compon
 import { IconCheckComponent } from "../../../shared/components/icon-check/icon-check.component";
 import { SidebarComponent } from "../../../shared/components/sidebar/sidebar.component";
 import { ChatbotComponent } from "../../../shared/components/chatbot/chatbot.component";
-import { RouterOutlet } from '@angular/router';
+import { RightSidebarComponent } from "../../../shared/components/right-sidebar/right-sidebar.component";
+import { RouterOutlet, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-main-page',
@@ -13,7 +14,9 @@ import { RouterOutlet } from '@angular/router';
     NavbarComponent,
     SidebarComponent,
     ChatbotComponent,
-    RouterOutlet
+    RightSidebarComponent,
+    RouterOutlet,
+    RouterModule
 ],
             
   templateUrl: './mainPage.component.html',

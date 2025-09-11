@@ -302,18 +302,18 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
     
     const datosRegistro = this.construirDatosRegistro();
     
-    console.log('🚀 [REGISTRO MANUAL] Iniciando envío al backend...');
-    console.log('📋 [REGISTRO MANUAL] Datos a enviar:', datosRegistro);
-    console.log('🌐 [REGISTRO MANUAL] URL del endpoint:', 'POST /asistencia/registro-manual');
+
+
+
     
     try {
       const response = await firstValueFrom(this.registroService.registrarAsistencia(datosRegistro));
       
-      console.log('✅ [REGISTRO MANUAL] Respuesta exitosa del backend:', response);
+
       await this.manejarRegistroExitoso(response, datosRegistro);
       
     } catch (error: any) {
-      console.log('❌ [REGISTRO MANUAL] Error del backend:', error);
+
       await this.manejarErrorRegistro(error, datosRegistro);
     } finally {
       this.registrando = false;
@@ -337,30 +337,30 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
     const idAux = this.userStore.idAuxiliar();
     const user = this.userStore.getUserSilently();
     
-    console.log('🔍 [REGISTRO MANUAL] Construyendo payload:');
-    console.log('- Usuario logueado:', user);
-    console.log('- ID Auxiliar disponible:', idAux);
-    console.log('- Rol del usuario:', this.userStore.userRole());
+
+
+
+
     
     if (idAux) {
       datos.id_auxiliar = idAux;
-      console.log('✅ [REGISTRO MANUAL] Enviando como AUXILIAR con id_auxiliar:', idAux);
+
     } else if (user?.administrador?.id_administrador) {
       datos.id_usuario = user.administrador.id_administrador;
-      console.log('✅ [REGISTRO MANUAL] Enviando como ADMINISTRADOR con id_usuario:', user.administrador.id_administrador);
+
     } else if (user?.director?.id_director) {
       datos.id_usuario = user.director.id_director;
-      console.log('✅ [REGISTRO MANUAL] Enviando como DIRECTOR con id_usuario:', user.director.id_director);
+
     } else {
-      console.log('❌ [REGISTRO MANUAL] ERROR: No se pudo determinar el actor del registro');
+
     }
 
     if (this.fechaSeleccionada && !this.registroService.esFechaHoy(this.fechaSeleccionada)) {
       datos.fecha = this.fechaSeleccionada;
-      console.log('📅 [REGISTRO MANUAL] Fecha personalizada agregada:', datos.fecha);
+
     }
 
-    console.log('📤 [REGISTRO MANUAL] Payload final enviado al backend:', datos);
+
     return datos;
   }
 

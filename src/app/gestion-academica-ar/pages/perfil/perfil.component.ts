@@ -8,6 +8,7 @@ import { AuthService } from '../../../auth/services/auth.service';
 import { UsuarioService } from '../usuarios/services/usuario.service';
 import { PhotoService } from '../../../shared/services/photo.service';
 import { UserInfo } from '../../../auth/interfaces/user-info.interface';
+import { AlertsService } from '../../../shared/alerts.service';
 import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 
@@ -25,6 +26,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly usuarioService = inject(UsuarioService);
   private readonly photoService = inject(PhotoService);
+  private readonly alertsService = inject(AlertsService);
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroy$ = new Subject<void>();
@@ -47,11 +49,6 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
   // Archivo seleccionado
   archivoSeleccionado: File | null = null;
-
-  // Notificaciones
-  mostrarNotificacion = false;
-  tipoNotificacion: 'success' | 'error' | 'info' = 'info';
-  mensajeNotificacion = '';
 
   ngOnInit(): void {
     this.initializeForms();
@@ -226,12 +223,12 @@ export class PerfilComponent implements OnInit, OnDestroy {
   }
 
   private initializePersonalForm(userInfo: UserInfo): void {
-    console.log('🔧 initializePersonalForm - role:', userInfo.role);
+
     const personalData: any = {};
 
     switch (userInfo.role) {
       case 'DIRECTOR':
-        console.log('👨‍💼 Director data:', userInfo.director);
+
         if (userInfo.director) {
           personalData.nombres = userInfo.director.nombres;
           personalData.apellidos = userInfo.director.apellidos;
@@ -241,7 +238,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
         }
         break;
       case 'ADMINISTRADOR':
-        console.log('👨‍💻 Administrador data:', userInfo.administrador);
+
         if (userInfo.administrador) {
           personalData.nombres = userInfo.administrador.nombres;
           personalData.apellidos = userInfo.administrador.apellidos;
@@ -578,7 +575,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
           detail: { userInfo }
         });
         window.dispatchEvent(event);
-        console.log('📡 Evento userDataUpdated disparado');
+
       }
     }, 1000); // Esperar a que se carguen los datos
   }
@@ -592,18 +589,17 @@ export class PerfilComponent implements OnInit, OnDestroy {
   }
 
   private mostrarNotificacionUsuario(mensaje: string, tipo: 'success' | 'error' | 'info'): void {
-    this.mensajeNotificacion = mensaje;
-    this.tipoNotificacion = tipo;
-    this.mostrarNotificacion = true;
-
-    // Auto-cerrar después de 5 segundos
-    setTimeout(() => {
-      this.cerrarNotificacion();
-    }, 5000);
-  }
-
-  cerrarNotificacion(): void {
-    this.mostrarNotificacion = false;
+    switch (tipo) {
+      case 'success':
+        this.alertsService.success(mensaje);
+        break;
+      case 'error':
+        this.alertsService.error(mensaje);
+        break;
+      case 'info':
+        this.alertsService.info(mensaje);
+        break;
+    }
   }
 
   volver(): void {

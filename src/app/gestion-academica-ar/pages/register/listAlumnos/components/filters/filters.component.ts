@@ -28,12 +28,12 @@ export class FiltrosAlumnosComponent {
   }>();
 
   onApplyFilter(): void {
-    console.log("Botón aplicar filtro clickeado");
+
     this.aplicarFiltro.emit();
   }
 
   onFilterValueChange(): void {
-    console.log("Valor del filtro de texto cambiado:", this.filterValue);
+
     this.filtroChange.emit({
       filterValue: this.filterValue,
       filtroEstado: this.filtroEstado,
@@ -55,7 +55,7 @@ export class FiltrosAlumnosComponent {
   }
 
   onLimpiarFiltros(): void {
-    console.log("Limpiando filtros");
+
     this.filterValue = '';
     this.filtroEstado = '';
     this.filtroNivel = '';

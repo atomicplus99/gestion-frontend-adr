@@ -71,8 +71,8 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
     // 🆕 Suscribirse a cambios del usuario
     this.setupUserSubscription();
     
-    console.log('🚀 Componente de anulaciones inicializado para:', this.fechaHoy);
-    console.log('👤 Usuario actual:', this.nombreUsuarioActual, '- Rol:', this.userStore.userRole());
+
+
   }
 
   ngOnDestroy(): void {
@@ -239,12 +239,12 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
     this.errorBusqueda = '';
     this.forzarDeteccionCambios();
 
-    console.log('🔍 Buscando estudiante:', this.codigoBusqueda.trim());
-    console.log('👤 Usuario actual:', this.nombreUsuarioActual, '- Rol:', this.userStore.userRole());
+
+
 
     this.asistenciaService.buscarAlumnoPorCodigo(this.codigoBusqueda.trim()).subscribe({
       next: (alumno) => {
-        console.log('✅ Estudiante encontrado:', alumno);
+
         this.estudianteSeleccionado = alumno;
         this.buscandoEstudiante = false;
         this.cargarAsistencias();
@@ -289,7 +289,7 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
 
     this.asistenciaService.obtenerAsistenciasAlumno(this.estudianteSeleccionado.codigo, this.fechaSeleccionada).subscribe({
       next: (asistencias: Asistencia[]) => {
-        console.log(`✅ Asistencias de ${this.fechaSeleccionada} cargadas:`, asistencias.length);
+
         this.asistenciasHoy = asistencias.sort((a, b) => 
           a.hora_de_llegada.localeCompare(b.hora_de_llegada)
         );
@@ -413,36 +413,36 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
     // ✅ AGREGAR FECHA SI NO ES HOY
     if (!this.esFechaHoy) {
       request.fecha = this.fechaSeleccionada;
-      console.log('📅 [ANULAR ASISTENCIA] Fecha específica agregada:', request.fecha);
+
     }
 
     const idAux = this.userStore.idAuxiliar();
     const user = this.userStore.getUserSilently();
     
-    console.log('🔍 [ANULAR ASISTENCIA] Construyendo payload:');
-    console.log('- Usuario logueado:', user);
-    console.log('- ID Auxiliar disponible:', idAux);
-    console.log('- Rol del usuario:', this.userStore.userRole());
-    console.log('- Fecha seleccionada:', this.fechaSeleccionada);
-    console.log('- Es fecha de hoy:', this.esFechaHoy);
+
+
+
+
+
+
     
     if (idAux) {
       request.id_auxiliar = idAux;
-      console.log('✅ [ANULAR ASISTENCIA] Enviando como AUXILIAR con id_auxiliar:', idAux);
+
     } else if (user?.administrador?.id_administrador) {
       request.id_usuario = user.administrador.id_administrador;
-      console.log('✅ [ANULAR ASISTENCIA] Enviando como ADMINISTRADOR con id_usuario:', user.administrador.id_administrador);
+
     } else if (user?.director?.id_director) {
       request.id_usuario = user.director.id_director;
-      console.log('✅ [ANULAR ASISTENCIA] Enviando como DIRECTOR con id_usuario:', user.director.id_director);
+
     }
 
-    console.log('🗑️ Enviando solicitud de anulación para hoy:', request);
-    console.log('👤 Usuario responsable:', this.nombreUsuarioActual);
+
+
 
     this.asistenciaService.anularAsistencia(request).subscribe({
       next: (response) => {
-        console.log('✅ Asistencia anulada exitosamente:', response);
+
         
         // Actualizar estado local
         const index = this.asistenciasHoy.findIndex(a => 

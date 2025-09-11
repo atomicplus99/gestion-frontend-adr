@@ -124,20 +124,20 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
     this.isLoading = true;
     
     try {
-      console.log('Cargando justificaciones pendientes...');
+
       
       const response = await this.http.get<JustificacionesResponse>(`${environment.apiUrl}/detalle-justificaciones`).toPromise();
       
-      console.log('🔍 Respuesta completa del backend:', response);
-      console.log('📊 Datos anidados:', response?.data);
-      console.log('📋 Array de justificaciones:', response?.data?.data);
+
+
+
       
       if (response && response.success && response.data && Array.isArray(response.data.data)) {
         // Filtrar solo las que están PENDIENTES
         this.justificacionesPendientes = response.data.data.filter(j => j.estado === 'PENDIENTE');
         this.aplicarFiltros();
         
-        console.log(`Cargadas ${this.justificacionesPendientes.length} justificaciones pendientes`);
+
         
         if (this.justificacionesPendientes.length === 0) {
           this.showAlertMessage('No hay justificaciones pendientes de revisión', 'info');
@@ -232,8 +232,8 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
     };
 
     try {
-      console.log(`Actualizando justificación ${this.justificacionSeleccionada.id_justificacion} a ${this.accionSeleccionada}`);
-      console.log('Payload:', payload);
+
+
 
       const response = await this.http.put<ActualizarEstadoResponse>(
         `${environment.apiUrl}/detalle-justificaciones/${this.justificacionSeleccionada.id_justificacion}/estado`,
@@ -241,7 +241,7 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
       ).toPromise();
 
       if (response && response.success) {
-        console.log('Response:', response);
+
         
         // Mostrar mensaje de éxito
         this.showAlertMessage(response.data?.message || response.message || 'Estado actualizado exitosamente', 'success');
@@ -284,7 +284,7 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
     };
 
     try {
-      console.log(`Acción rápida: ${accion} para justificación ${justificacion.id_justificacion}`);
+
 
       const response = await this.http.put<ActualizarEstadoResponse>(
         `${environment.apiUrl}/detalle-justificaciones/${justificacion.id_justificacion}/estado`,

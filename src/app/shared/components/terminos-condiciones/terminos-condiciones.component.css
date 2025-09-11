@@ -1,0 +1,51 @@
+/* Estilos adicionales para la página de términos y condiciones */
+.terminos-container {
+  scroll-behavior: smooth;
+}
+
+/* Animación para las secciones */
+section {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estilo para los números de sección */
+.section-number {
+  transition: all 0.3s ease;
+}
+
+.section-number:hover {
+  transform: scale(1.1);
+  background-color: #3b82f6 !important;
+  color: white !important;
+}
+
+/* Efecto hover para los elementos de lista */
+ul li {
+  transition: all 0.2s ease;
+}
+
+ul li:hover {
+  color: #1f2937;
+  transform: translateX(5px);
+}
+
+/* Estilo para el botón de volver */
+.back-button {
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  transform: translateX(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}

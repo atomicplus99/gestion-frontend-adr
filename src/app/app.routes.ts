@@ -26,6 +26,11 @@ export const routes: Routes = [
 
             },
             {
+                path: 'terminos-condiciones',
+                loadComponent: () => import('./shared/components/terminos-condiciones/terminos-condiciones.component').then(m => m.TerminosCondicionesComponent),
+
+            },
+            {
                 path: 'registrar',
                 children: [
                     {

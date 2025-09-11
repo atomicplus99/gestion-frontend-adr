@@ -111,11 +111,11 @@ export class ExcelImportService {
         }));
 
         // Aquí iría la implementación real con XLSX
-        console.log('Exportando datos:', data);
+
 
         // Simulación de descarga
         const fecha = ExcelUtils.formatearFecha(new Date(), 'yyyy-MM-dd');
-        console.log(`Archivo generado: alumnos_importados_${fecha}.xlsx`);
+
     }
 
     // ====================================

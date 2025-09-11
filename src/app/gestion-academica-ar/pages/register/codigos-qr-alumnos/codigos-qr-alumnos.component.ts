@@ -120,7 +120,7 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
 
     this.http.get<any>(`${environment.apiUrl}/alumnos`).pipe(
       map(response => {
-        console.log('📋 [IMPRIMIR-QR] Respuesta del backend:', response);
+
         
         // ✅ Extraer el array de alumnos de la respuesta del backend
         let alumnos: Alumno[] = [];
@@ -142,7 +142,7 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
           return [];
         }
         
-        console.log('✅ [IMPRIMIR-QR] Alumnos extraídos:', alumnos.length);
+
         return alumnos;
       }),
       catchError(error => {
@@ -153,7 +153,7 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
       // Filtrar solo alumnos que tienen codigo_qr
       this.alumnos = alumnos.filter(a => a.codigo_qr && a.codigo_qr.trim() !== '');
       this.buscando = false;
-      console.log(`✅ [IMPRIMIR-QR] Cargados ${this.alumnos.length} alumnos con código QR`);
+
       this.cd.markForCheck();
     });
   }
@@ -347,11 +347,11 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
 
     try {
       // 1. Convertir todas las imágenes QR a Base64
-      console.log('📥 Iniciando conversión de imágenes QR...');
+
       const imagenesBase64 = await this.precargarImagenesQRBase64();
 
       // 2. Crear PDF directamente con jsPDF (sin html2canvas)
-      console.log('📄 Creando PDF directamente...');
+
       
       const pdf = new jsPDF({
         orientation: this.orientacionPagina,
@@ -378,7 +378,7 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
       const nombreArchivo = `codigos_qr_${fecha.replace(/\//g, '-')}_${this.alumnosParaImprimir.length}_estudiantes.pdf`;
       pdf.save(nombreArchivo);
 
-      console.log('🎉 PDF generado exitosamente:', nombreArchivo);
+
 
     } catch (error) {
       console.error('💥 Error generando PDF:', error);

@@ -148,7 +148,7 @@ export class ListJustificacionesComponent implements OnInit, OnDestroy {
           this.cargando = false;
           this.cdr.detectChanges();
           
-          console.log('✅ [LIST-JUSTIFICACIONES] Justificaciones cargadas:', response);
+
         },
         error: (error) => {
           console.error('❌ [LIST-JUSTIFICACIONES] Error al cargar justificaciones:', error);
@@ -170,7 +170,7 @@ export class ListJustificacionesComponent implements OnInit, OnDestroy {
           this.cargandoEstadisticas = false;
           this.cdr.detectChanges();
           
-          console.log('✅ [LIST-JUSTIFICACIONES] Estadísticas cargadas:', estadisticas);
+
         },
         error: (error) => {
           console.error('❌ [LIST-JUSTIFICACIONES] Error al cargar estadísticas:', error);
@@ -354,7 +354,7 @@ export class ListJustificacionesComponent implements OnInit, OnDestroy {
   // ========================================
   
   verDetalle(justificacion: JustificacionItem): void {
-    console.log('🔍 [LIST-JUSTIFICACIONES] Ver detalle de justificación:', justificacion);
+
     
     // Toggle de la expansión
     if (this.justificacionExpandida === justificacion.id_justificacion) {
@@ -385,7 +385,7 @@ export class ListJustificacionesComponent implements OnInit, OnDestroy {
   }
 
   aprobarJustificacion(justificacion: JustificacionItem): void {
-    console.log('✅ [LIST-JUSTIFICACIONES] Aprobar justificación:', justificacion);
+
     // TODO: Implementar lógica de aprobación
     if (confirm(`¿Estás seguro de aprobar la justificación de ${justificacion.alumno_solicitante.nombre} ${justificacion.alumno_solicitante.apellido}?`)) {
       alert('Justificación aprobada (funcionalidad pendiente)');
@@ -393,7 +393,7 @@ export class ListJustificacionesComponent implements OnInit, OnDestroy {
   }
 
   rechazarJustificacion(justificacion: JustificacionItem): void {
-    console.log('❌ [LIST-JUSTIFICACIONES] Rechazar justificación:', justificacion);
+
     // TODO: Implementar lógica de rechazo
     if (confirm(`¿Estás seguro de rechazar la justificación de ${justificacion.alumno_solicitante.nombre} ${justificacion.alumno_solicitante.apellido}?`)) {
       alert('Justificación rechazada (funcionalidad pendiente)');

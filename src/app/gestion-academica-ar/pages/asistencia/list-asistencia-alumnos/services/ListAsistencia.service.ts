@@ -69,7 +69,7 @@ export class AsistenciaService {
   getAllAsistencias(): Observable<Asistencia[]> {
     return this.http.get<BackendResponse<Asistencia[]>>(`${this.baseUrl}/list`).pipe(
       map(response => {
-        console.log('Respuesta getAllAsistencias:', response);
+
         if (response && response.success && response.data) {
           return response.data;
         }
@@ -82,14 +82,14 @@ export class AsistenciaService {
   getAsistenciaPorCodigoAlumno(codigo: string): Observable<AsistenciaConAlumno> {
     return this.http.get<BackendResponse<AsistenciaConAlumno>>(`${this.baseUrl}/list/alumno/${codigo}`).pipe(
       map(response => {
-        console.log('🔍 [SERVICIO] Respuesta completa del backend:', response);
+
         if (response && response.success && response.data) {
-          console.log('🔍 [SERVICIO] Datos del alumno:', response.data.alumno);
-          console.log('🔍 [SERVICIO] Turno del alumno:', response.data.alumno.turno);
-          console.log('🔍 [SERVICIO] Tipo del turno:', typeof response.data.alumno.turno);
+
+
+
           if (response.data.alumno.turno && typeof response.data.alumno.turno === 'object') {
-            console.log('🔍 [SERVICIO] Propiedades del turno:', Object.keys(response.data.alumno.turno));
-            console.log('🔍 [SERVICIO] Contenido del turno:', response.data.alumno.turno);
+
+
           }
           return response.data;
         }
@@ -102,7 +102,7 @@ export class AsistenciaService {
   getAllTurnos(): Observable<Turno[]> {
     return this.http.get<BackendResponse<Turno[]>>(this.turnoUrl).pipe(
       map(response => {
-        console.log('Respuesta getAllTurnos:', response);
+
         if (response && response.success && response.data) {
           return response.data;
         }

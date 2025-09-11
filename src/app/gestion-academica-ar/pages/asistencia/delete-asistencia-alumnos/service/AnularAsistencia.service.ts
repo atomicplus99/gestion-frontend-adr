@@ -87,7 +87,7 @@ export class AsistenciaService {
 
   // ✅ BUSCAR ALUMNO POR CÓDIGO
   buscarAlumnoPorCodigo(codigo: string): Observable<Alumno> {
-    console.log(`🔍 Buscando alumno por código: ${codigo}`);
+
     
     // Definir la interfaz de respuesta del backend
     interface BackendResponse<T> {
@@ -100,7 +100,7 @@ export class AsistenciaService {
     return this.http.get<BackendResponse<Alumno>>(`${this.baseUrlAlumnos}/codigo/${codigo}`)
       .pipe(
         map(response => {
-          console.log('🔍 Respuesta completa del backend:', response);
+
           return response.data;
         })
       );
@@ -109,7 +109,7 @@ export class AsistenciaService {
   // ✅ OBTENER ASISTENCIAS DEL DÍA ACTUAL DE UN ALUMNO
   obtenerAsistenciasAlumno(codigo: string, fecha?: string): Observable<Asistencia[]> {
     const fechaBusqueda = fecha || this.getFechaHoy();
-    console.log(`📋 Obteniendo asistencias del alumno: ${codigo} para fecha: ${fechaBusqueda}`);
+
     
     // Definir la interfaz de respuesta del backend
     interface BackendResponse<T> {
@@ -122,12 +122,12 @@ export class AsistenciaService {
     return this.http.get<BackendResponse<AsistenciaConAlumno>>(`${this.baseUrlAsistencia}/list/alumno/${codigo}`)
       .pipe(
         map(response => {
-          console.log('📋 Respuesta completa del backend:', response);
+
           const data = response.data;
           
           // Filtrar asistencias de la fecha especificada
           // Comparar strings directamente para evitar problemas de zona horaria
-          console.log(`🔍 Fecha buscada: ${fechaBusqueda}`);
+
           console.log(`📅 Todas las asistencias del alumno:`, data.asistencias.map(a => ({ 
             id: a.id_asistencia, 
             fecha: a.fecha, 
@@ -138,11 +138,11 @@ export class AsistenciaService {
             // Extraer solo la fecha (YYYY-MM-DD) de la asistencia
             const fechaAsistencia = asistencia.fecha.split('T')[0];
             const coincide = fechaAsistencia === fechaBusqueda;
-            console.log(`📋 Asistencia ${asistencia.id_asistencia}: ${asistencia.fecha} -> ${fechaAsistencia} === ${fechaBusqueda} = ${coincide}`);
+
             return coincide;
           });
           
-          console.log(`📅 Asistencias de ${fechaBusqueda} encontradas: ${asistenciasFecha.length}`);
+
           return asistenciasFecha;
         })
       );
@@ -155,7 +155,7 @@ export class AsistenciaService {
 
   // ✅ ANULAR ASISTENCIA DEL DÍA ACTUAL (SIN FECHA ESPECÍFICA)
   anularAsistencia(request: AnularAsistenciaRequest): Observable<AnularAsistenciaResponse> {
-    console.log('🗑️ Anulando asistencia del día actual:', request);
+
     
     // Definir la interfaz de respuesta del backend
     interface BackendResponse<T> {
@@ -168,7 +168,7 @@ export class AsistenciaService {
     return this.http.patch<BackendResponse<AnularAsistenciaResponse>>(`${this.baseUrlAsistencia}/anular`, request)
       .pipe(
         map(response => {
-          console.log('🗑️ Respuesta completa del backend:', response);
+
           return response.data;
         })
       );
@@ -199,11 +199,11 @@ export class AsistenciaService {
   getFechaHoy(): string {
     // Obtener fecha y hora peruana real
     const ahora = new Date();
-    console.log(`🕐 Hora actual del navegador: ${ahora.toISOString()}`);
+
     
     // Crear fecha en zona horaria de Perú (UTC-5)
     const fechaPeru = new Date(ahora.toLocaleString("en-US", {timeZone: "America/Lima"}));
-    console.log(`🇵🇪 Fecha en zona horaria de Perú: ${fechaPeru.toISOString()}`);
+
     
     // Formatear fecha en formato YYYY-MM-DD
     const año = fechaPeru.getFullYear();
@@ -211,7 +211,7 @@ export class AsistenciaService {
     const dia = String(fechaPeru.getDate()).padStart(2, '0');
     
     const fechaFormateada = `${año}-${mes}-${dia}`;
-    console.log(`📅 Fecha formateada para Perú: ${fechaFormateada}`);
+
     
     return fechaFormateada;
   }

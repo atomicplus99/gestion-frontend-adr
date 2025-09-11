@@ -16,7 +16,7 @@ export class AlumnosEstadoService {
       .get<any>(`${environment.apiUrl}/alumnos/estado`)  // ✅ Cambiado a 'any' para manejar respuesta real
       .pipe(
         map(response => {
-          console.log('📋 [ALUMNOS-ESTADO] Respuesta del backend:', response);
+
           
           // ✅ Extraer el array de alumnos de la respuesta del backend
           let alumnos: AlumnoEstado[] = [];
@@ -38,7 +38,7 @@ export class AlumnosEstadoService {
             return [];
           }
           
-          console.log('✅ [ALUMNOS-ESTADO] Alumnos extraídos:', alumnos.length);
+
           return alumnos;
         }),
         map(alumnos => this.convertirAMayusculas(alumnos)),

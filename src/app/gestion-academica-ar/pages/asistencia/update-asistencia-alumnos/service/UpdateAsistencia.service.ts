@@ -93,13 +93,13 @@ export class AsistenciaService {
     const fechaConsulta = fecha || this.obtenerFechaActualPeru();
     const url = `${this.baseUrl}/verificar/${codigo}?fecha=${fechaConsulta}`;
     
-    console.log('🔍 Verificando asistencia para fecha:', fechaConsulta);
-    console.log('🌐 URL de verificación:', url);
+
+
     
     return this.http.get<BackendResponse<VerificarAsistenciaResponse>>(url)
       .pipe(
         map(response => {
-          console.log('🔍 Respuesta completa del backend:', response);
+
           if (response && response.success && response.data) {
             return response.data;
           }
@@ -111,13 +111,13 @@ export class AsistenciaService {
   }
 
   actualizarAsistenciaPorCodigo(codigo: string, updateData: UpdateAsistenciaRequest): Observable<UpdateAsistenciaResponse> {
-    console.log('🔧 SERVICIO EJECUTÁNDOSE - actualizarAsistenciaPorCodigo llamado con:', { codigo, updateData });
-    console.log('🌐 URL del servicio:', `${this.baseUrl}/actualizar/${codigo}`);
+
+
     
     return this.http.put<BackendResponse<UpdateAsistenciaResponse>>(`${this.baseUrl}/actualizar/${codigo}`, updateData)
       .pipe(
         map(response => {
-          console.log('🔄 Respuesta completa del backend:', response);
+
           if (response && response.success && response.data) {
             return response.data;
           }

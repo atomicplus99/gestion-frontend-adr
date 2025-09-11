@@ -29,8 +29,8 @@ export class TurnoService {
         }
       }),
       tap(turnos => {
-        console.log('✅ [TURNO-SERVICE] Turnos procesados:', turnos);
-        console.log('✅ [TURNO-SERVICE] Cantidad de turnos:', turnos.length);
+
+
       }),
       catchError(error => {
         console.error('❌ [TURNO-SERVICE] Error al obtener turnos:', error);

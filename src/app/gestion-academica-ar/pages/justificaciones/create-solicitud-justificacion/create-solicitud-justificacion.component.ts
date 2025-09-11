@@ -212,7 +212,7 @@ export class SolicitudJustificacionComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.isSearchingAlumno = false;
-          console.log('🔍 Respuesta completa del backend:', response);
+
           
           if (response && response.success && response.data) {
             this.alumnoEncontrado = response.data;
@@ -358,7 +358,7 @@ export class SolicitudJustificacionComponent implements OnInit {
     } else {
       // Modo individual: verificar que haya al menos una fecha no vacía
       const fechasValidas = this.fechasArray.value.filter((fecha: string) => fecha && fecha.trim());
-      console.log('Validación individual - Fechas válidas:', fechasValidas.length);
+
       return fechasValidas.length > 0;
     }
   }
@@ -477,27 +477,27 @@ export class SolicitudJustificacionComponent implements OnInit {
     // Asignar el ID correcto según el rol
     if (this.idAuxiliarActual) {
       payload.id_auxiliar = this.idAuxiliarActual;
-      console.log('✅ [JUSTIFICACIONES] Enviando como AUXILIAR con id_auxiliar:', this.idAuxiliarActual);
+
     } else if (this.idUsuarioActual) {
       payload.id_usuario = this.idUsuarioActual;
-      console.log('✅ [JUSTIFICACIONES] Enviando como ADMIN/DIRECTOR con id_usuario:', this.idUsuarioActual);
+
     }
 
-    console.log('🔍 DIAGNÓSTICO DEL USUARIO:');
-    console.log('- Usuario actual:', this.userStore.user());
-    console.log('- Rol del usuario:', this.rolUsuarioActual);
-    console.log('- ID auxiliar disponible:', this.idAuxiliarActual);
-    console.log('- ID administrador disponible:', this.userStore.user()?.administrador?.id_administrador);
-    console.log('- ID director disponible:', this.userStore.user()?.director?.id_director);
-    console.log('- ID usuario final seleccionado:', this.idUsuarioActual);
-    console.log('- Nombre usuario:', this.nombreUsuarioActual);
-    console.log('📦 Payload a enviar:', payload);
+
+
+
+
+
+
+
+
+
 
     this.http.post<JustificacionResponse>(`${environment.apiUrl}/detalle-justificaciones`, payload)
       .subscribe({
         next: (response) => {
           this.isLoading = false;
-          console.log('✅ Respuesta del backend:', response);
+
           
           // Mostrar mensaje de éxito personalizado
           this.confirmationMessage = {
@@ -573,7 +573,7 @@ export class SolicitudJustificacionComponent implements OnInit {
   }
 
   resetForm() {
-    console.log('=== RESET FORMULARIO ===');
+
     
     this.justificacionForm.reset();
     this.fechasArray.clear();
@@ -587,7 +587,7 @@ export class SolicitudJustificacionComponent implements OnInit {
     this.justificacionForm.get('fecha_inicio')?.setValue('');
     this.justificacionForm.get('fecha_fin')?.setValue('');
     
-    console.log('Formulario reseteado - Modo individual activado');
+
     this.cdr.detectChanges();
   }
 

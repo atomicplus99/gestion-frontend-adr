@@ -231,19 +231,19 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.resetUpdateForm();
     
-    console.log('🔍 Buscando alumno con código:', codigo);
-    console.log('📅 Para la fecha:', this.fechaSeleccionada);
+
+
     
     // Forzar actualización del DOM
     this.forzarDeteccionCambios();
 
     this.asistenciaService.verificarAsistenciaPorCodigo(codigo, this.fechaSeleccionada).subscribe({
       next: (response) => {
-        console.log('✅ Respuesta del backend (verificar):', response);
-        console.log('🔍 Datos del alumno:', response.alumno);
-        console.log('🔍 Turno del alumno:', response.alumno?.turno);
-        console.log('🔍 ¿Tiene turno?:', !!response.alumno?.turno);
-        console.log('🔍 Verificando datos:', {
+
+
+
+
+        console.log('', {
           tiene_asistencia: response.tiene_asistencia,
           tiene_asistencia_boolean: !!response.tiene_asistencia,
           asistencia: response.asistencia,
@@ -253,14 +253,14 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
         this.alumnoData = response;
         
         if (response.tiene_asistencia && response.asistencia) {
-          console.log('✅ Alumno tiene asistencia, mostrando formulario de actualización');
+
           // Tiene asistencia - mostrar formulario de actualización
           this.prepareUpdateForm(response);
           this.showUpdateForm = true;
           
 
         } else {
-          console.log('❌ Alumno NO tiene asistencia, mostrando mensaje');
+
           // No tiene asistencia - solo mostrar info del alumno
           this.showUpdateForm = false;
           
@@ -302,7 +302,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
   private prepareUpdateForm(data: VerificarAsistenciaResponse): void {
     if (!data.asistencia) return;
 
-    console.log('📋 Preparando formulario con datos:', data.asistencia);
+
 
     this.actualizarForm.patchValue({
       hora_de_llegada: data.asistencia.hora_de_llegada,
@@ -324,7 +324,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
    * Actualiza la asistencia del alumno
    */
   onActualizarAsistencia(): void {
-    console.log('🚀 Método onActualizarAsistencia ejecutado');
+
     console.log('📋 Estado del formulario:', {
       valid: this.actualizarForm.valid,
       value: this.actualizarForm.value,
@@ -343,7 +343,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
       this.mostrarErrorSinPermisos();
       return;
     }
-    console.log('✅ Permisos verificados correctamente');
+
 
     if (!this.tieneIdValido()) {
       this.confirmationMessage = {
@@ -354,7 +354,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
       };
       return;
     }
-    console.log('✅ ID del usuario verificado correctamente');
+
 
     console.log('🔍 Verificando alumnoData:', {
       alumnoData: this.alumnoData,
@@ -375,10 +375,10 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('✅ Formulario y datos de asistencia verificados correctamente');
+
 
     this.isLoadingUpdate = true;
-    console.log('⏳ Estado de carga de actualización activado:', this.isLoadingUpdate);
+
     this.forzarDeteccionCambios();
 
     const formValues = this.actualizarForm.value;
@@ -390,20 +390,20 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
     const idAux = this.userStore.idAuxiliar();
     const user = this.userStore.getUserSilently();
     
-    console.log('🔍 [ACTUALIZAR ASISTENCIA] Construyendo payload:');
-    console.log('- Usuario logueado:', user);
-    console.log('- ID Auxiliar disponible:', idAux);
-    console.log('- Rol del usuario:', this.userStore.userRole());
+
+
+
+
     
     if (idAux) {
       updateData.id_auxiliar = idAux;
-      console.log('✅ [ACTUALIZAR ASISTENCIA] Enviando como AUXILIAR con id_auxiliar:', idAux);
+
     } else if (user?.administrador?.id_administrador) {
       updateData.id_usuario = user.administrador.id_administrador;
-      console.log('✅ [ACTUALIZAR ASISTENCIA] Enviando como ADMINISTRADOR con id_usuario:', user.administrador.id_administrador);
+
     } else if (user?.director?.id_director) {
       updateData.id_usuario = user.director.id_director;
-      console.log('✅ [ACTUALIZAR ASISTENCIA] Enviando como DIRECTOR con id_usuario:', user.director.id_director);
+
     } else {
       console.error('❌ [ACTUALIZAR ASISTENCIA] ERROR: No se pudo determinar el actor de la actualización');
       this.confirmationMessage = {
@@ -433,7 +433,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
     // 📅 AGREGAR FECHA SI ES DIFERENTE A HOY
     if (this.fechaSeleccionada && !this.asistenciaService.esFechaHoy(this.fechaSeleccionada)) {
       updateData.fecha = this.fechaSeleccionada;
-      console.log('📅 [ACTUALIZAR ASISTENCIA] Fecha personalizada agregada:', updateData.fecha);
+
     }
 
     // Obtener el código del alumno del formulario de búsqueda
@@ -444,19 +444,19 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
     }
 
     // Debug: Log antes de hacer la petición de actualización
-    console.log('🔄 Actualizando asistencia para alumno:', codigo);
-    console.log('📝 Datos que se enviarán al backend:', updateData);
-    console.log('🌐 Endpoint que se llamará:', `${this.asistenciaService['baseUrl']}/actualizar/${codigo}`);
-    console.log('👤 Usuario que realiza la actualización - Rol:', this.userStore.userRole());
 
-    console.log('🚀 ANTES DE LLAMAR AL SERVICIO - Intentando enviar petición HTTP...');
+
+
+
+
+
 
     this.asistenciaService.actualizarAsistenciaPorCodigo(codigo, updateData).subscribe({
       next: (response) => {
-        console.log('✅ SUSCRIPCIÓN NEXT EJECUTADA - Respuesta del backend recibida');
+
         // Debug: Log de la respuesta exitosa del backend
-        console.log('✅ Respuesta exitosa del backend (actualizarAsistenciaPorCodigo):', response);
-        console.log('📊 Estructura de la respuesta:', {
+
+        console.log('Estructura de la respuesta:', {
           success: response.success,
           mensaje: response.mensaje,
           asistencia_actualizada: response.asistencia_actualizada ? 'SÍ' : 'NO',
@@ -484,7 +484,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
         };
       },
       error: (error) => {
-        console.log('❌ SUSCRIPCIÓN ERROR EJECUTADA - Error del backend recibido');
+
         // Debug: Log detallado del error de actualización
         console.error('💥 Error actualizando asistencia:', error);
         console.error('📊 Estructura del error:', {
