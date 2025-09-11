@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { ApoderadoAsignService } from './services/apoderado-asigne.service';
 import { AlumnoAsignService } from './services/alumno-asign.service';
 import { Alumno, Apoderado, ApoderadosResponseDto, AlumnosResponseDto, ErrorResponseDto, ConflictErrorResponseDto, AssignmentErrorResponseDto } from './models/AsignarAlumnoApoderado.model';
+import { AlertsService } from '../../../../shared/alerts.service';
 
 @Component({
   selector: 'app-assign-students',
@@ -565,27 +566,13 @@ import { Alumno, Apoderado, ApoderadosResponseDto, AlumnosResponseDto, ErrorResp
 
 
 
-      <!-- Success Message -->
-      @if (showSuccessMessage()) {
-        <div class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-          <i class="fas fa-check-circle mr-2"></i>
-          Cambios guardados exitosamente
-        </div>
-      }
-
-      <!-- Error Message -->
-      @if (errorMessage()) {
-        <div class="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-          <i class="fas fa-exclamation-circle mr-2"></i>
-          {{ errorMessage() }}
-        </div>
-      }
     </div>
   `
 })
 export class AssignStudentsComponent implements OnInit {
   private apoderadoService = inject(ApoderadoAsignService);
   private alumnoService = inject(AlumnoAsignService);
+  private alertsService = inject(AlertsService);
 
   // Data Signals
   apoderados = signal<Apoderado[]>([]);
@@ -593,8 +580,6 @@ export class AssignStudentsComponent implements OnInit {
   selectedApoderado = signal<Apoderado | null>(null);
   selectedStudents = signal<string[]>([]);
   initiallyAssignedStudents = signal<string[]>([]); // IDs de estudiantes inicialmente asignados
-  showSuccessMessage = signal(false);
-  errorMessage = signal('');
 
   // Filter Signals
   searchApoderado = signal('');
@@ -1099,15 +1084,11 @@ export class AssignStudentsComponent implements OnInit {
   }
 
   private showSuccess() {
-    this.showSuccessMessage.set(true);
-    setTimeout(() => this.showSuccessMessage.set(false), 3000);
+    this.alertsService.success('Asignación completada exitosamente');
   }
 
   private showError(message: string) {
-    this.errorMessage.set(message);
-    // ✅ Mostrar mensajes de error por más tiempo si son largos
-    const displayTime = message.length > 100 ? 6000 : 4000;
-    setTimeout(() => this.errorMessage.set(''), displayTime);
+    this.alertsService.error(message);
   }
 
   // Pagination methods

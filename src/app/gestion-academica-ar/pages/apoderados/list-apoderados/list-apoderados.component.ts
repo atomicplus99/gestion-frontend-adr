@@ -5,6 +5,7 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil, finalize } from
 import { Apoderado, TipoRelacion } from '../models/ApoderadoDtos';
 import { ApoderadoService } from '../apoderado.service';
 import { ChangeDetectorRef } from '@angular/core';
+import { AlertsService } from '../../../../shared/alerts.service';
 
 
 @Component({
@@ -18,13 +19,13 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
   private cdr = inject(ChangeDetectorRef);
+  private alertsService = inject(AlertsService);
 
   // Estado del componente
   apoderados: Apoderado[] = [];
   filteredApoderados: Apoderado[] = [];
   originalApoderados: Apoderado[] = [];
   loading = false;
-  error: string | null = null;
   showAdvancedFilters = false;
 
   // Formularios
@@ -130,7 +131,6 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
 
   loadApoderados(): void {
     this.loading = true;
-    this.error = null;
 
     this.apoderadoService.getAll()
       .pipe(
@@ -153,7 +153,7 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
         },
         error: () => {
-          this.error = 'Error al cargar los apoderados';
+          this.alertsService.error('Error al cargar los apoderados');
           this.cdr.detectChanges();
         }
       });
@@ -167,7 +167,6 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
     }
 
     this.loading = true;
-    this.error = null;
 
     this.apoderadoService.getByDni(dni)
       .pipe(
@@ -198,7 +197,7 @@ export class ApoderadoListComponent implements OnInit, OnDestroy {
             this.updatePagination();
             this.updatePaginatedData();
           } else {
-            this.error = 'Error al buscar por DNI';
+            this.alertsService.error('Error al buscar por DNI');
           }
           this.cdr.detectChanges();
         }

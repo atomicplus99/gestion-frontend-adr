@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { ApoderadoAsignService } from '../asigne-alumno/services/apoderado-asigne.service';
 import { Apoderado } from '../asigne-alumno/models/AsignarAlumnoApoderado.model';
+import { AlertsService } from '../../../../shared/alerts.service';
 
 
 @Component({
@@ -14,13 +15,12 @@ import { Apoderado } from '../asigne-alumno/models/AsignarAlumnoApoderado.model'
 })
 export class DeleteApoderadoComponent implements OnInit {
   private apoderadoService = inject(ApoderadoAsignService);
+  private alertsService = inject(AlertsService);
 
   // Data Signals
   apoderados = signal<Apoderado[]>([]);
   apoderadoToDelete = signal<Apoderado | null>(null);
   isLoading = signal(false);
-  showSuccessMessage = signal(false);
-  errorMessage = signal('');
 
   // Filter Signals
   searchTerm = signal('');
@@ -145,12 +145,10 @@ export class DeleteApoderadoComponent implements OnInit {
   }
 
   private showSuccess() {
-    this.showSuccessMessage.set(true);
-    setTimeout(() => this.showSuccessMessage.set(false), 3000);
+    this.alertsService.success('Apoderado eliminado exitosamente');
   }
 
   private showError(message: string) {
-    this.errorMessage.set(message);
-    setTimeout(() => this.errorMessage.set(''), 3000);
+    this.alertsService.error(message);
   }
 }

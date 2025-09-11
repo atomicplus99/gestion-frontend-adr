@@ -6,7 +6,7 @@
         Lista de Apoderados
       </h1>
       <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-        Gestiona y visualiza la información completa de apoderados y sus alumnos a cargo
+        Visualiza la información completa de apoderados y sus alumnos a cargo
       </p>
     </div>
 
@@ -144,19 +144,9 @@
         <p class="text-gray-600">Cargando apoderados...</p>
       </div>
 
-      <!-- Error -->
-      <div *ngIf="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-        <div class="flex items-center">
-          <div class="text-red-600 mr-3">❌</div>
-          <div>
-            <h3 class="text-red-800 font-semibold">Error</h3>
-            <p class="text-red-700">{{ error }}</p>
-          </div>
-        </div>
-      </div>
 
       <!-- Lista de apoderados -->
-      <div *ngIf="!loading && !error" class="space-y-4">
+      <div *ngIf="!loading" class="space-y-4">
         <div 
           *ngFor="let apoderado of paginatedApoderados; trackBy: trackByApoderadoId" 
           class="border border-gray-200 rounded-lg p-6 hover:bg-gray-50 transition-all duration-200 cursor-pointer"

@@ -5,6 +5,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Router } from '@angular/router';
 import { CreateApoderadoDto, ApoderadoCreateResponseDto } from '../models/ApoderadoDtos';
 import { ApoderadoService } from '../apoderado.service';
+import { AlertsService } from '../../../../shared/alerts.service';
 
 @Component({
  selector: 'app-apoderado-create-form',
@@ -16,11 +17,10 @@ export class ApoderadoCreateFormComponent implements OnInit {
  private apoderadoService = inject(ApoderadoService);
  private fb = inject(FormBuilder);
  private router = inject(Router);
+ private alertsService = inject(AlertsService);
 
  // Signals
  submitting = signal(false);
- successMessage = signal('');
- errorMessage = signal('');
 
  // Formulario
  apoderadoForm: FormGroup = this.fb.group({
@@ -44,7 +44,6 @@ export class ApoderadoCreateFormComponent implements OnInit {
  onSubmit(): void {
    if (this.apoderadoForm.valid) {
      this.submitting.set(true);
-     this.clearMessages();
 
      const formData = this.cleanFormData(this.apoderadoForm.value);
      this.createApoderado(formData);
@@ -58,17 +57,12 @@ export class ApoderadoCreateFormComponent implements OnInit {
      next: (response: ApoderadoCreateResponseDto) => {
        this.submitting.set(false);
        
-       // ✅ Usar el mensaje del backend en lugar del hardcodeado
+       // ✅ Usar SweetAlert para mostrar mensaje de éxito
        if (response && response.message) {
-         this.successMessage.set(response.message);
+         this.alertsService.success(response.message);
        } else {
-         this.successMessage.set('Apoderado creado exitosamente');
+         this.alertsService.success('Apoderado creado exitosamente');
        }
-       
-       // ✅ Limpiar mensaje automáticamente después de 5 segundos
-       setTimeout(() => {
-         this.clearMessages();
-       }, 5000);
        
        this.resetForm();
      },
@@ -110,20 +104,16 @@ export class ApoderadoCreateFormComponent implements OnInit {
    });
  }
 
- clearMessages(): void {
-   this.successMessage.set('');
-   this.errorMessage.set('');
- }
 
  private handleError(error: any): void {
    console.error('Error:', error);
    
    if (error.status === 409) {
-     this.errorMessage.set('Ya existe un apoderado con este DNI');
+     this.alertsService.error('Ya existe un apoderado con este DNI');
    } else if (error.status === 400) {
-     this.errorMessage.set('Datos inválidos. Revise la información ingresada');
+     this.alertsService.error('Datos inválidos. Revise la información ingresada');
    } else {
-     this.errorMessage.set('Error al procesar la solicitud. Intente nuevamente');
+     this.alertsService.error('Error al procesar la solicitud. Intente nuevamente');
    }
  }
 }
