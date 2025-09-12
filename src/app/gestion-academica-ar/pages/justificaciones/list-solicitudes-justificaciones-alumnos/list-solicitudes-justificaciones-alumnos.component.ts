@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
-import { ConfirmationMessageComponent, ConfirmationMessage } from '../../../../shared/components/confirmation-message/confirmation-message.component';
+import { AlertsService } from '../../../../shared/alerts.service';
 
 interface JustificacionResponseDto {
   id_justificacion: string;
@@ -75,7 +75,7 @@ interface AlumnoResponse {
 @Component({
   selector: 'app-lista-justificaciones',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, HttpClientModule, ConfirmationMessageComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, HttpClientModule],
   templateUrl: './list-solicitudes-justificaciones-alumnos.component.html',
   styleUrls: ['./list-solicitudes-justificaciones-alumnos.component.css']
 })
@@ -102,18 +102,12 @@ export class ListaJustificacionesComponent implements OnInit {
   // UI
   justificacionExpandida: string | null = null;
   
-  // Sistema de mensajes personalizados
-  confirmationMessage: ConfirmationMessage = {
-    type: 'info',
-    title: '',
-    message: '',
-    show: false
-  };
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private alertsService: AlertsService
   ) {}
 
   ngOnInit() {
@@ -157,26 +151,16 @@ export class ListaJustificacionesComponent implements OnInit {
         this.aplicarFiltros();
 
         if (this.justificaciones.length === 0) {
-          this.confirmationMessage = {
-            type: 'info',
-            title: 'Sin Resultados',
-            message: 'No se encontraron solicitudes de justificación en el sistema',
-            show: true
-          };
+          this.alertsService.info('No se encontraron solicitudes de justificación en el sistema', 'Sin Resultados');
         }
       } else {
-        this.confirmationMessage = {
-          type: 'error',
-          title: 'Error de Respuesta',
-          message: response?.message || 'Respuesta del backend no válida o formato incorrecto',
-          show: true
-        };
+        this.alertsService.error(response?.message || 'Respuesta del backend no válida o formato incorrecto', 'Error de Respuesta');
         // Asegurar que sean arrays vacíos
         this.justificaciones = [];
         this.justificacionesFiltradas = [];
       }
     } catch (error: any) {
-      console.error('Error cargando justificaciones:', error);
+      this.alertsService.error('Error al cargar las justificaciones', 'Error de Carga');
       
       let errorMessage = 'Error al cargar las justificaciones';
       if (error.status === 404) {
@@ -187,12 +171,7 @@ export class ListaJustificacionesComponent implements OnInit {
         errorMessage = 'No se pudo conectar con el servidor';
       }
       
-      this.confirmationMessage = {
-        type: 'error',
-        title: 'Error de Conexión',
-        message: errorMessage,
-        show: true
-      };
+      this.alertsService.error(errorMessage, 'Error de Conexión');
       
       // Asegurar que sean arrays vacíos
       this.justificaciones = [];
@@ -229,7 +208,7 @@ export class ListaJustificacionesComponent implements OnInit {
         this.justificacionesFiltradas = [];
       }
     } catch (error: any) {
-      console.error('Error buscando alumno:', error);
+      this.alertsService.error('Error al buscar el alumno', 'Error de Búsqueda');
       
       if (error.status === 404) {
         this.errorBusquedaAlumno = 'No se encontró un alumno con ese código';
@@ -265,26 +244,16 @@ export class ListaJustificacionesComponent implements OnInit {
         this.aplicarFiltros();
         
         if (this.justificaciones.length === 0) {
-          this.confirmationMessage = {
-            type: 'info',
-            title: 'Sin Solicitudes',
-            message: 'El alumno no tiene solicitudes de justificación registradas',
-            show: true
-          };
+          this.alertsService.info('El alumno no tiene solicitudes de justificación registradas', 'Sin Solicitudes');
         }
       } else {
-        this.confirmationMessage = {
-          type: 'error',
-          title: 'Error de Respuesta',
-          message: response?.message || 'Respuesta del backend no válida o formato incorrecto',
-          show: true
-        };
+        this.alertsService.error(response?.message || 'Respuesta del backend no válida o formato incorrecto', 'Error de Respuesta');
         // Asegurar que sean arrays vacíos
         this.justificaciones = [];
         this.justificacionesFiltradas = [];
       }
     } catch (error: any) {
-      console.error('Error cargando justificaciones del alumno:', error);
+      this.alertsService.error('Error al cargar las justificaciones del alumno', 'Error de Carga');
       
       let errorMessage = 'Error al cargar las justificaciones del alumno';
       if (error.status === 404) {
@@ -295,12 +264,7 @@ export class ListaJustificacionesComponent implements OnInit {
         errorMessage = 'No se pudo conectar con el servidor';
       }
       
-      this.confirmationMessage = {
-        type: 'error',
-        title: 'Error de Conexión',
-        message: errorMessage,
-        show: true
-      };
+      this.alertsService.error(errorMessage, 'Error de Conexión');
       
       // Asegurar que sean arrays vacíos
       this.justificaciones = [];
@@ -502,12 +466,7 @@ export class ListaJustificacionesComponent implements OnInit {
 
   exportarCSV() {
     if (this.justificacionesFiltradas.length === 0) {
-      this.confirmationMessage = {
-        type: 'info',
-        title: 'Sin Datos',
-        message: 'No hay datos para exportar. Aplica filtros diferentes o verifica que existan justificaciones',
-        show: true
-      };
+      this.alertsService.info('No hay datos para exportar. Aplica filtros diferentes o verifica que existan justificaciones', 'Sin Datos');
       return;
     }
 
@@ -553,16 +512,7 @@ export class ListaJustificacionesComponent implements OnInit {
     link.click();
     document.body.removeChild(link);
 
-    this.confirmationMessage = {
-      type: 'success',
-      title: 'Exportación Exitosa',
-      message: 'Archivo CSV exportado correctamente',
-      show: true
-    };
+    this.alertsService.success('Archivo CSV exportado correctamente', 'Exportación Exitosa');
   }
 
-  onConfirmMessage(): void {
-    this.confirmationMessage.show = false;
-    this.cdr.detectChanges();
-  }
 }

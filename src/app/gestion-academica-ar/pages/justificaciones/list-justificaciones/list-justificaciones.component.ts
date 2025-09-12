@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { JustificacionesService } from '../services/justificaciones.service';
+import { AlertsService } from '../../../../shared/alerts.service';
 import { 
   JustificacionItem, 
   JustificacionesQueryParams,
@@ -53,7 +54,8 @@ export class ListJustificacionesComponent implements OnInit, OnDestroy {
   constructor(
     private justificacionesService: JustificacionesService,
     private fb: FormBuilder,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private alertsService: AlertsService
   ) {
     this.filtrosForm = this.crearFormularioFiltros();
   }
@@ -151,7 +153,7 @@ export class ListJustificacionesComponent implements OnInit, OnDestroy {
 
         },
         error: (error) => {
-          console.error('❌ [LIST-JUSTIFICACIONES] Error al cargar justificaciones:', error);
+          this.alertsService.error('Error al cargar las justificaciones', 'Error de Carga');
           this.cargando = false;
           this.cdr.detectChanges();
         }
@@ -173,7 +175,7 @@ export class ListJustificacionesComponent implements OnInit, OnDestroy {
 
         },
         error: (error) => {
-          console.error('❌ [LIST-JUSTIFICACIONES] Error al cargar estadísticas:', error);
+          this.alertsService.error('Error al cargar las estadísticas', 'Error de Carga');
           this.cargandoEstadisticas = false;
           this.cdr.detectChanges();
         }

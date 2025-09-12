@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
+import { AlertsService } from '../../../../shared/alerts.service';
 
 interface JustificacionResponseDto {
   id_justificacion: string;
@@ -95,9 +96,6 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
   totalPaginas = 0;
   
   // UI
-  showAlert = false;
-  alertType: 'success' | 'error' | 'info' = 'info';
-  alertMessage = '';
   
   // Filtros
   filtroTipo = '';
@@ -106,7 +104,8 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private alertsService: AlertsService
   ) {}
 
   ngOnInit() {
@@ -147,7 +146,7 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
         this.justificacionesPendientes = [];
       }
     } catch (error) {
-      console.error('Error cargando justificaciones:', error);
+      this.alertsService.error('Error al cargar las justificaciones', 'Error de Carga');
       this.showAlertMessage('Error al cargar las justificaciones pendientes', 'error');
       this.justificacionesPendientes = [];
     } finally {
@@ -256,7 +255,7 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
         this.showAlertMessage('Respuesta del backend no válida', 'error');
       }
     } catch (error: any) {
-      console.error('Error actualizando estado:', error);
+      this.alertsService.error('Error al actualizar el estado', 'Error de Actualización');
       
       let mensajeError = 'Error al actualizar el estado de la justificación';
       
@@ -299,7 +298,7 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
         this.showAlertMessage('Respuesta del backend no válida', 'error');
       }
     } catch (error: any) {
-      console.error('Error en acción rápida:', error);
+      this.alertsService.error('Error en la acción rápida', 'Error de Acción');
       
       let mensajeError = 'Error al actualizar el estado';
       if (error.error?.message) {
@@ -360,15 +359,13 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
   }
 
   showAlertMessage(message: string, type: 'success' | 'error' | 'info') {
-    this.alertMessage = message;
-    this.alertType = type;
-    this.showAlert = true;
-    this.cdr.detectChanges();
-    
-    setTimeout(() => {
-      this.showAlert = false;
-      this.cdr.detectChanges();
-    }, 5000);
+    if (type === 'success') {
+      this.alertsService.success(message, 'Éxito');
+    } else if (type === 'error') {
+      this.alertsService.error(message, 'Error');
+    } else {
+      this.alertsService.info(message, 'Información');
+    }
   }
 
   actualizarLista() {
