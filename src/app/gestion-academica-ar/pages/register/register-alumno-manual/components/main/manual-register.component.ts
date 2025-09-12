@@ -85,7 +85,7 @@ export class ManualRegisterAlumnoComponent implements OnInit {
           this.turnos = turnos;
 
         } else {
-          console.warn('⚠️ [MANUAL-REGISTER] Respuesta inesperada, asignando array vacío');
+          console.warn('[MANUAL-REGISTER] Respuesta inesperada, asignando array vacío');
           this.turnos = [];
         }
         this.cd.markForCheck();

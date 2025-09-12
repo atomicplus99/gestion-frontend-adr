@@ -268,6 +268,136 @@
     </div>
   </div>
 
+  <!-- Formulario de creación -->
+  <div *ngIf="showCreateForm" class="bg-white shadow rounded-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-lg font-medium text-gray-900">Crear Nuevo Alumno</h3>
+      <button
+        (click)="cerrarModales()"
+        class="text-gray-400 hover:text-gray-600">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <form [formGroup]="createForm" (ngSubmit)="crearAlumno()" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="nombre" class="block text-sm font-medium text-gray-700 mb-1">
+            Nombres *
+          </label>
+          <input
+            type="text"
+            id="nombre"
+            formControlName="nombre"
+            placeholder="Ingresa los nombres"
+            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(createForm, 'nombre')">
+          <div *ngIf="hasFieldError(createForm, 'nombre')" class="mt-1 text-sm text-red-600">
+            {{ getFieldError(createForm, 'nombre') }}
+          </div>
+        </div>
+
+        <div>
+          <label for="apellido" class="block text-sm font-medium text-gray-700 mb-1">
+            Apellidos *
+          </label>
+          <input
+            type="text"
+            id="apellido"
+            formControlName="apellido"
+            placeholder="Ingresa los apellidos"
+            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(createForm, 'apellido')">
+          <div *ngIf="hasFieldError(createForm, 'apellido')" class="mt-1 text-sm text-red-600">
+            {{ getFieldError(createForm, 'apellido') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="codigo" class="block text-sm font-medium text-gray-700 mb-1">
+            Código *
+          </label>
+          <input
+            type="text"
+            id="codigo"
+            formControlName="codigo"
+            placeholder="Ingresa el código"
+            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(createForm, 'codigo')">
+          <div *ngIf="hasFieldError(createForm, 'codigo')" class="mt-1 text-sm text-red-600">
+            {{ getFieldError(createForm, 'codigo') }}
+          </div>
+        </div>
+
+        <div>
+          <label for="dni_alumno" class="block text-sm font-medium text-gray-700 mb-1">
+            DNI *
+          </label>
+          <input
+            type="text"
+            id="dni_alumno"
+            formControlName="dni_alumno"
+            placeholder="Ingresa el DNI"
+            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(createForm, 'dni_alumno')">
+          <div *ngIf="hasFieldError(createForm, 'dni_alumno')" class="mt-1 text-sm text-red-600">
+            {{ getFieldError(createForm, 'dni_alumno') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="fecha_nacimiento" class="block text-sm font-medium text-gray-700 mb-1">
+            Fecha de Nacimiento *
+          </label>
+          <input
+            type="date"
+            id="fecha_nacimiento"
+            formControlName="fecha_nacimiento"
+            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(createForm, 'fecha_nacimiento')">
+          <div *ngIf="hasFieldError(createForm, 'fecha_nacimiento')" class="mt-1 text-sm text-red-600">
+            {{ getFieldError(createForm, 'fecha_nacimiento') }}
+          </div>
+        </div>
+
+        <div>
+          <label for="direccion" class="block text-sm font-medium text-gray-700 mb-1">
+            Dirección
+          </label>
+          <input
+            type="text"
+            id="direccion"
+            formControlName="direccion"
+            placeholder="Ingresa la dirección"
+            [class]="'mt-1 block w-full rounded-md shadow-sm sm:text-sm ' + getFieldClass(createForm, 'direccion')">
+          <div *ngIf="hasFieldError(createForm, 'direccion')" class="mt-1 text-sm text-red-600">
+            {{ getFieldError(createForm, 'direccion') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-3 pt-4">
+        <button
+          type="button"
+          (click)="cerrarModales()"
+          class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          [disabled]="createForm.invalid || formLoading"
+          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50">
+          <svg *ngIf="formLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {{ formLoading ? 'Creando...' : 'Crear Alumno' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
   <!-- Formulario de edición -->
   <div *ngIf="showEditForm" class="bg-white shadow rounded-lg p-6">
     <div class="flex justify-between items-center mb-6">
@@ -488,7 +618,7 @@
             </svg>
             <div class="flex-1">
               <h4 class="text-sm font-medium text-orange-800 mb-2">
-                ⚠️ Información Importante
+                Información Importante
               </h4>
               <p class="text-sm text-orange-700 mb-3">
                 Este alumno tiene una cuenta de usuario asociada:
@@ -506,7 +636,7 @@
               </div>
               <div class="bg-orange-100 p-3 rounded border border-orange-300">
                 <p class="text-sm text-orange-800 font-medium">
-                  💡 <strong>¿Qué pasará?</strong><br>
+                  <strong>¿Qué pasará?</strong><br>
                   Si eliminas este alumno, también se borrará su cuenta de usuario y ya no podrá acceder al sistema.
                 </p>
               </div>
@@ -522,7 +652,7 @@
             </svg>
             <div class="flex-1">
               <h4 class="text-sm font-medium text-green-800 mb-1">
-                ✅ Todo en orden
+                Todo en orden
               </h4>
               <p class="text-sm text-green-700">
                 Este alumno no tiene una cuenta de usuario asociada. Puedes eliminarlo sin problemas.

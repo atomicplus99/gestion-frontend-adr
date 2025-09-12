@@ -25,11 +25,10 @@ export const routes: Routes = [
                 loadComponent: () => import('./gestion-academica-ar/pages/welcome/main-welcome/main-welcome.component').then(m => m.WelcomeComponent),
 
             },
-            {
-                path: 'terminos-condiciones',
-                loadComponent: () => import('./shared/components/terminos-condiciones/terminos-condiciones.component').then(m => m.TerminosCondicionesComponent),
-
-            },
+            // {
+            //     path: 'terminos-condiciones',
+            //     loadComponent: () => import('./shared/components/terminos-condiciones/terminos-condiciones.component').then(m => m.TerminosCondicionesComponent),
+            // },
             {
                 path: 'registrar',
                 children: [

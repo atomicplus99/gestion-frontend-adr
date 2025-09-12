@@ -18,7 +18,7 @@ import { AlertsService } from '../../../../shared/alerts.service';
   templateUrl: './listAlumnos.component.html',
   imports: [CommonModule, HttpClientModule, FormsModule, MatDialogModule, MatTooltipModule],
   providers: [AlumnosEstadoService, AlumnosFiltroService],
-  changeDetection: ChangeDetectionStrategy.OnPush, // ✅ Optimización de rendimiento
+  changeDetection: ChangeDetectionStrategy.OnPush, // Optimización de rendimiento
 })
 export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
   Math = Math;
@@ -45,7 +45,7 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
   private dialog = inject(MatDialog);
   private alumnosService = inject(AlumnosEstadoService);
   private filtroService = inject(AlumnosFiltroService);
-  private cdr = inject(ChangeDetectorRef); // ✅ Para forzar detección de cambios
+  private cdr = inject(ChangeDetectorRef); // Para forzar detección de cambios
   private alerts = inject(AlertsService);
 
   ngOnInit(): void { this.loadData(); }
@@ -60,7 +60,7 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$), 
         finalize(() => {
           this.isLoading = false;
-          this.cdr.markForCheck(); // ✅ Forzar detección al finalizar
+          this.cdr.markForCheck(); // Forzar detección al finalizar
         })
       )
       .subscribe({
@@ -70,14 +70,14 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
           this.actualizarContadores();
           this.filtroEstado = 'ACTIVO';
           this.applyFilter();
-          this.cdr.markForCheck(); // ✅ Forzar detección después de procesar
+          this.cdr.markForCheck(); // Forzar detección después de procesar
 
         },
         error: (err) => {
           this.alerts.error('Error al cargar la lista de alumnos', 'Error de Carga');
           this.datosOriginales = [];
           this.alumnosFiltrados = [];
-          this.cdr.markForCheck(); // ✅ Forzar detección en caso de error
+          this.cdr.markForCheck(); // Forzar detección en caso de error
         }
       });
   }
@@ -91,7 +91,7 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
 
   applyFilter(): void {
 
-    console.log('📊 [LISTA-ALUMNOS] Filtros:', {
+    console.log('[LISTA-ALUMNOS] Filtros:', {
       busqueda: this.filterValue,
       estado: this.filtroEstado,
       nivel: this.filtroNivel
@@ -106,7 +106,7 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
     this.sortData(this.sortColumn, this.sortDirection);
     
 
-    this.cdr.markForCheck(); // ✅ Forzar detección después de filtrar
+    this.cdr.markForCheck(); // Forzar detección después de filtrar
   }
 
   limpiarFiltros(): void {
@@ -115,7 +115,7 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
     this.filtroNivel = ''; 
     this.filtroEstado = 'ACTIVO'; 
     this.applyFilter();
-    this.cdr.markForCheck(); // ✅ Forzar detección después de limpiar
+    this.cdr.markForCheck(); // Forzar detección después de limpiar
   }
 
   openDetalle(row: AlumnoEstado): void {
@@ -147,7 +147,7 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
       this.alumnosFiltrados, this.sortColumn, this.sortDirection
     );
     
-    this.cdr.markForCheck(); // ✅ Forzar detección después de ordenar
+    this.cdr.markForCheck(); // Forzar detección después de ordenar
   }
 
   getAlumnosPaginados(): AlumnoEstado[] {
@@ -161,7 +161,7 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
 
-      this.cdr.markForCheck(); // ✅ Forzar detección al cambiar página
+      this.cdr.markForCheck(); // Forzar detección al cambiar página
     }
   }
 
@@ -170,7 +170,7 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
     this.pageSize = size;
     this.currentPage = 1;
 
-    this.cdr.markForCheck(); // ✅ Forzar detección al cambiar tamaño
+    this.cdr.markForCheck(); // Forzar detección al cambiar tamaño
   }
 
   onFiltroChange(filters: any): void { 
@@ -184,10 +184,10 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
     this.sortData(event.active, event.direction); 
   }
 
-  // ✅ Método para forzar detección de cambios manualmente
+  // Método para forzar detección de cambios manualmente
   forceChangeDetection(): void {
 
-    this.cdr.detectChanges(); // ✅ Detección inmediata
-    this.cdr.markForCheck();  // ✅ Marcar para próxima detección
+    this.cdr.detectChanges(); // Detección inmediata
+    this.cdr.markForCheck();  // Marcar para próxima detección
   }
 }

@@ -124,7 +124,7 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
       map(response => {
 
         
-        // ✅ Extraer el array de alumnos de la respuesta del backend
+        // Extraer el array de alumnos de la respuesta del backend
         let alumnos: Alumno[] = [];
         
         if (Array.isArray(response)) {

@@ -14,12 +14,12 @@ export class AlumnosEstadoService {
 
   getAlumnosEstado(): Observable<AlumnoEstado[]> {
     return this.http
-      .get<any>(`${environment.apiUrl}/alumnos/estado`)  // ✅ Cambiado a 'any' para manejar respuesta real
+      .get<any>(`${environment.apiUrl}/alumnos/estado`)  // Cambiado a 'any' para manejar respuesta real
       .pipe(
         map(response => {
 
           
-          // ✅ Extraer el array de alumnos de la respuesta del backend
+          // Extraer el array de alumnos de la respuesta del backend
           let alumnos: AlumnoEstado[] = [];
           
           if (Array.isArray(response)) {
@@ -54,7 +54,7 @@ export class AlumnosEstadoService {
         }),
         catchError(error => {
           this.alerts.error('Error al cargar la lista de alumnos', 'Error de Carga');
-          return of([]); // ✅ Retornar array vacío en caso de error
+          return of([]); // Retornar array vacío en caso de error
         })
       );
   }

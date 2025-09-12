@@ -82,7 +82,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private alerts = inject(AlertsService);
   private el = inject(ElementRef);
-  private cdr = inject(ChangeDetectorRef); // ✅ Para forzar detección de cambios
+  private cdr = inject(ChangeDetectorRef); // Para forzar detección de cambios
 
   // Estado del componente
   codigo = '';
@@ -101,7 +101,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
   // Historial de búsquedas (máximo 5)
   historialBusquedas: HistorialItem[] = [];
   
-  // ✅ ELIMINADO: Ya no necesitamos caché
+  // ELIMINADO: Ya no necesitamos caché
   // El endpoint incluye estado_actual directamente
   
   // Plantillas para observaciones
@@ -152,7 +152,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
     document.removeEventListener('keydown', this.keydownListener);
     this.subscriptions.unsubscribe();
     
-    // ✅ ELIMINADO: Ya no necesitamos limpiar caché
+    // ELIMINADO: Ya no necesitamos limpiar caché
   }
   
   @HostListener('window:beforeunload', ['$event'])
@@ -193,7 +193,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
     this.codigo = input.value;
   }
 
-  // ✅ ELIMINADO: Ya no necesitamos buscar estado por separado
+  // ELIMINADO: Ya no necesitamos buscar estado por separado
   // El endpoint /alumnos/codigo/{codigo} ahora incluye estado_actual
 
   buscarAlumno(): void {
@@ -206,13 +206,13 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
     this.errorMensaje.set(null);
     this.loadingMessage = 'Buscando alumno...';
     
-    // ✅ AHORA: Solo una llamada HTTP (el endpoint incluye estado_actual)
+    // AHORA: Solo una llamada HTTP (el endpoint incluye estado_actual)
     this.http.get<any>(`${environment.apiUrl}/alumnos/codigo/${this.codigo}`)
       .pipe(
         map(response => {
 
           
-          // ✅ Extraer el alumno de la respuesta del backend
+          // Extraer el alumno de la respuesta del backend
           let alumno: Alumno;
           
           if (response && response.data) {
@@ -226,7 +226,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
             throw new Error('Formato de respuesta inválido');
           }
           
-          // ✅ El alumno ya incluye estado_actual desde el backend
+          // El alumno ya incluye estado_actual desde el backend
 
           
           // Simular campo de última actualización si no existe
@@ -237,7 +237,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
 
           return alumno;
         }),
-        delay(200), // ✅ Delay reducido para mejor rendimiento
+        delay(200), // Delay reducido para mejor rendimiento
         catchError((error: HttpErrorResponse) => {
           // Mejorar manejo de errores con información específica
           let errorMsg = 'No se pudo encontrar el alumno con el código proporcionado';
@@ -259,7 +259,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
 
           this.alumnoEncontrado.set(alumno);
           
-          // ✅ Usar el estado del backend o establecer por defecto
+          // Usar el estado del backend o establecer por defecto
           const estadoBackend = alumno.estado_actual?.estado || alumno.estado;
           console.log('', {
             estado_actual: alumno.estado_actual,
@@ -288,12 +288,12 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
             timestamp: new Date()
           });
           
-          // ✅ Forzar detección de cambios
+          // Forzar detección de cambios
           this.cdr.markForCheck();
           
           setTimeout(() => {
             document.getElementById('estado-select')?.focus();
-            this.cdr.markForCheck(); // ✅ Forzar detección después del timeout
+            this.cdr.markForCheck(); // Forzar detección después del timeout
           }, 100);
           
           this.alerts.success('Alumno encontrado correctamente');
@@ -302,7 +302,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
           this.alerts.error('Error al buscar el alumno', 'Error de Búsqueda');
           this.mostrarFormulario.set(false);
           this.errorMensaje.set(error.message);
-          this.cdr.markForCheck(); // ✅ Forzar detección en caso de error
+          this.cdr.markForCheck(); // Forzar detección en caso de error
           this.alerts.error(error.message);
         }
       });
