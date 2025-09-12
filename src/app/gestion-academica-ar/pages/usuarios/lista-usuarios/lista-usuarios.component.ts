@@ -7,6 +7,7 @@ import { UsuarioCompleto, FiltrosUsuarios } from '../interfaces/usuario-completo
 import { ErrorHandlerService } from '../../../../shared/services/error-handler.service';
 import { PhotoService } from '../../../../shared/services/photo.service';
 import { UserStoreService } from '../../../../auth/store/user.store';
+import { AlertsService } from '../../../../shared/alerts.service';
 
 @Component({
   selector: 'app-lista-usuarios',
@@ -23,15 +24,12 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
   private userStore = inject(UserStoreService);
+  private alertsService = inject(AlertsService);
 
   // Estados
   usuarios: UsuarioCompleto[] = [];
   cargando = false;
   cargandoFotos = false;
-  errorMessage = '';
-  successMessage = '';
-  mostrarNotificacion: boolean = false;
-  tipoNotificacion: 'success' | 'error' | 'info' = 'info';
   
   // Estados para eliminación
   eliminando = false;
@@ -152,8 +150,6 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
 
     this.cargando = true;
     this.cargandoFotos = false;
-    this.errorMessage = '';
-    this.successMessage = '';
 
     // Cargar todos los usuarios sin filtros (límite máximo permitido por el backend)
     this.usuariosService.obtenerUsuariosCompletos({
@@ -171,14 +167,14 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
             
             // Mostrar notificación de carga exitosa
             if (this.todosLosUsuarios.length > 0) {
-              this.mostrarNotificacionUsuario(
+              this.alertsService.success(
                 `Se cargaron ${this.todosLosUsuarios.length} usuarios exitosamente.${this.todosLosUsuarios.length === 100 ? ' (Máximo permitido por página)' : ''}`,
-                'success'
+                'Usuarios Cargados'
               );
             } else {
-              this.mostrarNotificacionUsuario(
+              this.alertsService.info(
                 'No se encontraron usuarios en la base de datos.',
-                'info'
+                'Sin Usuarios'
               );
             }
             
@@ -200,9 +196,9 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
         error: (error) => {
           this.cargando = false;
           this.errorHandler.handleHttpError(error, 'Error al cargar usuarios');
-          this.mostrarNotificacionUsuario(
+          this.alertsService.error(
             'No se pudieron cargar los usuarios. Verifica tu conexión a internet.',
-            'error'
+            'Error de Carga'
           );
           this.cdr.detectChanges();
           setTimeout(() => {
@@ -348,9 +344,9 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
               fotosCargadas++;
               
               // Mostrar notificación amigable
-              this.mostrarNotificacionUsuario(
+              this.alertsService.info(
                 `No se pudo cargar la foto de ${usuario.nombre_usuario}. Se mostrará el avatar por defecto.`,
-                'info'
+                'Foto no disponible'
               );
               
               // Si todas las fotos están cargadas, ocultar el loader
@@ -398,8 +394,6 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
   limpiarFiltros(): void {
     this.filtrosForm.reset();
     this.paginaActual = 1;
-    this.errorMessage = '';
-    this.successMessage = '';
     this.aplicarFiltrosLocales();
   }
 
@@ -409,8 +403,6 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
   abrirModalEditar(usuario: UsuarioCompleto): void {
     this.usuarioAEditar = usuario;
     this.mostrarModalEditar = true;
-    this.errorMessage = '';
-    this.successMessage = '';
     this.archivoSeleccionado = null;
     this.previewFoto = null;
     
@@ -460,20 +452,19 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
       // Validar tipo de archivo
       const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
       if (!validTypes.includes(file.type)) {
-        this.errorMessage = 'Solo se permiten archivos JPG, JPEG y PNG';
+        this.alertsService.error('Solo se permiten archivos JPG, JPEG y PNG', 'Tipo de Archivo Inválido');
         this.cdr.detectChanges();
         return;
       }
       
       // Validar tamaño (5MB máximo)
       if (file.size > 5 * 1024 * 1024) {
-        this.errorMessage = 'El archivo no puede ser mayor a 5MB';
+        this.alertsService.error('El archivo no puede ser mayor a 5MB', 'Archivo Demasiado Grande');
         this.cdr.detectChanges();
         return;
       }
       
       this.archivoSeleccionado = file;
-      this.errorMessage = '';
       
       // Crear preview
       const reader = new FileReader();
@@ -490,18 +481,15 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
    */
   confirmarEdicion(): void {
     if (!this.usuarioAEditar || this.editarForm.invalid) {
-      this.errorMessage = 'Por favor, complete todos los campos requeridos';
-      this.mostrarNotificacionUsuario(
+      this.alertsService.error(
         'Por favor, complete todos los campos requeridos',
-        'error'
+        'Campos Requeridos'
       );
       this.cdr.detectChanges();
       return;
     }
 
     this.editando = true;
-    this.errorMessage = '';
-    this.successMessage = '';
 
     const datosActualizacion = {
       nombre_usuario: this.editarForm.get('nombre_usuario')?.value,
@@ -511,9 +499,9 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
 
     // Validación adicional: asegurar que el rol no se modifique
     if (this.usuarioAEditar && this.editarForm.get('rol_usuario')?.value !== this.usuarioAEditar.rol_usuario) {
-      this.mostrarNotificacionUsuario(
+      this.alertsService.error(
         'El rol del usuario no se puede modificar. Operación cancelada.',
-        'error'
+        'Rol No Modificable'
       );
       this.editando = false;
       this.cdr.detectChanges();
@@ -534,10 +522,9 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
             }
           } else {
             this.editando = false;
-            this.errorMessage = response.message;
-            this.mostrarNotificacionUsuario(
+            this.alertsService.error(
               response.message || 'Error al actualizar usuario',
-              'error'
+              'Error de Actualización'
             );
             this.cdr.detectChanges();
           }
@@ -545,9 +532,9 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
         error: (error) => {
           this.editando = false;
           this.errorHandler.handleHttpError(error, 'Error al actualizar usuario');
-          this.mostrarNotificacionUsuario(
+          this.alertsService.error(
             'Error al actualizar usuario. Intenta nuevamente.',
-            'error'
+            'Error de Actualización'
           );
           this.cdr.detectChanges();
         }
@@ -592,15 +579,14 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
                   }
                 },
                 error: (error) => {
-                  console.error('Error al obtener nueva foto:', error);
+                  this.alertsService.error('Error al obtener nueva foto', 'Error de Foto');
                   this.finalizarEdicion(this.usuarioAEditar);
                 }
               });
                               } else {
-                      this.errorMessage = response.message;
-                      this.mostrarNotificacionUsuario(
+                      this.alertsService.error(
                         response.message || 'Error al actualizar foto',
-                        'error'
+                        'Error de Foto'
                       );
                       this.cdr.detectChanges();
                     }
@@ -608,9 +594,9 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
         error: (error) => {
           this.editandoFoto = false;
           this.errorHandler.handleHttpError(error, 'Error al actualizar foto');
-          this.mostrarNotificacionUsuario(
+          this.alertsService.error(
             'Error al actualizar foto. Intenta nuevamente.',
-            'error'
+            'Error de Foto'
           );
           this.cdr.detectChanges();
         }
@@ -623,7 +609,6 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
   private finalizarEdicion(usuarioActualizado: any): void {
     this.editando = false;
     this.editandoFoto = false;
-    this.successMessage = 'Usuario actualizado exitosamente';
     
     // Actualizar la lista local
     if (this.usuarioAEditar) {
@@ -660,9 +645,9 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
     
     // Mostrar notificación de éxito
-    this.mostrarNotificacionUsuario(
+    this.alertsService.success(
       `Usuario ${usuarioActualizado.nombre_usuario} actualizado exitosamente.`,
-      'success'
+      'Usuario Actualizado'
     );
     
     this.cdr.detectChanges();
@@ -677,8 +662,6 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
   abrirModalEliminar(usuario: UsuarioCompleto): void {
     this.usuarioAEliminar = usuario;
     this.mostrarModalEliminar = true;
-    this.errorMessage = '';
-    this.successMessage = '';
     
     // Bloquear el scroll del body
     document.body.style.overflow = 'hidden';
@@ -707,8 +690,6 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
     if (!this.usuarioAEliminar) return;
 
     this.eliminando = true;
-    this.errorMessage = '';
-    this.successMessage = '';
 
     this.usuariosService.eliminarUsuario(this.usuarioAEliminar.id_user)
       .pipe(takeUntil(this.destroy$))
@@ -717,7 +698,6 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
           this.eliminando = false;
           
           if (response.success) {
-            this.successMessage = response.message;
             
             // Actualizar la lista local antes de cerrar el modal
             if (this.usuarioAEliminar) {
@@ -739,9 +719,9 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
               this.cdr.detectChanges();
             }, 1000);
             
-            this.mostrarNotificacionUsuario(
+            this.alertsService.success(
               `Usuario ${this.usuarioAEliminar!.nombre_usuario} eliminado exitosamente.`,
-              'success'
+              'Usuario Eliminado'
             );
             
             this.cdr.detectChanges();
@@ -749,10 +729,9 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
               this.cdr.detectChanges();
             }, 50);
           } else {
-            this.errorMessage = response.message;
-            this.mostrarNotificacionUsuario(
+            this.alertsService.error(
               response.message || 'Error al eliminar usuario.',
-              'error'
+              'Error de Eliminación'
             );
             // NO cerrar el modal cuando hay error - mantenerlo abierto para mostrar el mensaje
             this.cdr.detectChanges();
@@ -761,25 +740,21 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
         error: (error) => {
           this.eliminando = false;
           
-          console.error('Error al eliminar usuario:', error);
+          this.alertsService.error('Error al eliminar usuario', 'Error de Eliminación');
           
           // Manejar error específico de referencias
           if (error.status === 409) {
             const mensajeError = 'No se puede eliminar este usuario porque está siendo utilizado en el sistema. Por favor, contacte con el administrador o vaya a Administración de Personal para realizar el proceso.';
-            this.errorMessage = mensajeError;
-            this.mostrarNotificacionUsuario(mensajeError, 'error');
+            this.alertsService.error(mensajeError, 'Error de Eliminación');
           } else if (error.status === 404) {
             const mensajeError = 'El usuario no fue encontrado. Puede que ya haya sido eliminado.';
-            this.errorMessage = mensajeError;
-            this.mostrarNotificacionUsuario(mensajeError, 'error');
+            this.alertsService.error(mensajeError, 'Error de Eliminación');
           } else if (error.status === 403) {
             const mensajeError = 'No tiene permisos para eliminar este usuario.';
-            this.errorMessage = mensajeError;
-            this.mostrarNotificacionUsuario(mensajeError, 'error');
+            this.alertsService.error(mensajeError, 'Error de Eliminación');
           } else {
             const mensajeError = error.error?.message || 'Error al eliminar usuario. Intenta nuevamente.';
-            this.errorMessage = mensajeError;
-            this.mostrarNotificacionUsuario(mensajeError, 'error');
+            this.alertsService.error(mensajeError, 'Error de Eliminación');
           }
           
           this.cdr.detectChanges();
@@ -866,10 +841,6 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
   /**
    * Limpiar mensajes
    */
-  limpiarMensajes(): void {
-    this.errorMessage = '';
-    this.successMessage = '';
-  }
 
   /**
    * Función auxiliar para Math.min
@@ -928,9 +899,9 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
               fotosCargadas++;
               
               // Mostrar notificación amigable
-              this.mostrarNotificacionUsuario(
+              this.alertsService.info(
                 `No se pudo cargar la foto de ${usuario.nombre_usuario}. Se mostrará el avatar por defecto.`,
-                'info'
+                'Foto no disponible'
               );
               
               // Si todas las fotos están cargadas, ocultar el loader
@@ -972,44 +943,6 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
 
 
 
-  /**
-   * Mostrar notificación amigable al usuario
-   */
-  private mostrarNotificacionUsuario(mensaje: string, tipo: 'success' | 'error' | 'info' = 'info'): void {
-    this.mostrarNotificacion = true;
-    this.tipoNotificacion = tipo;
-    
-    if (tipo === 'success') {
-      this.successMessage = mensaje;
-      this.errorMessage = '';
-    } else if (tipo === 'error') {
-      this.errorMessage = mensaje;
-      this.successMessage = '';
-    } else {
-      this.errorMessage = mensaje;
-      this.successMessage = '';
-    }
-    
-    this.cdr.detectChanges();
-    
-    // Ocultar notificación después de 5 segundos
-    setTimeout(() => {
-      this.mostrarNotificacion = false;
-      this.errorMessage = '';
-      this.successMessage = '';
-      this.cdr.detectChanges();
-    }, 5000);
-  }
-
-  /**
-   * Cerrar notificación manualmente
-   */
-  cerrarNotificacion(): void {
-    this.mostrarNotificacion = false;
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.cdr.detectChanges();
-  }
 
   /**
    * Forzar recarga de foto específica
@@ -1029,10 +962,10 @@ export class ListaUsuariosComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          console.error('Error al recargar foto:', error);
-          this.mostrarNotificacionUsuario(
+          this.alertsService.error('Error al recargar foto', 'Error de Recarga');
+          this.alertsService.error(
             'No se pudo recargar la foto. Intenta recargar la página.',
-            'error'
+            'Error de Recarga'
           );
         }
       });

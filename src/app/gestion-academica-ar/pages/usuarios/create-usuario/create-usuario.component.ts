@@ -377,34 +377,4 @@ export class CreateUsuarioComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Probar conectividad con el servidor
-   */
-  probarConectividad(): void {
-    this.loading = true;
-    this.errorMessage = '';
-
-    this.usuarioService.probarConectividad()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          this.loading = false;
-          this.successMessage = 'Conectividad con el servidor exitosa';
-          this.cdr.detectChanges();
-          setTimeout(() => {
-            this.successMessage = '';
-            this.cdr.detectChanges();
-          }, 3000);
-        },
-        error: (error) => {
-          this.loading = false;
-          this.errorMessage = `Error de conectividad: ${error.status} - ${error.statusText}`;
-          this.cdr.detectChanges();
-          setTimeout(() => {
-            this.errorMessage = '';
-            this.cdr.detectChanges();
-          }, 5000);
-        }
-      });
-  }
 }

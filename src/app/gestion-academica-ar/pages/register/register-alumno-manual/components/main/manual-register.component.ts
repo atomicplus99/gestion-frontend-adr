@@ -91,7 +91,7 @@ export class ManualRegisterAlumnoComponent implements OnInit {
         this.cd.markForCheck();
       },
       error: (error) => {
-        console.error('❌ [MANUAL-REGISTER] Error al obtener turnos:', error);
+        this.alerts.error('Error al cargar los turnos', 'Error de Carga');
         
         // En caso de error, asignar array vacío para evitar errores en el template
         this.turnos = [];
@@ -184,7 +184,7 @@ export class ManualRegisterAlumnoComponent implements OnInit {
         this.cd.markForCheck();
       },
       error: (err) => {
-        console.error('❌ [MANUAL-REGISTER] Error del backend:', err);
+        this.alerts.error('Error del servidor al registrar alumno', 'Error de Registro');
         this.alerts.error('Error al registrar alumno: ' + (err?.error?.message || err?.message || 'Error desconocido'));
         this.isSubmitting = false;
         this.cd.markForCheck();

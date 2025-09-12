@@ -50,7 +50,9 @@
         [class.opacity-50]="!codigo || codigo.length < 10"
         [attr.title]="'Buscar alumno' + (!codigo || codigo.length < 10 ? ' (Ingrese un código válido primero)' : '')"
       >
-        <i class="material-icons mr-1">search</i>
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
         Buscar
       </button>
     </div>
@@ -231,7 +233,10 @@
             class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors flex items-center"
             (click)="confirmarGuardar(false)"
           >
-            <i class="material-icons mr-1 text-sm">preview</i>
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
             Previsualizar
           </button>
           
@@ -241,7 +246,9 @@
             [disabled]="(estadoSeleccionado() === 'inactivo' && observacionInvalida()) || alumnoEncontrado()?.estado === estadoSeleccionado() && !observacion().trim()"
             [class.opacity-50]="(estadoSeleccionado() === 'inactivo' && observacionInvalida()) || alumnoEncontrado()?.estado === estadoSeleccionado() && !observacion().trim()"
           >
-            <i class="material-icons mr-1 text-sm">save</i>
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+            </svg>
             Guardar cambios
           </button>
         </div>
@@ -261,7 +268,9 @@
           (click)="resetFormulario()" 
           class="mt-2 text-blue-600 hover:text-blue-800 text-sm flex items-center"
         >
-          <i class="material-icons text-sm mr-1">refresh</i>
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
           Reiniciar formulario
         </button>
       </div>
@@ -323,88 +332,4 @@
     </div>
   </div>
   
-  <!-- Confirmation Modal -->
-  <div *ngIf="mostrarConfirmacion" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate__animated animate__fadeIn">
-    <div class="bg-white rounded-lg max-w-lg w-full p-6 m-4 shadow-xl">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-semibold">Confirmar cambios</h3>
-        <button (click)="mostrarConfirmacion = false" class="text-gray-500 hover:text-gray-700">
-          <i class="material-icons">close</i>
-        </button>
-      </div>
-      
-      <div class="p-4 bg-gray-50 rounded-lg mb-4">
-        <div class="mb-3">
-          <span class="text-sm text-gray-500">Alumno:</span>
-          <p class="font-medium">{{ alumnoEncontrado()?.nombre }} {{ alumnoEncontrado()?.apellido }}</p>
-        </div>
-        
-        <div class="flex gap-4 mb-3">
-          <div>
-            <span class="text-sm text-gray-500">Estado Actual:</span>
-            <div class="mt-1">
-              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                [class.bg-green-100]="alumnoEncontrado()?.estado === 'activo'" 
-                [class.text-green-800]="alumnoEncontrado()?.estado === 'activo'"
-                [class.bg-red-100]="alumnoEncontrado()?.estado === 'inactivo'" 
-                [class.text-red-800]="alumnoEncontrado()?.estado === 'inactivo'">
-                {{ alumnoEncontrado()?.estado | titlecase }}
-              </span>
-            </div>
-          </div>
-          
-          <div>
-            <span class="text-sm text-gray-500">Nuevo Estado:</span>
-            <div class="mt-1">
-              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                [class.bg-green-100]="estadoSeleccionado() === 'activo'" 
-                [class.text-green-800]="estadoSeleccionado() === 'activo'"
-                [class.bg-red-100]="estadoSeleccionado() === 'inactivo'" 
-                [class.text-red-800]="estadoSeleccionado() === 'inactivo'">
-                {{ estadoSeleccionado() | titlecase }}
-              </span>
-            </div>
-          </div>
-        </div>
-        
-        <div *ngIf="observacion().trim()">
-          <span class="text-sm text-gray-500">Observación:</span>
-          <p class="mt-1 text-sm italic border-l-2 border-gray-300 pl-2">{{ observacion() }}</p>
-        </div>
-      </div>
-      
-      <p *ngIf="!confirmacionFinal" class="text-sm text-gray-600 mb-4">
-        ¿Está seguro de que desea cambiar el estado del alumno?
-      </p>
-      
-      <div *ngIf="!confirmacionFinal" class="flex justify-end gap-3">
-        <button 
-          (click)="mostrarConfirmacion = false" 
-          class="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-100 transition-colors"
-        >
-          Cancelar
-        </button>
-        <button 
-          *ngIf="!esPreview"
-          (click)="guardarCambios()" 
-          class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-        >
-          Confirmar
-        </button>
-        <button 
-          *ngIf="esPreview"
-          (click)="mostrarConfirmacion = false" 
-          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-        >
-          Volver al formulario
-        </button>
-      </div>
-      
-      <!-- Loading State in Modal -->
-      <div *ngIf="confirmacionFinal && cargando()" class="text-center py-4">
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-600 mb-2"></div>
-        <p class="text-gray-600">Procesando cambios...</p>
-      </div>
-    </div>
-  </div>
 </div>

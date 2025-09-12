@@ -3,12 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map, catchError, of } from 'rxjs';
 import { AlumnoEstado } from '../models/AlumnoEstado.model';
 import { environment } from '../../../../../../environments/environment';
+import { AlertsService } from '../../../../../shared/alerts.service';
 
 
 
 @Injectable()
 export class AlumnosEstadoService {
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private alerts: AlertsService) { }
 
 
   getAlumnosEstado(): Observable<AlumnoEstado[]> {
@@ -34,7 +35,7 @@ export class AlumnosEstadoService {
             // Si es { result: [...] }
             alumnos = response.result;
           } else {
-            console.error('❌ [ALUMNOS-ESTADO] Formato de respuesta no reconocido:', response);
+            this.alerts.error('Formato de respuesta no reconocido del servidor', 'Error de Formato');
             return [];
           }
           
@@ -52,7 +53,7 @@ export class AlumnosEstadoService {
           return alumnos;
         }),
         catchError(error => {
-          console.error('❌ [ALUMNOS-ESTADO] Error en la petición:', error);
+          this.alerts.error('Error al cargar la lista de alumnos', 'Error de Carga');
           return of([]); // ✅ Retornar array vacío en caso de error
         })
       );

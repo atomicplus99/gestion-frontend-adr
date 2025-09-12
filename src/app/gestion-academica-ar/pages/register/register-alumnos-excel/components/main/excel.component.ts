@@ -18,6 +18,7 @@ import { ExcelWidgetsComponent } from '../excel-widgets/excel-widgets.component'
 import { ExcelNotificationService } from '../../services/excel-notificacion.service';
 import { TurnoModuleExcel } from '../../models/turno-excel.model';
 import { AlumnoModuleExcel } from '../../models/alumno-excel.model';
+import { AlertsService } from '../../../../../../shared/alerts.service';
 import { ExcelImportRequest, ExcelWidgetData } from '../../models/excel-import.model';
 import { EXCEL_MESSAGES } from '../../constants/excel.constants';
 import { ExcelValidators } from '../../validators/excel.validators';
@@ -41,6 +42,7 @@ export class ExcelComponent implements OnInit, OnDestroy {
   private readonly notificationService = inject(ExcelNotificationService);
   private readonly stateService = inject(ExcelStateService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly alerts: AlertsService = inject(AlertsService);
 
   // Referencias del DOM
   @ViewChild('fileInput') fileInputRef!: ElementRef<HTMLInputElement>;
@@ -147,7 +149,7 @@ export class ExcelComponent implements OnInit, OnDestroy {
           this.stateService.setTurnos(turnos);
         },
         error: (error) => {
-          console.error('Error al cargar turnos:', error);
+          this.alerts.error('Error al cargar los turnos', 'Error de Carga');
           this.notificationService.error(
             EXCEL_MESSAGES.ERROR.NETWORK,
             'Error al cargar turnos'
@@ -265,7 +267,7 @@ export class ExcelComponent implements OnInit, OnDestroy {
   }
 
   private manejarErrorImportacion(error: any): void {
-    console.error('Error al importar:', error);
+    this.alerts.error('Error al importar el archivo', 'Error de Importación');
     this.notificationService.importError(error.message);
   }
 

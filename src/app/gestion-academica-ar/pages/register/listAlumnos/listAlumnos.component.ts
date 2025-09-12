@@ -10,6 +10,7 @@ import { AlumnosEstadoService } from './services/AlumnoEstado.service';
 import { AlumnosFiltroService } from './services/AlumnosFilter.service';
 import { AlumnoEstado } from './models/AlumnoEstado.model';
 import { DetalleAlumnoDialogComponent } from '../../../../shared/components/dialog/dialog.component';
+import { AlertsService } from '../../../../shared/alerts.service';
 
 @Component({
   selector: 'app-lista-alumnos-estado',
@@ -45,6 +46,7 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
   private alumnosService = inject(AlumnosEstadoService);
   private filtroService = inject(AlumnosFiltroService);
   private cdr = inject(ChangeDetectorRef); // ✅ Para forzar detección de cambios
+  private alerts = inject(AlertsService);
 
   ngOnInit(): void { this.loadData(); }
   ngOnDestroy(): void { this.destroy$.next(); this.destroy$.complete(); }
@@ -72,7 +74,7 @@ export class ListaAlumnosEstadoComponent implements OnInit, OnDestroy {
 
         },
         error: (err) => {
-          console.error('❌ [LISTA-ALUMNOS] Error al cargar datos:', err);
+          this.alerts.error('Error al cargar la lista de alumnos', 'Error de Carga');
           this.datosOriginales = [];
           this.alumnosFiltrados = [];
           this.cdr.markForCheck(); // ✅ Forzar detección en caso de error

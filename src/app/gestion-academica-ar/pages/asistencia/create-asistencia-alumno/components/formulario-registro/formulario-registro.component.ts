@@ -41,7 +41,6 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
   registrando = false;
   alumnoEncontrado: AlumnoInfoAsistenciaManual | null = null;
   fechaSeleccionada: string = '';
-  mostrarPayload = false;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -364,16 +363,6 @@ export class FormularioRegistroComponent implements OnInit, OnDestroy {
     return datos;
   }
 
-  // ========================================
-  // VISTA PREVIA DE PAYLOAD (sin logs)
-  // ========================================
-  togglePayload(): void {
-    this.mostrarPayload = !this.mostrarPayload;
-  }
-
-  get payloadPreview(): any {
-    return this.construirDatosRegistro();
-  }
 
   private async manejarRegistroExitoso(response: any, datosRegistro: RegistroAsistenciaRequestManual): Promise<void> {
     const nombreCompleto = `${this.alumnoEncontrado?.nombre} ${this.alumnoEncontrado?.apellido}`;

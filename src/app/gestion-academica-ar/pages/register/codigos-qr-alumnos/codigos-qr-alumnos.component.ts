@@ -140,7 +140,7 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
           // Si es { result: [...] }
           alumnos = response.result;
         } else {
-          console.error('❌ [IMPRIMIR-QR] Formato de respuesta no reconocido:', response);
+          this.alertsService.error('Formato de respuesta no reconocido del servidor', 'Error de Formato');
           return [];
         }
         
@@ -148,7 +148,7 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
         return alumnos;
       }),
       catchError(error => {
-        console.error('❌ [IMPRIMIR-QR] Error al cargar alumnos:', error);
+        this.alertsService.error('Error al cargar la lista de alumnos', 'Error de Carga');
         return of([]);
       })
     ).subscribe(alumnos => {
@@ -169,7 +169,7 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
 
     this.http.get<Alumno>(`${environment.apiUrl}/alumnos/codigo/${codigo}`).pipe(
       catchError(error => {
-        console.error('Error al buscar alumno:', error);
+        this.alertsService.error('Error al buscar el alumno', 'Error de Búsqueda');
         return of(null);
       })
     ).subscribe(alumno => {
@@ -383,7 +383,7 @@ export class QrPrinterComponent implements OnInit, OnDestroy {
 
 
     } catch (error) {
-      console.error('💥 Error generando PDF:', error);
+      this.alertsService.error('Error al generar el PDF', 'Error de Generación');
     } finally {
       this.generandoPDF = false;
       this.cd.markForCheck();

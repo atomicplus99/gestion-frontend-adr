@@ -95,9 +95,6 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
   
   // Estado UI adicional
   mostrarAyuda = false;
-  mostrarConfirmacion = false;
-  confirmacionFinal = false;
-  esPreview = false;
   loadingMessage = 'Buscando alumno...';
   private keydownListener: any;
   
@@ -225,7 +222,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
             // Si es el alumno directo
             alumno = response;
           } else {
-            console.error('❌ [ESTADO-ALUMNO] Formato de respuesta no reconocido:', response);
+            this.alerts.error('Formato de respuesta no reconocido del servidor', 'Error de Formato');
             throw new Error('Formato de respuesta inválido');
           }
           
@@ -302,7 +299,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
           this.alerts.success('Alumno encontrado correctamente');
         },
         error: (error: Error) => {
-          console.error('❌ [ESTADO-ALUMNO] Error al buscar alumno:', error);
+          this.alerts.error('Error al buscar el alumno', 'Error de Búsqueda');
           this.mostrarFormulario.set(false);
           this.errorMensaje.set(error.message);
           this.cdr.markForCheck(); // ✅ Forzar detección en caso de error
@@ -312,9 +309,49 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
   }
   
   confirmarGuardar(guardar: boolean): void {
-    this.mostrarConfirmacion = true;
-    this.esPreview = !guardar;
-    this.confirmacionFinal = false;
+    if (guardar) {
+      this.confirmarCambios();
+    } else {
+      this.mostrarPreview();
+    }
+  }
+
+  private async confirmarCambios(): Promise<void> {
+    const alumno = this.alumnoEncontrado();
+    if (!alumno) return;
+
+    const estado = this.estadoSeleccionado();
+    const obs = this.observacion().trim();
+    
+    const mensaje = estado === 'inactivo' 
+      ? `¿Está seguro de cambiar el estado del alumno ${alumno.nombre} ${alumno.apellido} a "Inactivo"?`
+      : `¿Está seguro de cambiar el estado del alumno ${alumno.nombre} ${alumno.apellido} a "${estado}"?`;
+
+    const result = await this.alerts.confirm(mensaje, 'Confirmar Cambios');
+    
+    if (result) {
+      this.guardarCambios();
+    }
+  }
+
+  private mostrarPreview(): void {
+    const alumno = this.alumnoEncontrado();
+    if (!alumno) return;
+
+    const estado = this.estadoSeleccionado();
+    const obs = this.observacion().trim();
+    
+    let mensaje = `Vista previa de cambios para ${alumno.nombre} ${alumno.apellido}:\n\n`;
+    mensaje += `Estado actual: ${alumno.estado}\n`;
+    mensaje += `Nuevo estado: ${estado}\n`;
+    
+    if (estado === 'inactivo' && obs) {
+      mensaje += `Observación: ${obs}\n`;
+    }
+    
+    mensaje += `\n¿Desea proceder con estos cambios?`;
+
+    this.alerts.info(mensaje, 'Vista Previa');
   }
 
   guardarCambios(): void {
@@ -326,10 +363,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
       return;
     }
     
-    // Indicar que estamos en modo de confirmación final
-    this.confirmacionFinal = true;
     this.cargando.set(true);
-    this.loadingMessage = 'Guardando cambios...';
     
     const payload = {
       estado,
@@ -341,7 +375,6 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
         delay(800), // Pequeño delay para mostrar la animación de guardado
         finalize(() => {
           this.cargando.set(false);
-          this.mostrarConfirmacion = false;
         })
       )
       .subscribe({
@@ -398,7 +431,6 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
     this.estadoSeleccionado.set('activo');
     this.observacion.set('');
     this.errorMensaje.set(null);
-    this.mostrarConfirmacion = false;
     
     // Focus en el campo de código
     setTimeout(() => document.getElementById('codigo-input')?.focus(), 100);
@@ -423,7 +455,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
         }
       }
     } catch (error) {
-      console.error('Error al cargar historial de búsquedas:', error);
+      this.alerts.error('Error al cargar historial de búsquedas', 'Error de Historial');
       // Resetear historial si hay error
       this.historialBusquedas = [];
       localStorage.removeItem('alumnosHistorial');
@@ -451,7 +483,7 @@ export class DeleteAlumnoComponent implements OnInit, OnDestroy {
     try {
       localStorage.setItem('alumnosHistorial', JSON.stringify(this.historialBusquedas));
     } catch (error) {
-      console.error('Error al guardar historial:', error);
+      this.alerts.error('Error al guardar historial', 'Error de Historial');
     }
   }
   

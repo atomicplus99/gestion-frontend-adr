@@ -12,6 +12,7 @@ import { ExcelImportRequest, ExcelImportResponse, ExcelWidgetData } from '../mod
 import { ExcelApiResponse } from '../models/responses/excel-api-response.model';
 import { AlumnoModuleExcel } from '../models/alumno-excel.model';
 import { ExcelUtils } from '../utils/excel.utils';
+import { AlertsService } from '../../../../../shared/alerts.service';
 
 
 
@@ -24,7 +25,7 @@ export class ExcelImportService {
     private readonly apiUrl = EXCEL_CONFIG.API.BASE_URL + EXCEL_CONFIG.API.ENDPOINTS.ALUMNOS;
     private readonly turnosUrl = EXCEL_CONFIG.API.BASE_URL + EXCEL_CONFIG.API.ENDPOINTS.TURNOS;
 
-    constructor(private http: HttpClient) { }
+    constructor(private http: HttpClient, private alerts: AlertsService) { }
 
     /**
      * Obtiene la lista de turnos disponibles
@@ -40,7 +41,7 @@ export class ExcelImportService {
                 return response || [];
             }),
             catchError(error => {
-                console.error('Error al cargar turnos:', error);
+                this.alerts.error('Error al cargar los turnos', 'Error de Carga');
                 return throwError(() => new Error(EXCEL_MESSAGES.ERROR.NETWORK));
             })
         );
@@ -126,7 +127,7 @@ export class ExcelImportService {
      * Maneja errores de importación sin generar datos ficticios
      */
     private manejarErrorImportacion(error: HttpErrorResponse): Observable<never> {
-        console.error('Error en importación:', error);
+        this.alerts.error('Error en la importación', 'Error de Importación');
 
         let mensajeError: string = EXCEL_MESSAGES.ERROR.IMPORT;
 
