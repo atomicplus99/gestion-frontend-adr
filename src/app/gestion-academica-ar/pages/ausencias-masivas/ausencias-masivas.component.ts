@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { AusenciasMasivasService } from './services/ausencias-masivas.service';
 import { WebSocketService } from '../../../shared/services/websocket.service';
-import { ConfirmationMessageComponent, ConfirmationMessage } from '../../../shared/components/confirmation-message/confirmation-message.component';
+import { AlertsService } from '../../../shared/alerts.service';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 import { 
   ResultadoEjecucion, 
@@ -21,7 +21,7 @@ import {
 @Component({
   selector: 'app-ausencias-masivas',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, ConfirmationMessageComponent, ConfirmationDialogComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, ConfirmationDialogComponent],
   templateUrl: './ausencias-masivas.component.html',
   styleUrls: ['./ausencias-masivas.component.css']
 })
@@ -43,13 +43,6 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
   historialEjecuciones: EjecucionAusenciasMasivas[] = [];
   ausenciasProgramadas: AusenciaProgramada[] = [];
   
-  // Sistema de mensajes personalizados
-  confirmationMessage: ConfirmationMessage = {
-    type: 'info',
-    title: '',
-    message: '',
-    show: false
-  };
 
   // Modal de confirmación para eliminar historial
   confirmationDialog: ConfirmationDialogData = {
@@ -84,7 +77,8 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private ausenciasMasivasService: AusenciasMasivasService,
     private webSocketService: WebSocketService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private alertsService: AlertsService
   ) {
     this.fechaActual = this.obtenerFechaActualPeru();
     this.horaActual = this.obtenerHoraActualPeru();
@@ -175,12 +169,7 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
       const resultado = await this.ausenciasMasivasService.eliminarHistorial(true).toPromise();
       
       if (resultado) {
-        this.confirmationMessage = {
-          type: 'success',
-          title: 'Historial Eliminado',
-          message: `Se eliminaron exitosamente ${resultado.registrosEliminados} registros del historial`,
-          show: true
-        };
+        this.alertsService.success(`Se eliminaron exitosamente ${resultado.registrosEliminados} registros del historial`, 'Historial Eliminado');
         
         // Limpiar el historial local
         this.historialEjecuciones = [];
@@ -197,12 +186,7 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
         mensajeError = error.message;
       }
       
-      this.confirmationMessage = {
-        type: 'error',
-        title: 'Error de Eliminación',
-        message: mensajeError,
-        show: true
-      };
+      this.alertsService.error(mensajeError, 'Error de Eliminación');
     } finally {
       this.isDeletingHistorial = false;
       this.cdr.detectChanges();
@@ -229,12 +213,7 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
         this.ausenciasProgramadas = [...this.ausenciasProgramadas, nuevaAusencia];
         
         // Mostrar mensaje de éxito
-        this.confirmationMessage = {
-          type: 'success',
-          title: 'Ausencia Programada',
-          message: `Se programó exitosamente una nueva ausencia para el ${this.formatearFecha(nuevaAusencia.fecha)} a las ${nuevaAusencia.hora}`,
-          show: true
-        };
+        this.alertsService.success(`Se programó exitosamente una nueva ausencia para el ${this.formatearFecha(nuevaAusencia.fecha)} a las ${nuevaAusencia.hora}`, 'Ausencia Programada');
         
         this.cdr.detectChanges();
       });
@@ -251,12 +230,7 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
         );
         
         // Mostrar mensaje de éxito
-        this.confirmationMessage = {
-          type: 'success',
-          title: 'Ausencia Cancelada',
-          message: 'Se canceló exitosamente una ausencia programada',
-          show: true
-        };
+        this.alertsService.success('Se canceló exitosamente una ausencia programada', 'Ausencia Cancelada');
         
         this.cdr.detectChanges();
       });
@@ -277,12 +251,7 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
         this.historialEjecuciones = data.historial;
         
         // Mostrar mensaje de éxito
-        this.confirmationMessage = {
-          type: 'success',
-          title: 'Programación Creada',
-          message: `Se programó exitosamente una nueva ausencia para el ${this.formatearFecha(data.programacion.fecha)} a las ${data.programacion.hora}`,
-          show: true
-        };
+        this.alertsService.success(`Se programó exitosamente una nueva ausencia para el ${this.formatearFecha(data.programacion.fecha)} a las ${data.programacion.hora}`, 'Programación Creada');
         
         this.cdr.detectChanges();
       });
@@ -303,12 +272,7 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
         this.historialEjecuciones = data.historial;
         
         // Mostrar mensaje de éxito
-        this.confirmationMessage = {
-          type: 'success',
-          title: 'Programación Cancelada',
-          message: 'La programación de ausencias fue cancelada exitosamente',
-          show: true
-        };
+        this.alertsService.success('La programación de ausencias fue cancelada exitosamente', 'Programación Cancelada');
         
         this.cdr.detectChanges();
       });
@@ -371,12 +335,7 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
         }
       });
       
-      this.confirmationMessage = {
-        type: 'error',
-        title: 'Formulario Inválido',
-        message: 'Por favor, corrige los errores en el formulario antes de continuar',
-        show: true
-      };
+      this.alertsService.error('Por favor, corrige los errores en el formulario antes de continuar', 'Formulario Inválido');
       return;
     }
 
@@ -386,12 +345,7 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
     
     // Validar que la fecha y hora sean futuras
     if (!this.validarFechaYHoraProgramacion(fecha, hora)) {
-      this.confirmationMessage = {
-        type: 'error',
-        title: 'Fecha/Hora Inválida',
-        message: 'No se puede programar para fechas u horas pasadas. La programación debe ser futura.',
-        show: true
-      };
+      this.alertsService.error('No se puede programar para fechas u horas pasadas. La programación debe ser futura.', 'Fecha/Hora Inválida');
       return;
     }
     
@@ -414,12 +368,7 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
       
       if (resultado) {
         
-        this.confirmationMessage = {
-          type: 'success',
-          title: 'Ausencias Programadas Exitosamente',
-          message: `Se programaron ausencias automáticas para el ${this.formatearFecha(fecha)} a las ${hora} para el turno: ${turnos}`,
-          show: true
-        };
+        this.alertsService.success(`Se programaron ausencias automáticas para el ${this.formatearFecha(fecha)} a las ${hora} para el turno: ${turnos}`, 'Ausencias Programadas Exitosamente');
         
         // Limpiar formulario (la lista se actualizará via WebSocket)
         this.limpiarFormulario();
@@ -440,12 +389,7 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
         mensajeError = error.message;
       }
       
-      this.confirmationMessage = {
-        type: 'error',
-        title: 'Error de Programación',
-        message: mensajeError,
-        show: true
-      };
+      this.alertsService.error(mensajeError, 'Error de Programación');
     } finally {
       this.isExecuting = false;
       this.cdr.detectChanges();
@@ -568,13 +512,6 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
     return this.isExecuting || this.ejecucionForm.invalid;
   }
 
-  /**
-   * Maneja la confirmación de mensajes
-   */
-  onConfirmMessage(): void {
-    this.confirmationMessage.show = false;
-    this.cdr.detectChanges();
-  }
 
   /**
    * Limpia el formulario y resetea el estado
@@ -617,21 +554,11 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
       // Verificar si la cancelación fue exitosa según la estructura actual del backend
       if (resultado?.cancelada === true || resultado?.estado === 'CANCELADA') {
         
-        this.confirmationMessage = {
-          type: 'success',
-          title: 'Ausencia Cancelada',
-          message: `Se canceló exitosamente la ausencia programada para el ${this.formatearFecha(ausencia.fecha)} a las ${ausencia.hora}`,
-          show: true
-        };
+        this.alertsService.success(`Se canceló exitosamente la ausencia programada para el ${this.formatearFecha(ausencia.fecha)} a las ${ausencia.hora}`, 'Ausencia Cancelada');
         
         // La lista se actualizará automáticamente via WebSocket
       } else {
-        this.confirmationMessage = {
-          type: 'error',
-          title: 'Error de Cancelación',
-          message: 'La cancelación no se completó correctamente',
-          show: true
-        };
+        this.alertsService.error('La cancelación no se completó correctamente', 'Error de Cancelación');
       }
     } catch (error: any) {
       
@@ -654,12 +581,7 @@ export class AusenciasMasivasComponent implements OnInit, OnDestroy {
         mensajeError = error.message;
       }
       
-      this.confirmationMessage = {
-        type: 'error',
-        title: tituloError,
-        message: mensajeError,
-        show: true
-      };
+      this.alertsService.error(mensajeError, tituloError);
     } finally {
       this.isCancelling = false;
       this.cdr.detectChanges();
