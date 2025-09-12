@@ -25,22 +25,16 @@ export class SuccessHandlerService {
       icon: 'success',
       title: 'Registro Completado',
       html: `
-        <div style="text-align: left; font-size: 14px; line-height: 1.6;">
-          <h4 style="color: #059669; margin-bottom: 15px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">Confirmación del Registro</h4>
+        <div style="text-align: center; font-size: 16px; line-height: 1.8;">
           <p><strong>Estudiante:</strong> ${nombreCompleto}</p>
           <p><strong>Código:</strong> ${codigo}</p>
-          <p><strong>Hora de llegada:</strong> ${datosRegistro.hora_de_llegada}</p>
-          ${datosRegistro.hora_salida ? `<p><strong>Hora de salida:</strong> ${datosRegistro.hora_salida}</p>` : ''}
-          <p><strong>Estado:</strong> ${datosRegistro.estado_asistencia}</p>
-          <p><strong>Fecha de registro:</strong> ${fechaTexto}</p>
-          <p><strong>Procesado a las:</strong> ${horaActual}</p>
-          <p><strong>Registrado por:</strong> ${nombreAuxiliar}</p>
-          <p><strong>ID de registro:</strong> ${idRegistro}</p>
+          <p><strong>Estado:</strong> <span style="color: #059669; font-weight: bold;">${datosRegistro.estado_asistencia}</span></p>
+          <p><strong>Hora:</strong> ${datosRegistro.hora_de_llegada}</p>
         </div>
       `,
       confirmButtonText: 'Continuar',
       confirmButtonColor: '#2563eb',
-      timer: 8000,
+      timer: 5000,
       timerProgressBar: true
     });
   }

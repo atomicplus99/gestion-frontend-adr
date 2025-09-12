@@ -3,6 +3,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AsistenciaService, RegistroAusenciaAlumno, ResponseAusenciaAlumno, EstudianteInfo } from './service/AusenciaService.service';
 import { CommonModule } from '@angular/common';
+import { AlertsService } from '../../../../shared/alerts.service';
 
 @Component({
   imports: [CommonModule, ReactiveFormsModule],
@@ -31,7 +32,8 @@ export class RegistroAusenciasComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private asistenciaService: AsistenciaService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private alertsService: AlertsService
   ) {
     // Inicializar formulario personal
     this.personalForm = this.fb.group({
@@ -117,7 +119,7 @@ export class RegistroAusenciasComponent implements OnInit {
         this.cdr.markForCheck();
       },
       error: (error) => {
-        console.error('❌ Error buscando estudiante:', error);
+        this.alertsService.error('Error al buscar el estudiante', 'Error de Búsqueda');
         this.buscandoEstudiante = false;
         this.estudianteEncontrado = null;
         
@@ -205,8 +207,8 @@ export class RegistroAusenciasComponent implements OnInit {
       error: (error) => {
         this.loadingPersonal = false;
         
-        // Debug: Log del error completo
-        console.error('Error completo:', error);
+        // Mostrar error con SweetAlert
+        this.alertsService.error('Error al registrar la ausencia del estudiante', 'Error de Registro');
         
         // Manejar diferentes estructuras de error
         let mensajeError = 'Error al registrar ausencia del estudiante';

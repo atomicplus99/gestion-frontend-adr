@@ -11,14 +11,14 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="bg-white rounded-lg shadow-md border border-blue-200 h-fit">
-      <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-lg">
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 h-fit">
+      <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
         <div class="flex items-center space-x-3">
           <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
           </svg>
           <div>
-            <h2 class="text-lg font-bold">Información del Estudiante</h2>
+            <h2 class="text-lg font-semibold">Información del Estudiante</h2>
             <p class="text-blue-100 text-sm">Datos del estudiante encontrado</p>
           </div>
         </div>
@@ -26,77 +26,77 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
       
       <div class="p-6">
         <!-- Estudiante Encontrado -->
-        <div *ngIf="alumnoEncontrado && !asistenciaExistente" class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 shadow-sm mb-6">
+        <div *ngIf="alumnoEncontrado && !asistenciaExistente" class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
           <div class="flex items-center space-x-4 mb-6">
-            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <div class="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center">
               <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
               </svg>
             </div>
             <div>
-              <h3 class="text-2xl font-bold text-blue-800">Estudiante Encontrado</h3>
+              <h3 class="text-2xl font-semibold text-blue-800">Estudiante Encontrado</h3>
               <p class="text-blue-600 text-lg">Listo para registro de asistencia</p>
             </div>
           </div>
           
-          <div class="bg-white rounded-xl p-6 border border-blue-200 space-y-4 shadow-sm">
+          <div class="bg-white rounded-lg p-6 border border-blue-200 space-y-4">
             <div class="grid grid-cols-2 gap-4">
-              <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
+              <div class="bg-blue-50 rounded-md p-4 border border-blue-200">
                 <span class="text-sm font-medium text-blue-700">Código</span>
                 <p class="font-bold font-mono text-blue-900 text-lg">{{ alumnoEncontrado.codigo }}</p>
               </div>
-              <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
+              <div class="bg-blue-50 rounded-md p-4 border border-blue-200">
                 <span class="text-sm font-medium text-blue-700">Fecha</span>
                 <p class="font-bold text-blue-900 text-lg">{{ esFechaHoy ? 'Hoy' : fechaSeleccionada }}</p>
               </div>
             </div>
             
-            <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
+            <div class="bg-blue-50 rounded-md p-4 border border-blue-200">
               <span class="text-sm font-medium text-blue-700">Nombre Completo</span>
               <p class="font-bold text-blue-900 text-xl">{{ alumnoEncontrado.nombre }} {{ alumnoEncontrado.apellido }}</p>
             </div>
             
-            <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
+            <div class="bg-blue-50 rounded-md p-4 border border-blue-200">
               <span class="text-sm font-medium text-blue-700">Información Académica</span>
               <p class="font-bold text-blue-900 text-xl">{{ alumnoEncontrado.nivel }} - {{ alumnoEncontrado.grado }}° {{ alumnoEncontrado.seccion }}</p>
             </div>
           </div>
           
-                     <div class="mt-6 p-4 bg-blue-100 rounded-xl border border-blue-300">
-             <div class="flex items-center justify-center">
-               <svg class="w-5 h-5 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-               </svg>
-               <p class="text-blue-800 font-semibold text-center">
-                 Sin asistencia registrada para {{ esFechaHoy ? 'hoy' : 'la fecha seleccionada' }}. Puede proceder con el registro manual.
-               </p>
-             </div>
-           </div>
+          <div class="mt-6 p-4 bg-green-50 rounded-md border border-green-200">
+            <div class="flex items-center justify-center">
+              <svg class="w-5 h-5 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <p class="text-green-800 font-medium text-center">
+                Sin asistencia registrada para {{ esFechaHoy ? 'hoy' : 'la fecha seleccionada' }}. Puede proceder con el registro manual.
+              </p>
+            </div>
+          </div>
         </div>
 
       <!-- Estudiante con Asistencia -->
-      <div *ngIf="asistenciaExistente" class="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-6 shadow-sm">
+      <div *ngIf="asistenciaExistente" class="bg-red-50 border border-red-200 rounded-lg p-6">
         <div class="flex items-center space-x-4 mb-6">
-          <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl flex items-center justify-center shadow-lg">
+          <div class="w-16 h-16 bg-red-600 rounded-lg flex items-center justify-center">
             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
             </svg>
           </div>
           <div>
-            <h3 class="text-2xl font-bold text-red-800">Registro Bloqueado</h3>
+            <h3 class="text-2xl font-semibold text-red-800">Registro Bloqueado</h3>
             <p class="text-red-600 text-lg">Asistencia ya registrada</p>
           </div>
         </div>
         
-        <div class="bg-white rounded-xl p-6 border border-red-200 space-y-4 shadow-sm">
+        <div class="bg-white rounded-lg p-6 border border-red-200 space-y-4">
           <p class="text-red-700 font-semibold mb-4 text-lg">Ya tiene asistencia registrada para {{ esFechaHoy ? 'hoy' : fechaSeleccionada }}:</p>
           
           <div class="grid grid-cols-2 gap-4">
-            <div class="bg-red-50 rounded-lg p-4 border border-red-100">
+            <div class="bg-red-50 rounded-md p-4 border border-red-200">
               <span class="text-sm font-medium text-red-700">Hora Llegada</span>
               <p class="font-bold text-red-900 text-lg">{{ asistenciaExistente.hora_de_llegada }}</p>
             </div>
-            <div class="bg-red-50 rounded-lg p-4 border border-red-100">
+            <div class="bg-red-50 rounded-md p-4 border border-red-200">
               <span class="text-sm font-medium text-red-700">Estado</span>
               <p class="font-bold" [ngClass]="getEstadoClass(asistenciaExistente.estado_asistencia)">
                 {{ asistenciaExistente.estado_asistencia }}
@@ -104,12 +104,12 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
             </div>
           </div>
           
-          <div *ngIf="asistenciaExistente.hora_salida" class="bg-red-50 rounded-lg p-4 border border-red-100">
+          <div *ngIf="asistenciaExistente.hora_salida" class="bg-red-50 rounded-md p-4 border border-red-200">
             <span class="text-sm font-medium text-red-700">Hora Salida</span>
             <p class="font-bold text-red-900 text-lg">{{ asistenciaExistente.hora_salida }}</p>
           </div>
           
-          <div class="bg-red-50 rounded-lg p-4 border border-red-100">
+          <div class="bg-red-50 rounded-md p-4 border border-red-200">
             <span class="text-sm font-medium text-red-700">Fecha</span>
             <p class="font-bold text-red-900 text-lg">{{ asistenciaExistente.fecha | date:'dd/MM/yyyy' }}</p>
           </div>
@@ -144,15 +144,15 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
       </div>
 
       <!-- Estado Inicial -->
-      <div *ngIf="!alumnoEncontrado && !asistenciaExistente" class="bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
-        <div class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-          <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div *ngIf="!alumnoEncontrado && !asistenciaExistente" class="bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg p-12 text-center">
+        <div class="w-20 h-20 bg-blue-200 rounded-lg flex items-center justify-center mx-auto mb-6">
+          <svg class="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
           </svg>
         </div>
-        <h3 class="text-2xl font-semibold text-gray-600 mb-3">Esperando Búsqueda</h3>
-        <p class="text-gray-500 text-lg mb-2">Ingrese el código de un estudiante para comenzar</p>
-        <p class="text-gray-400">Fecha: {{ esFechaHoy ? 'Hoy' : fechaSeleccionada }}</p>
+        <h3 class="text-2xl font-semibold text-blue-600 mb-3">Esperando Búsqueda</h3>
+        <p class="text-blue-500 text-lg mb-2">Ingrese el código de un estudiante para comenzar</p>
+        <p class="text-blue-400">Fecha: {{ esFechaHoy ? 'Hoy' : fechaSeleccionada }}</p>
       </div>
     </div>
   `

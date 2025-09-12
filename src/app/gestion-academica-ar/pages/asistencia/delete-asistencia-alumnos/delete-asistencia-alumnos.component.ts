@@ -11,6 +11,7 @@ import {
   AnularAsistenciaRequest
 } from './service/AnularAsistencia.service';
 import { UserStoreService } from '../../../../auth/store/user.store'; // 🆕 IMPORTAR USERSTORE
+import { AlertsService } from '../../../../shared/alerts.service';
 
 @Component({
   selector: 'app-anular-asistencias',
@@ -57,7 +58,8 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
   constructor(
     private asistenciaService: AsistenciaService,
     private userStore: UserStoreService, // 🆕 INYECTAR USERSTORE
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private alertsService: AlertsService
   ) {
     this.inicializarFecha();
   }
@@ -251,7 +253,7 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
         this.forzarDeteccionCambios();
       },
       error: (error) => {
-        console.error('❌ Error buscando estudiante:', error);
+        this.alertsService.error('Error al buscar el estudiante', 'Error de Búsqueda');
         this.buscandoEstudiante = false;
         this.estudianteSeleccionado = null;
         this.asistenciasHoy = [];
@@ -297,7 +299,7 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
         this.forzarDeteccionCambios();
       },
       error: (error) => {
-        console.error(`❌ Error cargando asistencias de ${this.fechaSeleccionada}:`, error);
+        this.alertsService.error(`Error al cargar asistencias de ${this.fechaSeleccionada}`, 'Error de Carga');
         this.cargandoAsistencias = false;
         
         if (error.status === 404) {
@@ -478,7 +480,7 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
         this.forzarDeteccionCambios();
       },
       error: (error) => {
-        console.error('❌ Error anulando asistencia:', error);
+        this.alertsService.error('Error al anular la asistencia', 'Error de Anulación');
         this.procesandoAnulacion = false;
         this.cerrarModal();
         

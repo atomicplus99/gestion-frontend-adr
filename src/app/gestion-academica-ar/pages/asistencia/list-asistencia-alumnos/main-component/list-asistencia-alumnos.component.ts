@@ -7,6 +7,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { Asistencia, AsistenciaConAlumno, AsistenciaService } from '../services/ListAsistencia.service';
+import { AlertsService } from '../../../../../shared/alerts.service';
 
 @Component({
   selector: 'app-lista-asistencia',
@@ -62,7 +63,7 @@ export class ListaAsistenciaComponent implements OnInit {
   mostrarModalDetalle = false;
   alumnoDetalle: AsistenciaConAlumno | null = null;
 
-  constructor(private asistenciaService: AsistenciaService,  private cdr: ChangeDetectorRef) { }
+  constructor(private asistenciaService: AsistenciaService, private cdr: ChangeDetectorRef, private alertsService: AlertsService) { }
 
   // Helper para obtener el turno de forma segura (puede ser string o objeto Turno)
   getTurnoDisplay(turno: any): string {
@@ -124,7 +125,7 @@ export class ListaAsistenciaComponent implements OnInit {
         this.cdr.detectChanges(); // Forzar actualización cuando termine
       },
       error: (error) => {
-        console.error('Error al cargar asistencias:', error);
+        this.alertsService.error('No se pudieron cargar los datos de asistencia. Verifique que el servidor esté funcionando.', 'Error de Carga');
         this.error = 'No se pudieron cargar los datos de asistencia. Verifique que el servidor esté funcionando.';
         this.loading = false;
         this.cdr.detectChanges(); // Forzar actualización del error
@@ -139,7 +140,7 @@ export class ListaAsistenciaComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (error) => {
-        console.error('Error al cargar turnos:', error);
+        this.alertsService.error('Error al cargar los turnos disponibles', 'Error de Carga');
         this.extraerTurnosDeAsistencias();
         this.cdr.detectChanges();
       }
@@ -390,7 +391,7 @@ export class ListaAsistenciaComponent implements OnInit {
         this.cdr.detectChanges(); // Forzar detección de cambios aquí también
       },
       error: (error) => {
-        console.error('Error al cargar detalle del alumno:', error);
+        this.alertsService.error('Error al cargar el detalle del alumno', 'Error de Carga');
         this.cerrarModalDetalle();
         this.cdr.detectChanges();
       }

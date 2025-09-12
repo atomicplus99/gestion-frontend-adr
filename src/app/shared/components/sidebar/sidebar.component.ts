@@ -71,6 +71,7 @@ export class SidebarComponent {
             { label: 'Lista de Asistencia', link: '/home/asistencia/list-asistencia-alumnos' },
             { label: 'Actualizar Asistencia', link: '/home/asistencia/update-asistencia-alumnos' },
             { label: 'Anular Asistencia', link: '/home/asistencia/delete-asistencia-alumnos' },
+            { label: 'Auditoría Asistencia', link: '/home/asistencia/audit-asistencia-alumnos' },
           ],
         },
         {

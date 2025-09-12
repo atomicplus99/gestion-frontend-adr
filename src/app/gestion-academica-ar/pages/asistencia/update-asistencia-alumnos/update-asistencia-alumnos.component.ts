@@ -7,13 +7,13 @@ import { HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { UserStoreService } from '../../../../auth/store/user.store';
-import { ConfirmationMessageComponent, ConfirmationMessage } from '../../../../shared/components/confirmation-message/confirmation-message.component';
+import { AlertsService } from '../../../../shared/alerts.service';
 
 // Importar el UserStoreService
 // Ajusta la ruta según tu estructura
 
 @Component({
-  imports: [ReactiveFormsModule, FormsModule, HttpClientModule, CommonModule, ConfirmationMessageComponent],
+  imports: [ReactiveFormsModule, FormsModule, HttpClientModule, CommonModule],
   selector: 'app-actualizar-asistencia',
   templateUrl: './update-asistencia-alumnos.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush // Optimización de rendimiento
@@ -41,26 +41,18 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
     { value: EstadoAsistencia.PUNTUAL, label: 'Puntual' },
     { value: EstadoAsistencia.TARDANZA, label: 'Tardanza' },
     { value: EstadoAsistencia.AUSENTE, label: 'Ausente' },
-    { value: EstadoAsistencia.ANULADO, label: 'Anulado' },
-    { value: EstadoAsistencia.JUSTIFICADO, label: 'Justificado' }
+    { value: EstadoAsistencia.ANULADO, label: 'Anulado' }
   ];
 
   // Subject para manejo de suscripciones
   private destroy$ = new Subject<void>();
 
-  // Mensaje de confirmación personalizado
-  confirmationMessage: ConfirmationMessage = {
-    type: 'info',
-    title: '',
-    message: '',
-    show: false
-  };
-
   constructor(
     private fb: FormBuilder,
     private asistenciaService: AsistenciaService,
     private userStore: UserStoreService, // 🔥 Inyectar UserStoreService
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private alertsService: AlertsService
   ) {
     this.initializeForms();
     this.inicializarFecha();
@@ -84,12 +76,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
   // ========================================
   private verificarPermisosAuxiliar(): void {
     if (!this.puedeActualizarAsistencias) {
-      this.confirmationMessage = {
-        type: 'error',
-        title: 'Sin Permisos',
-        message: 'No tienes permisos de auxiliar para actualizar asistencias.',
-        show: true
-      };
+      this.alertsService.error('No tienes permisos de auxiliar para actualizar asistencias.', 'Sin Permisos');
     }
   }
 
@@ -266,12 +253,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
           
           // Mostrar mensaje de error específico
           const nombreCompleto = response.alumno ? `${response.alumno.nombre} ${response.alumno.apellido}` : 'el estudiante';
-          this.confirmationMessage = {
-            type: 'error',
-            title: 'Sin Asistencia',
-            message: `No se encontró asistencia en la fecha ${this.fechaSeleccionada} para ${nombreCompleto}`,
-            show: true
-          };
+          this.alertsService.error(`No se encontró asistencia en la fecha ${this.fechaSeleccionada} para ${nombreCompleto}`, 'Sin Asistencia');
         }
         
         this.isLoading = false;
@@ -282,12 +264,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
         console.error('💥 Error buscando alumno:', error);
         
         // Mostrar error personalizado
-        this.confirmationMessage = {
-          type: 'error',
-          title: 'Error',
-          message: error,
-          show: true
-        };
+        this.alertsService.error(error, 'Error');
         
         this.showUpdateForm = false;
         this.isLoading = false;
@@ -346,12 +323,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
 
 
     if (!this.tieneIdValido()) {
-      this.confirmationMessage = {
-        type: 'error',
-        title: 'Error de Usuario',
-        message: 'No se pudo obtener la información del usuario. Verifica tu sesión.',
-        show: true
-      };
+      this.alertsService.error('No se pudo obtener la información del usuario. Verifica tu sesión.', 'Error de Usuario');
       return;
     }
 
@@ -406,12 +378,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
 
     } else {
       console.error('❌ [ACTUALIZAR ASISTENCIA] ERROR: No se pudo determinar el actor de la actualización');
-      this.confirmationMessage = {
-        type: 'error',
-        title: 'Error de Usuario',
-        message: 'No se pudo determinar los permisos del usuario. Verifica tu sesión.',
-        show: true
-      };
+      this.alertsService.error('No se pudo determinar los permisos del usuario. Verifica tu sesión.', 'Error de Usuario');
       this.isLoadingUpdate = false;
       this.forzarDeteccionCambios();
       return;
@@ -476,12 +443,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
         this.forzarDeteccionCambios();
 
         // Mostrar éxito con mensaje personalizado
-        this.confirmationMessage = {
-          type: 'success',
-          title: '¡Actualización Exitosa!',
-          message: 'La asistencia se ha actualizado correctamente',
-          show: true
-        };
+        this.alertsService.success('La asistencia se ha actualizado correctamente', '¡Actualización Exitosa!');
       },
       error: (error) => {
 
@@ -499,12 +461,7 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
         this.isLoadingUpdate = false;
         
         // Mostrar error personalizado
-        this.confirmationMessage = {
-          type: 'error',
-          title: 'Error al Actualizar',
-          message: error,
-          show: true
-        };
+        this.alertsService.error(error, 'Error al Actualizar');
         
         this.forzarDeteccionCambios();
       }
@@ -544,25 +501,9 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
    * Muestra error cuando no hay permisos de auxiliar
    */
   private mostrarErrorSinPermisos(): void {
-    this.confirmationMessage = {
-      type: 'error',
-      title: 'Sin Permisos de Auxiliar',
-      message: 'Necesitas permisos de auxiliar para realizar esta acción.',
-      show: true
-    };
+    this.alertsService.error('Necesitas permisos de auxiliar para realizar esta acción.', 'Sin Permisos de Auxiliar');
   }
 
-  /**
-   * Maneja la confirmación del mensaje de confirmación
-   */
-  onConfirmMessage(): void {
-    this.confirmationMessage.show = false;
-    
-    // Si es un mensaje de éxito, limpiar el formulario
-    if (this.confirmationMessage.type === 'success') {
-      this.limpiarFormularioCompleto();
-    }
-  }
 
   /**
    * Marca todos los campos de un FormGroup como touched para mostrar validaciones

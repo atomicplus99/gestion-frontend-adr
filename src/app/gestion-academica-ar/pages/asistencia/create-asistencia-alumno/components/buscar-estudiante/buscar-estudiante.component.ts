@@ -3,7 +3,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef, AfterViewInit, ChangeD
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
-import { ConfirmationMessageComponent, ConfirmationMessage } from '../../../../../../shared/components/confirmation-message/confirmation-message.component';
+import { AlertsService } from '../../../../../../shared/alerts.service';
 
 import { SelectorFechaComponent } from '../selector-fecha/selector-fecha.component';
 import { RegistroAsistenciaServiceManual } from '../../services/register-asistencia.service';
@@ -14,14 +14,14 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
   imports: [CommonModule, ReactiveFormsModule, SelectorFechaComponent],
   changeDetection: ChangeDetectionStrategy.OnPush, // Optimización de rendimiento
   template: `
-    <div class="bg-white rounded-lg shadow-md border border-blue-200 h-fit sticky top-6">
-      <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-lg">
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 h-fit sticky top-6">
+      <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
         <div class="flex items-center space-x-3">
           <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
           <div>
-            <h2 class="text-lg font-bold">Buscar Estudiante</h2>
+            <h2 class="text-lg font-semibold">Buscar Estudiante</h2>
             <p class="text-blue-100 text-sm">Ingrese el código para verificar</p>
           </div>
         </div>
@@ -46,7 +46,7 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
                 placeholder="Código del estudiante"
                 autocomplete="off"
                 spellcheck="false"
-                class="w-full px-4 py-3 text-base border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                class="w-full px-4 py-3 text-base border border-slate-300 rounded-md focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all duration-200"
                 [class.border-red-400]="buscarForm.get('codigo')?.invalid && buscarForm.get('codigo')?.touched"
                 [class.border-green-400]="buscarForm.get('codigo')?.valid && buscarForm.get('codigo')?.value?.length >= 8"
                 (input)="onInputChange($event)"
@@ -72,7 +72,7 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
               type="submit"
               [disabled]="verificando || buscarForm.invalid"
               (click)="onClickBuscar($event)"
-              class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200"
+              class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-all duration-200"
               [class.animate-pulse]="verificando">
               <span *ngIf="verificando" class="flex items-center justify-center">
                 <svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
@@ -92,21 +92,21 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
             <!-- Estado del Input -->
             <div class="space-y-2">
               <div *ngIf="getCodigoLength() > 0 && getCodigoLength() < 8" 
-                   class="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <svg class="w-4 h-4 text-blue-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   class="flex items-center p-3 bg-slate-50 rounded-md border border-slate-200">
+                <svg class="w-4 h-4 text-slate-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span class="text-sm text-blue-700 font-medium">{{ getCodigoLength() }}/8 caracteres mínimos</span>
+                <span class="text-sm text-slate-700 font-medium">{{ getCodigoLength() }}/8 caracteres mínimos</span>
               </div>
               <div *ngIf="buscarForm.get('codigo')?.valid && getCodigoLength() >= 8" 
-                   class="flex items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                   class="flex items-center p-3 bg-green-50 rounded-md border border-green-200">
                 <svg class="w-4 h-4 text-green-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
                 <span class="text-sm text-green-700 font-medium">Código válido - Búsqueda automática activada</span>
               </div>
               <div *ngIf="buscarForm.get('codigo')?.invalid && buscarForm.get('codigo')?.touched" 
-                   class="flex items-center p-3 bg-red-50 rounded-lg border border-red-200">
+                   class="flex items-center p-3 bg-red-50 rounded-md border border-red-200">
                 <svg class="w-4 h-4 text-red-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
@@ -119,12 +119,12 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
     </div>
 
     <!-- Panel de Control Rápido -->
-    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 mt-6 p-6">
-      <h3 class="text-lg font-bold text-gray-800 mb-4">🚀 Acciones Rápidas</h3>
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 mt-6 p-6">
+      <h3 class="text-lg font-semibold text-slate-800 mb-4">Acciones Rápidas</h3>
       <div class="space-y-3">
         <button 
           (click)="resetearTodo()"
-          class="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors duration-200 flex items-center justify-center">
+          class="w-full px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium rounded-md transition-colors duration-200 flex items-center justify-center">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
           </svg>
@@ -133,7 +133,7 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
         <button 
           *ngIf="tieneAsistencia"
           (click)="buscarOtro()"
-          class="w-full px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium rounded-lg transition-colors duration-200 flex items-center justify-center">
+          class="w-full px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium rounded-md transition-colors duration-200 flex items-center justify-center">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
@@ -141,8 +141,8 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
         </button>
         
         <!-- Información del estado actual -->
-        <div *ngIf="tieneAsistencia || alumnoEncontrado" class="p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <p class="text-xs text-blue-800 font-medium">
+        <div *ngIf="tieneAsistencia || alumnoEncontrado" class="p-3 bg-blue-50 rounded-md border border-blue-200">
+          <p class="text-xs text-blue-700 font-medium">
             {{ estadoActualTexto }}
           </p>
         </div>
@@ -158,18 +158,11 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
   private searchTimeout: any;
   private destroy$ = new Subject<void>();
 
-  // Mensaje de confirmación personalizado
-  confirmationMessage: ConfirmationMessage = {
-    type: 'info',
-    title: '',
-    message: '',
-    show: false
-  };
-
   constructor(
     private fb: FormBuilder,
     private registroService: RegistroAsistenciaServiceManual,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private alertsService: AlertsService
   ) {
     this.initForm();
   }
@@ -402,20 +395,9 @@ export class BuscarEstudianteComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   private async mostrarError(titulo: string, mensaje: string): Promise<void> {
-    this.confirmationMessage = {
-      type: 'error',
-      title: titulo,
-      message: mensaje,
-      show: true
-    };
+    this.alertsService.error(mensaje, titulo);
   }
 
-  /**
-   * Maneja la confirmación del mensaje de confirmación
-   */
-  onConfirmMessage(): void {
-    this.confirmationMessage.show = false;
-  }
 
   // ========================================
   // ACCIONES DE CONTROL

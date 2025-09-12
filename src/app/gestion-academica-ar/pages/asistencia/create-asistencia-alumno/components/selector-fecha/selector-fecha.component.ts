@@ -12,18 +12,18 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="p-4 bg-blue-50 rounded-xl border border-blue-200">
-      <h4 class="text-sm font-bold text-blue-800 mb-3">📅 Fecha de Registro</h4>
+    <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+      <h4 class="text-sm font-semibold text-blue-800 mb-3">Fecha de Registro</h4>
       
       <!-- Fecha actual vs personalizada -->
       <div class="flex items-center justify-between mb-3">
         <span class="text-sm font-medium text-blue-700">
-          {{ esFechaHoy ? '📅 Hoy' : '📅 Fecha personalizada' }}
+          {{ esFechaHoy ? 'Fecha actual' : 'Fecha personalizada' }}
         </span>
         <button 
           type="button"
           (click)="toggleFechaPersonalizada()"
-          class="text-xs px-3 py-1 rounded-full transition-colors"
+          class="text-xs px-3 py-1 rounded-md transition-colors"
           [ngClass]="{
             'bg-blue-600 text-white': usarFechaPersonalizada,
             'bg-blue-200 text-blue-700 hover:bg-blue-300': !usarFechaPersonalizada
@@ -38,7 +38,7 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
         [value]="fechaSeleccionada"
         (change)="onFechaChange($event)"
         [disabled]="!usarFechaPersonalizada"
-        class="w-full px-3 py-2 text-sm border-2 border-blue-300 rounded-lg transition-all"
+        class="w-full px-3 py-2 text-sm border border-blue-300 rounded-md transition-all focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         [class.bg-gray-100]="!usarFechaPersonalizada"
         [class.border-blue-500]="usarFechaPersonalizada"
       />
@@ -61,7 +61,7 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
 
       <!-- Información de la fecha -->
       <div class="mt-3 text-xs text-blue-600">
-        <p>🔍 Buscará asistencia para: <strong>{{ fechaSeleccionada }}</strong></p>
+        <p>Buscará asistencia para: <strong>{{ fechaSeleccionada }}</strong></p>
       </div>
     </div>
   `

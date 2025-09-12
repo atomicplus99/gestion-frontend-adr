@@ -1,6 +1,6 @@
 <!-- formulario-registro.component.html -->
-<div *ngIf="puedeRegistrar" class="bg-white rounded-lg shadow-lg border border-gray-200 h-fit w-full">
-  <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-lg">
+<div *ngIf="puedeRegistrar" class="bg-white rounded-lg shadow-sm border border-slate-200 h-fit w-full">
+  <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
     <div class="flex items-center space-x-3">
       <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -8,7 +8,7 @@
         </path>
       </svg>
       <div>
-        <h2 class="text-lg font-bold">Registrar Asistencia</h2>
+        <h2 class="text-lg font-semibold">Registrar Asistencia</h2>
         <p class="text-blue-100 text-sm">{{ tipoRegistroTexto }}</p>
         <p class="text-blue-100 text-xs mt-1">
           Registrando como: <span class="font-semibold">{{ rolUsuarioActual }} - {{ nombreUsuarioActual }}</span>
@@ -39,24 +39,24 @@
       <!-- Horarios - En dos columnas -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-bold text-gray-800 mb-2">
+          <label class="block text-sm font-semibold text-blue-800 mb-2">
             Hora de Llegada <span class="text-red-500">*</span>
           </label>
           <input type="time" formControlName="hora_de_llegada"
-            class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            class="w-full px-4 py-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all"
             [class.border-red-400]="registroForm.get('hora_de_llegada')?.invalid && registroForm.get('hora_de_llegada')?.touched"
             [class.border-green-400]="registroForm.get('hora_de_llegada')?.valid && registroForm.get('hora_de_llegada')?.value" />
         </div>
 
         <div>
-          <label class="block text-sm font-bold text-gray-800 mb-2">
-            Hora de Salida <span class="text-gray-500">(Opcional)</span>
+          <label class="block text-sm font-semibold text-blue-800 mb-2">
+            Hora de Salida <span class="text-blue-500">(Opcional)</span>
           </label>
           <input type="time" formControlName="hora_salida"
-            class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+            class="w-full px-4 py-3 border border-slate-300 rounded-md focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all"
             [class.border-red-400]="registroForm.get('hora_salida')?.invalid && registroForm.get('hora_salida')?.touched"
             [class.border-green-400]="registroForm.get('hora_salida')?.valid && registroForm.get('hora_salida')?.value" />
-          <p class="text-xs text-gray-500 mt-1">
+          <p class="text-xs text-blue-500 mt-1">
             Si especifica hora de salida, se considerará un registro completo
           </p>
         </div>
@@ -64,48 +64,46 @@
 
       <!-- Estado -->
       <div>
-        <label class="block text-sm font-bold text-gray-800 mb-3">
+        <label class="block text-sm font-semibold text-blue-800 mb-3">
           Estado <span class="text-red-500">*</span>
-          <span class="text-xs font-normal text-gray-500">(Solo registro manual)</span>
+          <span class="text-xs font-normal text-blue-500">(Solo registro manual)</span>
         </label>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <label
-            class="flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all hover:bg-blue-50"
+            class="flex items-center p-3 border border-blue-300 rounded-md cursor-pointer transition-all hover:bg-blue-50"
             [class.border-green-500]="registroForm.get('estado_asistencia')?.value === 'PUNTUAL'"
             [class.bg-green-50]="registroForm.get('estado_asistencia')?.value === 'PUNTUAL'">
             <input type="radio" value="PUNTUAL" formControlName="estado_asistencia"
               class="w-4 h-4 text-green-600 mr-3" />
             <div>
-              <div class="font-bold text-green-700">PUNTUAL</div>
-              <div class="text-xs text-gray-600">Llegó a tiempo según el horario del turno</div>
+              <div class="font-semibold text-green-700">PUNTUAL</div>
+              <div class="text-xs text-blue-600">Llegó a tiempo según el horario del turno</div>
             </div>
           </label>
 
           <label
-            class="flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all hover:bg-blue-50"
+            class="flex items-center p-3 border border-blue-300 rounded-md cursor-pointer transition-all hover:bg-blue-50"
             [class.border-yellow-500]="registroForm.get('estado_asistencia')?.value === 'TARDANZA'"
             [class.bg-yellow-50]="registroForm.get('estado_asistencia')?.value === 'TARDANZA'">
             <input type="radio" value="TARDANZA" formControlName="estado_asistencia"
               class="w-4 h-4 text-yellow-600 mr-3" />
             <div>
-              <div class="font-bold text-yellow-700">TARDANZA</div>
-              <div class="text-xs text-gray-600">Llegó después del horario establecido</div>
+              <div class="font-semibold text-yellow-700">TARDANZA</div>
+              <div class="text-xs text-blue-600">Llegó después del horario establecido</div>
             </div>
           </label>
         </div>
-
-                 
       </div>
 
       <!-- Motivo -->
       <div>
-        <label class="block text-sm font-bold text-gray-800 mb-2">
+        <label class="block text-sm font-semibold text-slate-800 mb-2">
           Motivo <span class="text-red-500">*</span>
         </label>
         <div class="relative">
           <textarea formControlName="motivo" rows="4"
             placeholder="Explique el motivo del registro manual (ej: alumno olvidó QR, problema con scanner, etc.)"
-            class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
+            class="w-full px-4 py-3 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
             [class.border-red-400]="registroForm.get('motivo')?.invalid && registroForm.get('motivo')?.touched"
             [class.border-green-400]="registroForm.get('motivo')?.valid && registroForm.get('motivo')?.value"></textarea>
           <div class="absolute bottom-2 right-2 text-xs px-2 py-1 rounded" [ngClass]="getCharCountClass()">
@@ -115,20 +113,20 @@
       </div>
 
              <!-- Botones -->
-       <div class="space-y-4 pt-6 border-t border-gray-200">
+      <div class="space-y-4 pt-6 border-t border-blue-200">
          <!-- Vista previa de payload -->
          <div class="flex justify-end">
            <button type="button" (click)="togglePayload()"
-             class="px-6 py-3 text-sm border border-blue-300 rounded-lg text-blue-700 hover:bg-blue-50 transition-all">
+            class="px-6 py-3 text-sm border border-blue-300 rounded-md text-blue-700 hover:bg-blue-50 transition-all">
              {{ mostrarPayload ? 'Ocultar payload' : 'Ver payload' }}
            </button>
          </div>
-         <pre *ngIf="mostrarPayload" class="text-xs bg-gray-50 border border-gray-200 rounded-lg p-3 overflow-auto">
+        <pre *ngIf="mostrarPayload" class="text-xs bg-blue-50 border border-blue-200 rounded-md p-3 overflow-auto">
 {{ payloadPreview | json }}
          </pre>
 
          <button type="submit" [disabled]="registrando || registroForm.invalid || !puedeRegistrar"
-           class="w-full px-8 py-4 font-bold text-lg rounded-xl transition-all duration-200 shadow-lg"
+          class="w-full px-8 py-4 font-semibold text-lg rounded-md transition-all duration-200 shadow-sm"
            [ngClass]="getSubmitButtonClass()">
            <span *ngIf="registrando" class="flex items-center justify-center">
              <svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
@@ -154,7 +152,7 @@
          </button>
 
          <button type="button" (click)="resetearTodo()"
-           class="w-full px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold text-lg rounded-xl hover:bg-gray-50 transition-all duration-200 flex items-center justify-center shadow-md">
+          class="w-full px-8 py-4 border border-blue-300 text-blue-700 font-semibold text-lg rounded-md hover:bg-blue-50 transition-all duration-200 flex items-center justify-center">
            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
            </svg>
@@ -166,15 +164,15 @@
 </div>
 
 <!-- Estado cuando no puede registrar -->
-<div *ngIf="!puedeRegistrar" class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center">
+<div *ngIf="!puedeRegistrar" class="bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg p-8 text-center">
   <div class="flex flex-col items-center">
-    <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg class="w-16 h-16 text-blue-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
       </path>
     </svg>
-    <h3 class="text-lg font-semibold text-gray-600 mb-2">Formulario No Disponible</h3>
-    <p class="text-gray-500 text-center max-w-sm">
+    <h3 class="text-lg font-semibold text-blue-600 mb-2">Formulario No Disponible</h3>
+    <p class="text-blue-500 text-center max-w-sm">
       {{ !puedeRegistrar ? 'No tiene permisos para registrar asistencia' : 'Busque un estudiante válido para habilitar el registro' }}
     </p>
   </div>

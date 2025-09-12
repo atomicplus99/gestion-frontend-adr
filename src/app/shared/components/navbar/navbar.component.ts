@@ -56,6 +56,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     { label: 'Lista de Asistencia', link: '/home/asistencia/list-asistencia-alumnos', category: 'Asistencia' },
     { label: 'Actualizar Asistencia', link: '/home/asistencia/update-asistencia-alumnos', category: 'Asistencia' },
     { label: 'Anular Asistencia', link: '/home/asistencia/delete-asistencia-alumnos', category: 'Asistencia' },
+    { label: 'Auditoría Asistencia', link: '/home/asistencia/audit-asistencia-alumnos', category: 'Asistencia' },
     { label: 'Programa de Ausencias', link: '/home/ausencias-masivas/programa', category: 'Ausencias Masivas' },
     { label: 'Registrar Solicitud', link: '/home/justificaciones/create-solicitud-justificacion', category: 'Justificaciones' },
     { label: 'Ver Solicitudes', link: '/home/justificaciones/list-solicitudes-justificaciones-alumnos', category: 'Justificaciones' },

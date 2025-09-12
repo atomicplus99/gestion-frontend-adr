@@ -7,13 +7,6 @@
       ℹ️ Puedes anular asistencias de fechas pasadas. Los registros anulados serán procesados automáticamente.
     </p>
     
-    <!-- 🆕 INFORMACIÓN DEL AUXILIAR -->
-    <div *ngIf="puedeAnularAsistencias" class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-      <p class="text-sm text-green-800">
-        👤 <strong>Usuario:</strong> {{ nombreUsuarioActual }}
-        <span class="ml-3 text-xs text-green-600">Rol: {{ rolUsuarioActual }}</span>
-      </p>
-    </div>
     
     <!-- 🆕 ALERTA SIN PERMISOS -->
     <div *ngIf="!puedeAnularAsistencias" class="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -344,11 +337,22 @@
   <!-- Modal Anular Asistencia -->
   <div *ngIf="mostrarModal" class="fixed inset-0 z-50 overflow-y-auto">
     <!-- Overlay -->
-    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" (click)="cerrarModal()"></div>
+    <div class="fixed inset-0 bg-gray-900 bg-opacity-20 backdrop-blur-sm transition-opacity" (click)="cerrarModal()"></div>
     
     <!-- Modal -->
     <div class="flex min-h-full items-center justify-center p-4">
-      <div class="relative w-full max-w-md transform rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+      <div class="relative w-full max-w-lg transform rounded-2xl bg-white px-6 pb-6 pt-6 text-left shadow-2xl transition-all duration-300 ease-out sm:my-8 sm:w-full sm:max-w-xl sm:p-8">
+        
+        <!-- Botón de cerrar -->
+        <button
+          type="button"
+          (click)="cerrarModal()"
+          [disabled]="procesandoAnulacion"
+          class="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
         
         <!-- Header -->
         <div class="sm:flex sm:items-start">
@@ -366,92 +370,124 @@
                 ¿Estás seguro de que deseas anular la asistencia de 
                 <strong>{{ estudianteSeleccionado?.nombre }} {{ estudianteSeleccionado?.apellido }}</strong> del {{ fechaSeleccionada }}?
               </p>
-              <div class="mt-3 p-3 bg-gray-50 rounded">
-                <p class="text-xs text-gray-600">
-                  <strong>📅 Fecha:</strong> {{ fechaSeleccionada }}
-                </p>
-                <p class="text-xs text-gray-600">
-                  <strong>🕐 Hora:</strong> {{ asistenciaSeleccionada?.hora_de_llegada }}
+              <div class="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="space-y-3">
+                  <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <div>
+                      <span class="text-sm font-medium text-gray-700">Fecha:</span>
+                      <span class="text-sm text-gray-900 ml-2">{{ fechaSeleccionada }}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div>
+                      <span class="text-sm font-medium text-gray-700">Hora:</span>
+                      <span class="text-sm text-gray-900 ml-2">{{ asistenciaSeleccionada?.hora_de_llegada }}
                   <span *ngIf="asistenciaSeleccionada?.hora_salida"> - {{ asistenciaSeleccionada?.hora_salida }}</span>
-                </p>
-                <p class="text-xs text-gray-600">
-                  <strong>📊 Estado actual:</strong> {{ obtenerInfoEstado(asistenciaSeleccionada!.estado_asistencia || 'PUNTUAL').texto }}
-                </p>
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div class="flex items-center space-x-3">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <div>
+                      <span class="text-sm font-medium text-gray-700">Estado actual:</span>
+                      <span class="text-sm text-gray-900 ml-2">{{ obtenerInfoEstado(asistenciaSeleccionada!.estado_asistencia || 'PUNTUAL').texto }}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
               
-              <!-- 🆕 INFORMACIÓN DEL AUXILIAR EN EL MODAL -->
-              <div class="mt-3 p-3 bg-blue-50 rounded border border-blue-200">
-                <p class="text-xs text-blue-800">
-                  <strong>👤 Usuario responsable:</strong> {{ nombreUsuarioActual }}
-                </p>
-                <p class="text-xs text-blue-600">
-                  <strong>🆔 Rol:</strong> {{ rolUsuarioActual }}
-                </p>
-              </div>
               
-              <div class="mt-3 p-3 bg-yellow-50 rounded border border-yellow-200">
-                <p class="text-xs text-yellow-800">
-                  ⚠️ <strong>Importante:</strong> La asistencia anulada será procesada automáticamente como AUSENTE al final del día.
-                </p>
+              <div class="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <div class="flex items-start space-x-3">
+                  <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                  </svg>
+                  <div>
+                    <p class="text-sm font-medium text-amber-800 mb-1">Importante</p>
+                    <p class="text-sm text-amber-700">
+                      La asistencia anulada será procesada automáticamente como <strong>AUSENTE</strong> al final del día.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Formulario -->
-        <form (ngSubmit)="confirmarAnulacion()" class="mt-5">
-          <div class="mb-4">
-            <label for="motivo" class="block text-sm font-medium text-gray-700 mb-2">
-              Motivo de la anulación *
+        <form (ngSubmit)="confirmarAnulacion()" class="mt-6">
+          <div class="mb-6">
+            <label for="motivo" class="block text-sm font-semibold text-gray-900 mb-3">
+              Motivo de la anulación
+              <span class="text-red-500 ml-1">*</span>
             </label>
+            <div class="relative">
             <textarea
               id="motivo"
               [(ngModel)]="motivoAnulacion"
               name="motivo"
-              rows="3"
+                rows="4"
               required
               maxlength="500"
-              placeholder="Ej: Registro incorrecto por error del sistema, estudiante no asistió realmente, etc."
-              class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Describe el motivo de la anulación de la asistencia..."
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 resize-none"
               [class.border-red-500]="!motivoAnulacion && formularioEnviado"
+                [class.focus:ring-red-500]="!motivoAnulacion && formularioEnviado"
               [disabled]="!puedeAnularAsistencias"></textarea>
             
-            <div class="flex justify-between items-center mt-1">
-              <p *ngIf="!motivoAnulacion && formularioEnviado" class="text-red-500 text-xs">
-                El motivo es obligatorio
-              </p>
-              <p class="text-xs text-gray-500">
+              <!-- Contador de caracteres -->
+              <div class="absolute bottom-3 right-3 text-xs text-gray-400 bg-white px-2 py-1 rounded">
                 {{ (motivoAnulacion || '').length }}/500
-              </p>
+              </div>
+            </div>
+            
+            <!-- Mensaje de error -->
+            <div *ngIf="!motivoAnulacion && formularioEnviado" class="mt-2 flex items-center space-x-2">
+              <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <p class="text-sm text-red-600">El motivo es obligatorio</p>
             </div>
           </div>
 
           <!-- Botones -->
-          <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-            <button
-              type="submit"
-              [disabled]="procesandoAnulacion || !(motivoAnulacion || '').trim() || !puedeAnularAsistencias"
-              [class]="'inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm sm:ml-3 sm:w-auto ' +
-                ((!puedeAnularAsistencias || procesandoAnulacion || !(motivoAnulacion || '').trim()) ? 
-                  'bg-gray-400 cursor-not-allowed' : 
-                  'bg-red-600 hover:bg-red-500')">
-              
-              <span *ngIf="!procesandoAnulacion">{{ estadoAnularTexto }}</span>
-              <span *ngIf="procesandoAnulacion" class="flex items-center">
-                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle>
-                  <path fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" class="opacity-75"></path>
-                </svg>
-                Procesando...
-              </span>
-            </button>
-            
+          <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
             <button
               type="button"
               (click)="cerrarModal()"
               [disabled]="procesandoAnulacion"
-              class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed sm:mt-0 sm:w-auto">
+              class="px-6 py-3 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
               Cancelar
+            </button>
+            
+            <button
+              type="submit"
+              [disabled]="procesandoAnulacion || !(motivoAnulacion || '').trim() || !puedeAnularAsistencias"
+              [class]="'px-6 py-3 text-sm font-semibold text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 flex items-center space-x-2 ' +
+                ((!puedeAnularAsistencias || procesandoAnulacion || !(motivoAnulacion || '').trim()) ? 
+                  'bg-gray-400 cursor-not-allowed' : 
+                  'bg-red-600 hover:bg-red-700 shadow-lg hover:shadow-xl')">
+              
+              <svg *ngIf="!procesandoAnulacion" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+              
+              <svg *ngIf="procesandoAnulacion" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle>
+                  <path fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" class="opacity-75"></path>
+                </svg>
+              
+              <span>{{ procesandoAnulacion ? 'Procesando...' : 'Confirmar Anulación' }}</span>
             </button>
           </div>
         </form>

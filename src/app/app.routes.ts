@@ -115,6 +115,10 @@ export const routes: Routes = [
                         path: 'create-ausencia-alumnos',
                         loadComponent: () => import('./gestion-academica-ar/pages/asistencia/create-ausencia-alumno/create-ausencia-alumno.component').then(m => m.RegistroAusenciasComponent),
                     },
+                    {
+                        path: 'audit-asistencia-alumnos',
+                        loadComponent: () => import('./gestion-academica-ar/pages/asistencia/audit-asistencia-alumnos/audit-asistencia-alumnos.component').then(m => m.AuditAsistenciaComponent),
+                    },
                 ]
             },
             {
