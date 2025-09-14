@@ -257,6 +257,24 @@
                         Actualizar Asistencia
                     </h3>
 
+                    <!-- Mensaje de asistencia justificada -->
+                    <div *ngIf="alumnoData?.asistencia?.estado_asistencia === 'JUSTIFICADO'" 
+                         class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-yellow-400 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <h4 class="text-sm font-semibold text-yellow-800 mb-1">
+                                    Asistencia Justificada
+                                </h4>
+                                <p class="text-sm text-yellow-700">
+                                    Esta asistencia está justificada y no puede ser modificada. Los registros justificados son inmutables por seguridad.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     <form [formGroup]="actualizarForm" (ngSubmit)="onActualizarAsistencia()" class="space-y-6">
 
                         <!-- Campos de horarios -->
@@ -269,7 +287,7 @@
                                 </label>
                                 <input id="hora_llegada" type="time" step="1" formControlName="hora_de_llegada" [class]="'block w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ' + 
                           (hasFieldError(actualizarForm, 'hora_de_llegada') ? 'border-red-300' : 'border-gray-300')"
-                                    [disabled]="isLoadingUpdate">
+                                    [disabled]="isFormDisabled">
 
                                 <p *ngIf="hasFieldError(actualizarForm, 'hora_de_llegada')"
                                     class="mt-2 text-sm text-red-600">
@@ -284,7 +302,7 @@
                                 </label>
                                 <input id="hora_salida" type="time" step="1" formControlName="hora_salida" [class]="'block w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ' + 
                           (hasFieldError(actualizarForm, 'hora_salida') ? 'border-red-300' : 'border-gray-300')"
-                                    [disabled]="isLoadingUpdate">
+                                    [disabled]="isFormDisabled">
 
                                 <p *ngIf="hasFieldError(actualizarForm, 'hora_salida')"
                                     class="mt-2 text-sm text-red-600">
@@ -301,7 +319,7 @@
                             </label>
                             <select id="estado_asistencia" formControlName="estado_asistencia"
                                 class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                                [disabled]="isLoadingUpdate">
+                                [disabled]="isFormDisabled">
                                 <option value="">Seleccionar estado...</option>
                                 <option *ngFor="let estado of estadosAsistencia" [value]="estado.value">
                                     {{ estado.label }}
@@ -317,7 +335,7 @@
                             <textarea id="motivo" formControlName="motivo" rows="4"
                                 placeholder="Describe el motivo de la actualización (mínimo 10 caracteres)..."
                                 [class]="'block w-full px-4 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none ' + 
-                        (hasFieldError(actualizarForm, 'motivo') ? 'border-red-300 text-red-900 placeholder-red-300' : 'border-gray-300')" [disabled]="isLoadingUpdate"></textarea>
+                        (hasFieldError(actualizarForm, 'motivo') ? 'border-red-300 text-red-900 placeholder-red-300' : 'border-gray-300')" [disabled]="isFormDisabled"></textarea>
 
                             <p *ngIf="hasFieldError(actualizarForm, 'motivo')" class="mt-2 text-sm text-red-600">
                                 {{ getFieldError(actualizarForm, 'motivo') }}

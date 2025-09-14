@@ -171,7 +171,7 @@
       <!-- Estado del Día -->
       <div class="space-y-2">
         <div>
-          <span class="text-xs font-medium text-gray-500 uppercase">Estado del {{ fechaSeleccionada }}</span>
+          <span class="text-xs font-medium text-gray-500 uppercase">Estado del {{ fechaRealAsistencias || fechaSeleccionada }}</span>
           <p class="text-gray-900 font-semibold" [ngClass]="{
             'text-green-600': asistenciasHoy.length > 0 && tieneAsistenciaPuntualOTardanza(),
             'text-red-600': asistenciasHoy.length > 0 && tieneAsistenciaAnulada(),
@@ -181,7 +181,7 @@
           </p>
         </div>
         <div>
-          <span class="text-xs font-medium text-gray-500 uppercase">Registros del {{ fechaSeleccionada }}</span>
+          <span class="text-xs font-medium text-gray-500 uppercase">Registros del {{ fechaRealAsistencias || fechaSeleccionada }}</span>
           <p class="text-gray-900 font-semibold">{{ asistenciasHoy.length }}</p>
         </div>
       </div>
@@ -192,7 +192,7 @@
   <div *ngIf="estudianteSeleccionado" class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
       <h2 class="text-lg font-semibold text-gray-900">
-        📋 Asistencias del {{ fechaSeleccionada }} ({{ asistenciasHoy.length }})
+        📋 Asistencias del {{ fechaRealAsistencias || fechaSeleccionada }} ({{ asistenciasHoy.length }})
       </h2>
       <button 
         (click)="cargarAsistencias()"
@@ -206,7 +206,7 @@
     <!-- Loading -->
     <div *ngIf="cargandoAsistencias" class="flex justify-center items-center h-32">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span class="ml-3 text-gray-600">Cargando asistencias del {{ fechaSeleccionada }}...</span>
+              <span class="ml-3 text-gray-600">Cargando asistencias del {{ fechaRealAsistencias || fechaSeleccionada }}...</span>
     </div>
 
     <!-- Error -->
@@ -311,9 +311,9 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
         </svg>
       </div>
-      <h3 class="text-lg font-medium text-gray-900 mb-2">Sin asistencias para el {{ fechaSeleccionada }}</h3>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">Sin asistencias para el {{ fechaRealAsistencias || fechaSeleccionada }}</h3>
       <p class="text-gray-500">
-        {{ estudianteSeleccionado.nombre }} no tiene registros de asistencia para el {{ fechaSeleccionada }}.
+        {{ estudianteSeleccionado.nombre }} no tiene registros de asistencia para el {{ fechaRealAsistencias || fechaSeleccionada }}.
       </p>
       <p class="text-sm text-gray-400 mt-2">
         Los registros aparecerán aquí cuando el estudiante marque su asistencia.

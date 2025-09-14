@@ -205,7 +205,21 @@
               </div>
               <div>
                 <span class="font-medium text-gray-700">Fechas a justificar:</span>
-                <span class="ml-1 text-gray-900">{{ formatearFechasJustificacion(justificacion.fechas_de_justificacion) }}</span>
+                <div class="mt-1">
+                  <div *ngIf="justificacion.fechas_de_justificacion.length === 1" class="text-gray-900">
+                    <span class="bg-gray-100 px-2 py-1 rounded text-sm">{{ formatearFechaCorta(justificacion.fechas_de_justificacion[0]) }}</span>
+                  </div>
+                  <div *ngIf="justificacion.fechas_de_justificacion.length > 1 && justificacion.fechas_de_justificacion.length <= 3" class="flex flex-wrap gap-1">
+                    <span *ngFor="let fecha of justificacion.fechas_de_justificacion" class="bg-gray-100 px-2 py-1 rounded text-sm text-gray-800">
+                      {{ formatearFechaCorta(fecha) }}
+                    </span>
+                  </div>
+                  <div *ngIf="justificacion.fechas_de_justificacion.length > 3" class="text-gray-900">
+                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">
+                      {{ formatearFechasJustificacion(justificacion.fechas_de_justificacion) }}
+                    </span>
+                  </div>
+                </div>
               </div>
               <div class="md:col-span-2">
                 <span class="font-medium text-gray-700">Motivo:</span>
@@ -370,10 +384,24 @@
               <span class="font-medium">Código:</span> 
               {{ justificacionSeleccionada.alumno_solicitante.codigo }}
             </p>
-            <p class="text-sm text-gray-600">
-              <span class="font-medium">Fechas:</span> 
-              {{ formatearFechasJustificacion(justificacionSeleccionada.fechas_de_justificacion) }}
-            </p>
+            <div class="text-sm text-gray-600">
+              <span class="font-medium">Fechas:</span>
+              <div class="mt-1">
+                <div *ngIf="justificacionSeleccionada.fechas_de_justificacion.length === 1" class="text-gray-900">
+                  <span class="bg-gray-100 px-2 py-1 rounded text-sm">{{ formatearFechaCorta(justificacionSeleccionada.fechas_de_justificacion[0]) }}</span>
+                </div>
+                <div *ngIf="justificacionSeleccionada.fechas_de_justificacion.length > 1 && justificacionSeleccionada.fechas_de_justificacion.length <= 3" class="flex flex-wrap gap-1">
+                  <span *ngFor="let fecha of justificacionSeleccionada.fechas_de_justificacion" class="bg-gray-100 px-2 py-1 rounded text-sm text-gray-800">
+                    {{ formatearFechaCorta(fecha) }}
+                  </span>
+                </div>
+                <div *ngIf="justificacionSeleccionada.fechas_de_justificacion.length > 3" class="text-gray-900">
+                  <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">
+                    {{ formatearFechasJustificacion(justificacionSeleccionada.fechas_de_justificacion) }}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Formulario -->

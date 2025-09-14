@@ -1,5 +1,5 @@
 // components/selector-fecha/selector-fecha.component.ts
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
@@ -35,9 +35,10 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
       <!-- Campo de fecha -->
       <input
         type="date"
-        [value]="fechaSeleccionada"
-        (change)="onFechaChange($event)"
+        [ngModel]="fechaSeleccionada"
+        (ngModelChange)="onFechaChange($event)"
         [disabled]="!usarFechaPersonalizada"
+        #fechaInput
         class="w-full px-3 py-2 text-sm border border-blue-300 rounded-md transition-all focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         [class.bg-gray-100]="!usarFechaPersonalizada"
         [class.border-blue-500]="usarFechaPersonalizada"
@@ -57,6 +58,13 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
           class="text-xs px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition-colors">
           Hoy
         </button>
+        <!-- Botón de debug temporal -->
+        <button 
+          type="button"
+          (click)="debugFecha()"
+          class="text-xs px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors">
+          Debug
+        </button>
       </div>
 
       <!-- Información de la fecha -->
@@ -67,18 +75,33 @@ import { RegistroAsistenciaServiceManual } from '../../services/register-asisten
   `
 })
 export class SelectorFechaComponent implements OnInit, OnDestroy {
+  @ViewChild('fechaInput', { static: false }) fechaInput!: ElementRef<HTMLInputElement>;
+  
   fechaSeleccionada: string = '';
   usarFechaPersonalizada = false;
   private destroy$ = new Subject<void>();
 
-  constructor(private registroService: RegistroAsistenciaServiceManual) {}
+  constructor(
+    private registroService: RegistroAsistenciaServiceManual,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     // Suscribirse a cambios en la fecha del servicio
     this.registroService.fechaSeleccionada$
       .pipe(takeUntil(this.destroy$))
       .subscribe(fecha => {
+        console.log('🔄 [SELECTOR] Fecha actualizada desde servicio:', {
+          fechaAnterior: this.fechaSeleccionada,
+          fechaNueva: fecha
+        });
         this.fechaSeleccionada = fecha;
+        this.cdr.detectChanges(); // Forzar actualización de la UI
+        
+        // Forzar actualización del input después de un pequeño delay
+        setTimeout(() => {
+          this.forzarActualizacionInput();
+        }, 100);
       });
   }
 
@@ -96,28 +119,71 @@ export class SelectorFechaComponent implements OnInit, OnDestroy {
     
     if (!this.usarFechaPersonalizada) {
       // Volver a fecha de hoy
-      this.registroService.setFechaSeleccionada(this.registroService.getFechaHoy());
+      const fechaHoy = this.registroService.getFechaHoy();
+      console.log('🔄 [SELECTOR] Volviendo a fecha de hoy:', {
+        usarFechaPersonalizada: this.usarFechaPersonalizada,
+        fechaHoy,
+        fechaActual: this.fechaSeleccionada
+      });
+      this.registroService.setFechaSeleccionada(fechaHoy);
+      this.cdr.detectChanges(); // Forzar actualización inmediata
+      
+      // Forzar actualización del input después de un pequeño delay
+      setTimeout(() => {
+        this.forzarActualizacionInput();
+      }, 100);
+    }
+  }
+
+  private forzarActualizacionInput(): void {
+    if (this.fechaInput && this.fechaInput.nativeElement) {
+      console.log('🔧 [SELECTOR] Forzando actualización del input:', {
+        valorAnterior: this.fechaInput.nativeElement.value,
+        valorNuevo: this.fechaSeleccionada
+      });
+      
+      // Forzar la actualización del valor del input
+      this.fechaInput.nativeElement.value = this.fechaSeleccionada;
+      
+      // Disparar evento de cambio para sincronizar
+      this.fechaInput.nativeElement.dispatchEvent(new Event('input', { bubbles: true }));
+      this.fechaInput.nativeElement.dispatchEvent(new Event('change', { bubbles: true }));
+      
+      this.cdr.detectChanges();
     }
   }
 
   establecerFechaRapida(dias: number): void {
     // Usar el nuevo método que maneja la zona horaria de Perú
     const fechaStr = this.registroService.getFechaConDias(dias);
+    
+    console.log('📅 [SELECTOR] Estableciendo fecha rápida:', {
+      dias,
+      fechaStr,
+      fechaActual: this.fechaSeleccionada
+    });
 
     this.registroService.setFechaSeleccionada(fechaStr);
+    this.cdr.detectChanges(); // Forzar actualización inmediata
+    
+    // Forzar actualización del input después de un pequeño delay
+    setTimeout(() => {
+      this.forzarActualizacionInput();
+    }, 100);
   }
 
-  onFechaChange(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const nuevaFecha = target.value;
-    
-
+  onFechaChange(nuevaFecha: string): void {
+    console.log('📅 [SELECTOR] Cambio de fecha:', {
+      nuevaFecha,
+      fechaActual: this.fechaSeleccionada
+    });
     
     // Validar fecha antes de establecerla
     const validacion = this.registroService.validarFecha(nuevaFecha);
     
     if (!validacion.valida) {
-
+      console.log('❌ [SELECTOR] Fecha inválida:', validacion.mensaje);
+      
       Swal.fire({
         icon: 'warning',
         title: 'Fecha Inválida',
@@ -130,13 +196,26 @@ export class SelectorFechaComponent implements OnInit, OnDestroy {
       // Si la fecha es futura, resetear a hoy
       if (validacion.mensaje?.includes('futuras')) {
         const fechaHoy = this.registroService.getFechaHoy();
-
+        console.log('🔄 [SELECTOR] Reseteando a fecha de hoy:', fechaHoy);
         this.registroService.setFechaSeleccionada(fechaHoy);
         return;
       }
     }
     
-
+    console.log('✅ [SELECTOR] Estableciendo nueva fecha:', nuevaFecha);
     this.registroService.setFechaSeleccionada(nuevaFecha);
+  }
+
+  // Método temporal para debug
+  debugFecha(): void {
+    console.log('🐛 [DEBUG] Estado actual:', {
+      fechaSeleccionada: this.fechaSeleccionada,
+      usarFechaPersonalizada: this.usarFechaPersonalizada,
+      esFechaHoy: this.esFechaHoy
+    });
+    
+    // Forzar fecha específica para debug
+    this.registroService.setFechaDebug('2025-09-14');
+    this.cdr.detectChanges();
   }
 }

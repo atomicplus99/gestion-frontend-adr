@@ -15,13 +15,28 @@ export class RegistroAsistenciaServiceManual {
   // Estados compartidos
   private alumnoEncontradoSubject = new BehaviorSubject<AlumnoInfoAsistenciaManual | null>(null);
   private asistenciaExistenteSubject = new BehaviorSubject<AsistenciaExistenteManual | null>(null);
-  private fechaSeleccionadaSubject = new BehaviorSubject<string>(this.getFechaHoy());
+  private fechaSeleccionadaSubject = new BehaviorSubject<string>('');
   
   public alumnoEncontrado$ = this.alumnoEncontradoSubject.asObservable();
   public asistenciaExistente$ = this.asistenciaExistenteSubject.asObservable();
   public fechaSeleccionada$ = this.fechaSeleccionadaSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    // Inicializar la fecha después de que el servicio esté completamente construido
+    this.initializeFecha();
+  }
+
+  private initializeFecha(): void {
+    const fechaHoy = this.getFechaHoy();
+    console.log('🗓️ [SERVICE] Inicializando fecha:', fechaHoy);
+    this.fechaSeleccionadaSubject.next(fechaHoy);
+  }
+
+  // Método temporal para debug - forzar fecha específica
+  setFechaDebug(fecha: string): void {
+    console.log('🐛 [DEBUG] Forzando fecha:', fecha);
+    this.fechaSeleccionadaSubject.next(fecha);
+  }
 
   // Getters para valores actuales
   get alumnoActual(): AlumnoInfoAsistenciaManual | null {
@@ -81,30 +96,36 @@ export class RegistroAsistenciaServiceManual {
   private getFechaPeruana(): Date {
     // Obtener fecha y hora actual en zona horaria de Perú (UTC-5)
     const ahora = new Date();
-    const offsetPeru = -5; // UTC-5 (Perú)
-    const offsetLocal = ahora.getTimezoneOffset() / 60; // Offset local en horas
-    const diferenciaHoras = offsetPeru - (-offsetLocal); // Diferencia entre Perú y local
     
-    // Crear nueva fecha ajustada a zona horaria de Perú
-    const fechaPeruana = new Date(ahora.getTime() + (diferenciaHoras * 60 * 60 * 1000));
+    // Usar toLocaleString con zona horaria de Perú para obtener la fecha correcta
+    const fechaPeruanaStr = ahora.toLocaleString("en-US", {timeZone: "America/Lima"});
+    const fechaPeruana = new Date(fechaPeruanaStr);
+    
+    console.log('🌍 [SERVICE] Fecha Perú calculada:', {
+      ahora: ahora.toString(),
+      fechaPeruanaStr,
+      fechaPeruana: fechaPeruana.toString(),
+      fechaPeruanaISO: fechaPeruana.toISOString()
+    });
+    
     return fechaPeruana;
   }
 
   getFechaHoy(): string {
-    // Obtener fecha actual en zona horaria de Perú (UTC-5)
-    const fechaPeruana = this.getFechaPeruana();
+    // Método alternativo más simple para obtener fecha de hoy
+    const ahora = new Date();
     
-    // Obtener componentes de fecha en zona horaria de Perú
-    const año = fechaPeruana.getFullYear();
-    const mes = String(fechaPeruana.getMonth() + 1).padStart(2, '0');
-    const dia = String(fechaPeruana.getDate()).padStart(2, '0');
+    // Obtener fecha en zona horaria de Perú usando toLocaleDateString
+    const fechaPeruana = ahora.toLocaleDateString("en-CA", {timeZone: "America/Lima"});
     
-
-
-
+    console.log('🗓️ [SERVICE] Fecha de hoy calculada (método simple):', {
+      ahora: ahora.toString(),
+      fechaPeruana,
+      fechaPeruanaISO: ahora.toISOString()
+    });
     
     // Formatear como YYYY-MM-DD
-    return `${año}-${mes}-${dia}`;
+    return fechaPeruana;
   }
 
   esFechaHoy(fecha: string): boolean {
@@ -115,14 +136,23 @@ export class RegistroAsistenciaServiceManual {
 
   // Método para obtener fecha con días de diferencia (para fechas rápidas)
   getFechaConDias(dias: number): string {
-    const fechaPeruana = this.getFechaPeruana();
-    fechaPeruana.setDate(fechaPeruana.getDate() + dias);
+    const ahora = new Date();
     
-    const año = fechaPeruana.getFullYear();
-    const mes = String(fechaPeruana.getMonth() + 1).padStart(2, '0');
-    const dia = String(fechaPeruana.getDate()).padStart(2, '0');
+    // Crear una nueva fecha con los días agregados
+    const fechaConDias = new Date(ahora);
+    fechaConDias.setDate(ahora.getDate() + dias);
     
-    return `${año}-${mes}-${dia}`;
+    // Obtener fecha en zona horaria de Perú usando toLocaleDateString
+    const fechaPeruana = fechaConDias.toLocaleDateString("en-CA", {timeZone: "America/Lima"});
+    
+    console.log('📅 [SERVICE] Fecha con días calculada:', {
+      dias,
+      ahora: ahora.toString(),
+      fechaConDias: fechaConDias.toString(),
+      fechaPeruana
+    });
+    
+    return fechaPeruana;
   }
 
   obtenerInfoEstado(estado: string): EstadoInfoManualAsistencia {

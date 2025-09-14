@@ -332,13 +332,105 @@ export class GestionEstadosJustificacionesComponent implements OnInit {
 
   formatearFechaCorta(fecha: Date | string): string {
     if (!fecha) return '-';
-    const fechaObj = new Date(fecha);
+    
+    let fechaObj: Date;
+    
+    if (typeof fecha === 'string') {
+      // Intentar diferentes formatos de fecha
+      if (fecha.includes('T')) {
+        // Formato ISO con tiempo
+        fechaObj = new Date(fecha);
+      } else if (fecha.includes('-')) {
+        // Verificar si es formato DD-MM-YYYY o YYYY-MM-DD
+        const partes = fecha.split('-');
+        if (partes.length === 3) {
+          if (partes[0].length === 4) {
+            // Formato YYYY-MM-DD
+            fechaObj = new Date(fecha + 'T00:00:00');
+          } else {
+            // Formato DD-MM-YYYY
+            fechaObj = new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+          }
+        } else {
+          fechaObj = new Date(fecha);
+        }
+      } else if (fecha.includes('/')) {
+        // Formato DD/MM/YYYY o MM/DD/YYYY
+        const partes = fecha.split('/');
+        if (partes.length === 3) {
+          // Asumir formato DD/MM/YYYY
+          fechaObj = new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+        } else {
+          fechaObj = new Date(fecha);
+        }
+      } else {
+        fechaObj = new Date(fecha);
+      }
+    } else {
+      fechaObj = fecha;
+    }
+    
+    if (isNaN(fechaObj.getTime())) {
+      return 'Fecha inválida';
+    }
+    
     return fechaObj.toLocaleDateString('es-ES');
   }
 
   formatearFechasJustificacion(fechas: string[]): string {
     if (!fechas || fechas.length === 0) return '-';
-    return fechas.join(', ');
+    
+    // Filtrar fechas válidas y ordenar
+    const fechasValidas = fechas
+      .map(fecha => {
+        // Intentar diferentes formatos de fecha
+        let fechaObj: Date;
+        
+        if (fecha.includes('T')) {
+          // Formato ISO con tiempo
+          fechaObj = new Date(fecha);
+        } else if (fecha.includes('-')) {
+          // Verificar si es formato DD-MM-YYYY o YYYY-MM-DD
+          const partes = fecha.split('-');
+          if (partes.length === 3) {
+            if (partes[0].length === 4) {
+              // Formato YYYY-MM-DD
+              fechaObj = new Date(fecha + 'T00:00:00');
+            } else {
+              // Formato DD-MM-YYYY
+              fechaObj = new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+            }
+          } else {
+            fechaObj = new Date(fecha);
+          }
+        } else if (fecha.includes('/')) {
+          // Formato DD/MM/YYYY o MM/DD/YYYY
+          const partes = fecha.split('/');
+          if (partes.length === 3) {
+            // Asumir formato DD/MM/YYYY
+            fechaObj = new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+          } else {
+            fechaObj = new Date(fecha);
+          }
+        } else {
+          fechaObj = new Date(fecha);
+        }
+        
+        return fechaObj;
+      })
+      .filter(fecha => !isNaN(fecha.getTime())) // Filtrar fechas inválidas
+      .sort((a, b) => a.getTime() - b.getTime())
+      .map(fecha => fecha.toLocaleDateString('es-ES'));
+    
+    if (fechasValidas.length === 0) return 'Fechas inválidas';
+    
+    if (fechasValidas.length === 1) {
+      return fechasValidas[0];
+    } else if (fechasValidas.length <= 3) {
+      return fechasValidas.join(', ');
+    } else {
+      return `${fechasValidas[0]} - ${fechasValidas[fechasValidas.length - 1]} (${fechasValidas.length} fechas)`;
+    }
   }
 
   getTipoClase(tipo: string): string {

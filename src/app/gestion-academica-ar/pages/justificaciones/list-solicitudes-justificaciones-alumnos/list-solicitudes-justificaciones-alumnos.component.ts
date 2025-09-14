@@ -102,6 +102,9 @@ export class ListaJustificacionesComponent implements OnInit {
   // UI
   justificacionExpandida: string | null = null;
   
+  // Estados para eliminación
+  eliminandoJustificacion: string | null = null;
+  
 
   constructor(
     private fb: FormBuilder,
@@ -398,13 +401,105 @@ export class ListaJustificacionesComponent implements OnInit {
 
   formatearFechaCorta(fecha: Date | string): string {
     if (!fecha) return '-';
-    const fechaObj = new Date(fecha);
+    
+    let fechaObj: Date;
+    
+    if (typeof fecha === 'string') {
+      // Intentar diferentes formatos de fecha
+      if (fecha.includes('T')) {
+        // Formato ISO con tiempo
+        fechaObj = new Date(fecha);
+      } else if (fecha.includes('-')) {
+        // Verificar si es formato DD-MM-YYYY o YYYY-MM-DD
+        const partes = fecha.split('-');
+        if (partes.length === 3) {
+          if (partes[0].length === 4) {
+            // Formato YYYY-MM-DD
+            fechaObj = new Date(fecha + 'T00:00:00');
+          } else {
+            // Formato DD-MM-YYYY
+            fechaObj = new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+          }
+        } else {
+          fechaObj = new Date(fecha);
+        }
+      } else if (fecha.includes('/')) {
+        // Formato DD/MM/YYYY o MM/DD/YYYY
+        const partes = fecha.split('/');
+        if (partes.length === 3) {
+          // Asumir formato DD/MM/YYYY
+          fechaObj = new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+        } else {
+          fechaObj = new Date(fecha);
+        }
+      } else {
+        fechaObj = new Date(fecha);
+      }
+    } else {
+      fechaObj = fecha;
+    }
+    
+    if (isNaN(fechaObj.getTime())) {
+      return 'Fecha inválida';
+    }
+    
     return fechaObj.toLocaleDateString('es-ES');
   }
 
   formatearFechasJustificacion(fechas: string[]): string {
     if (!fechas || fechas.length === 0) return '-';
-    return fechas.join(', ');
+    
+    // Filtrar fechas válidas y ordenar
+    const fechasValidas = fechas
+      .map(fecha => {
+        // Intentar diferentes formatos de fecha
+        let fechaObj: Date;
+        
+        if (fecha.includes('T')) {
+          // Formato ISO con tiempo
+          fechaObj = new Date(fecha);
+        } else if (fecha.includes('-')) {
+          // Verificar si es formato DD-MM-YYYY o YYYY-MM-DD
+          const partes = fecha.split('-');
+          if (partes.length === 3) {
+            if (partes[0].length === 4) {
+              // Formato YYYY-MM-DD
+              fechaObj = new Date(fecha + 'T00:00:00');
+            } else {
+              // Formato DD-MM-YYYY
+              fechaObj = new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+            }
+          } else {
+            fechaObj = new Date(fecha);
+          }
+        } else if (fecha.includes('/')) {
+          // Formato DD/MM/YYYY o MM/DD/YYYY
+          const partes = fecha.split('/');
+          if (partes.length === 3) {
+            // Asumir formato DD/MM/YYYY
+            fechaObj = new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+          } else {
+            fechaObj = new Date(fecha);
+          }
+        } else {
+          fechaObj = new Date(fecha);
+        }
+        
+        return fechaObj;
+      })
+      .filter(fecha => !isNaN(fecha.getTime())) // Filtrar fechas inválidas
+      .sort((a, b) => a.getTime() - b.getTime())
+      .map(fecha => fecha.toLocaleDateString('es-ES'));
+    
+    if (fechasValidas.length === 0) return 'Fechas inválidas';
+    
+    if (fechasValidas.length === 1) {
+      return fechasValidas[0];
+    } else if (fechasValidas.length <= 3) {
+      return fechasValidas.join(', ');
+    } else {
+      return `${fechasValidas[0]} - ${fechasValidas[fechasValidas.length - 1]} (${fechasValidas.length} fechas)`;
+    }
   }
 
   getEstadoClase(estado: string): string {
@@ -513,6 +608,61 @@ export class ListaJustificacionesComponent implements OnInit {
     document.body.removeChild(link);
 
     this.alertsService.success('Archivo CSV exportado correctamente', 'Exportación Exitosa');
+  }
+
+  /**
+   * Elimina una justificación específica
+   */
+  async eliminarJustificacion(justificacion: JustificacionResponseDto) {
+    const result = await this.alertsService.confirm(
+      `¿Estás seguro de que deseas eliminar la justificación de ${justificacion.alumno_solicitante.nombre} ${justificacion.alumno_solicitante.apellido}?`,
+      'Eliminar Justificación'
+    );
+
+    if (!result) {
+      return;
+    }
+
+    this.eliminandoJustificacion = justificacion.id_justificacion;
+    this.cdr.detectChanges();
+
+    try {
+      const response = await this.http.delete<{success: boolean, message: string}>(
+        `${environment.apiUrl}/detalle-justificaciones/${justificacion.id_justificacion}`
+      ).toPromise();
+
+      if (response && response.success) {
+        this.alertsService.success('Justificación eliminada exitosamente', 'Eliminación Exitosa');
+        
+        // Remover la justificación de las listas
+        this.justificaciones = this.justificaciones.filter(j => j.id_justificacion !== justificacion.id_justificacion);
+        this.aplicarFiltros();
+        
+        // Cerrar detalles si estaban abiertos
+        if (this.justificacionExpandida === justificacion.id_justificacion) {
+          this.justificacionExpandida = null;
+        }
+      } else {
+        this.alertsService.error(response?.message || 'Error al eliminar la justificación', 'Error de Eliminación');
+      }
+    } catch (error: any) {
+      let errorMessage = 'Error al eliminar la justificación';
+      
+      if (error.status === 404) {
+        errorMessage = 'La justificación no fue encontrada';
+      } else if (error.status === 403) {
+        errorMessage = 'No tienes permisos para eliminar esta justificación';
+      } else if (error.status === 500) {
+        errorMessage = 'Error interno del servidor';
+      } else if (error.status === 0) {
+        errorMessage = 'No se pudo conectar con el servidor';
+      }
+      
+      this.alertsService.error(errorMessage, 'Error de Eliminación');
+    } finally {
+      this.eliminandoJustificacion = null;
+      this.cdr.detectChanges();
+    }
   }
 
 }

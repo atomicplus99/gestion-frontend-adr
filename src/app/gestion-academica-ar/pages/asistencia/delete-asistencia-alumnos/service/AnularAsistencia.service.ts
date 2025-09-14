@@ -135,10 +135,21 @@ export class AsistenciaService {
           })));
           
           const asistenciasFecha = data.asistencias.filter(asistencia => {
-            // Extraer solo la fecha (YYYY-MM-DD) de la asistencia
-            const fechaAsistencia = asistencia.fecha.split('T')[0];
+            // Convertir la fecha UTC a hora local de Perú (UTC-5)
+            const fechaUTC = new Date(asistencia.fecha);
+            // Ajustar a zona horaria de Perú (UTC-5)
+            const fechaLocal = new Date(fechaUTC.getTime() - (5 * 60 * 60 * 1000));
+            const fechaAsistencia = fechaLocal.toISOString().split('T')[0];
+            
+            console.log(`🕐 Fecha UTC: ${asistencia.fecha} -> Fecha Local Perú: ${fechaAsistencia} (Buscando: ${fechaBusqueda})`);
+            
             const coincide = fechaAsistencia === fechaBusqueda;
-
+            
+            // Actualizar la fecha de la asistencia para mostrar la fecha local correcta
+            if (coincide) {
+              asistencia.fecha = fechaAsistencia + 'T' + asistencia.fecha.split('T')[1];
+            }
+            
             return coincide;
           });
           

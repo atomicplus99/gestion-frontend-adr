@@ -347,6 +347,12 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Verificar si la asistencia está JUSTIFICADA - no se puede modificar
+    if (this.alumnoData.asistencia.estado_asistencia === EstadoAsistencia.JUSTIFICADO) {
+      this.alertsService.error('No se puede modificar una asistencia que está JUSTIFICADA', 'Asistencia Justificada');
+      return;
+    }
+
 
 
     this.isLoadingUpdate = true;
@@ -444,6 +450,13 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
 
         // Mostrar éxito con mensaje personalizado
         this.alertsService.success('La asistencia se ha actualizado correctamente', '¡Actualización Exitosa!');
+        
+        // Reiniciar el formulario después de la actualización exitosa
+        setTimeout(() => {
+          console.log('🔄 [UPDATE] Reiniciando formulario después de actualización exitosa');
+          this.limpiarFormularioCompleto();
+          this.forzarDeteccionCambios();
+        }, 1500); // Delay para que el usuario vea el mensaje de éxito
       },
       error: (error) => {
 
@@ -554,11 +567,15 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
    * Verifica si el formulario de actualización es válido
    */
   get isActualizarFormValid(): boolean {
-    const isValid = this.actualizarForm.valid && this.puedeActualizarAsistencias && this.tieneIdValido();
+    // Verificar si la asistencia está justificada
+    const estaJustificada = this.alumnoData?.asistencia?.estado_asistencia === EstadoAsistencia.JUSTIFICADO;
+    
+    const isValid = this.actualizarForm.valid && this.puedeActualizarAsistencias && this.tieneIdValido() && !estaJustificada;
     console.log('🔍 Validación del formulario de actualización:', {
       formValid: this.actualizarForm.valid,
       puedeActualizar: this.puedeActualizarAsistencias,
       tieneIdValido: this.tieneIdValido(),
+      estaJustificada: estaJustificada,
       resultado: isValid
     });
     return isValid;
@@ -578,7 +595,15 @@ export class ActualizarAsistenciaComponent implements OnInit, OnDestroy {
   get estadoActualizarTexto(): string {
     if (!this.puedeActualizarAsistencias) return 'Sin permisos para actualizar';
     if (!this.tieneIdValido()) return 'Usuario no autorizado';
+    if (this.alumnoData?.asistencia?.estado_asistencia === EstadoAsistencia.JUSTIFICADO) return 'Asistencia Justificada - No Modificable';
     if (this.isLoadingUpdate) return 'Actualizando...';
     return 'Actualizar Asistencia';
+  }
+
+  /**
+   * Verifica si el formulario debe estar deshabilitado
+   */
+  get isFormDisabled(): boolean {
+    return this.isLoadingUpdate || (this.alumnoData?.asistencia?.estado_asistencia === EstadoAsistencia.JUSTIFICADO);
   }
 }

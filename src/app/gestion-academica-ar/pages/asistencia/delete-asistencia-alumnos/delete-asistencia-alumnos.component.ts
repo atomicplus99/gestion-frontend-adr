@@ -50,6 +50,7 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
   // ✅ PROPIEDADES PARA FECHAS
   fechaHoy = '';
   fechaSeleccionada!: string;
+  fechaRealAsistencias = ''; // Fecha real de las asistencias encontradas
   usarFechaPersonalizada = false;
 
   // Subject para manejo de suscripciones
@@ -169,7 +170,9 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
   }
 
   get esFechaHoy(): boolean {
-    return this.asistenciaService.esFechaHoy(this.fechaSeleccionada);
+    // Comparar con la fecha real de las asistencias si está disponible
+    const fechaAComparar = this.fechaRealAsistencias || this.fechaSeleccionada;
+    return this.asistenciaService.esFechaHoy(fechaAComparar);
   }
 
   toggleFechaPersonalizada(): void {
@@ -295,6 +298,14 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
         this.asistenciasHoy = asistencias.sort((a, b) => 
           a.hora_de_llegada.localeCompare(b.hora_de_llegada)
         );
+        
+        // Actualizar la fecha real de las asistencias
+        if (asistencias.length > 0) {
+          this.fechaRealAsistencias = asistencias[0].fecha.split('T')[0];
+        } else {
+          this.fechaRealAsistencias = this.fechaSeleccionada;
+        }
+        
         this.cargandoAsistencias = false;
         this.forzarDeteccionCambios();
       },
@@ -412,10 +423,13 @@ export class AnularAsistenciasComponent implements OnInit, OnDestroy {
       motivo: this.motivoAnulacion.trim()
     };
 
-    // ✅ AGREGAR FECHA SI NO ES HOY
+    // ✅ AGREGAR FECHA SI NO ES HOY - USAR LA FECHA REAL DE LA ASISTENCIA
     if (!this.esFechaHoy) {
-      request.fecha = this.fechaSeleccionada;
-
+      // Usar la fecha real de las asistencias encontradas, no la fecha de búsqueda
+      request.fecha = this.fechaRealAsistencias || this.fechaSeleccionada;
+      console.log(`📅 Enviando fecha para anular: ${request.fecha} (fecha real: ${this.fechaRealAsistencias}, fecha búsqueda: ${this.fechaSeleccionada})`);
+    } else {
+      console.log(`📅 No enviando fecha - es hoy (fecha real: ${this.fechaRealAsistencias}, fecha búsqueda: ${this.fechaSeleccionada})`);
     }
 
     const idAux = this.userStore.idAuxiliar();

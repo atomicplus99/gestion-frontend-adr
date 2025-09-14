@@ -1,9 +1,10 @@
 // registro-asistencia.component.ts - Componente principal modularizado
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BuscarEstudianteComponent } from '../buscar-estudiante/buscar-estudiante.component';
 import { InfoEstudianteComponent } from '../info-estudiante/info-estudiante.component';
 import { FormularioRegistroComponent } from '../formulario-registro/formulario-registro.component';
+import { RegistroAsistenciaServiceManual } from '../../services/register-asistencia.service';
 
 
 @Component({
@@ -52,7 +53,16 @@ import { FormularioRegistroComponent } from '../formulario-registro/formulario-r
     </div>
   `
 })
-export class RegistroAsistenciaComponentManual {
+export class RegistroAsistenciaComponentManual implements OnInit {
   // El componente principal ahora es solo un contenedor
   // Toda la lógica está distribuida en los componentes hijos
+  
+  constructor(private registroService: RegistroAsistenciaServiceManual) {}
+  
+  ngOnInit(): void {
+    // Reiniciar la fecha a "hoy" cada vez que se entra a esta sección
+    console.log('🔄 [MAIN] Reiniciando fecha al entrar a asistencia manual');
+    this.registroService.setFechaSeleccionada(this.registroService.getFechaHoy());
+    this.registroService.resetearTodo();
+  }
 }

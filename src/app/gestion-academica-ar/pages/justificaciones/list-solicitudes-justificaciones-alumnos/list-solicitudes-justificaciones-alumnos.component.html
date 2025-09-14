@@ -247,21 +247,56 @@
                   {{ formatearFechaCorta(justificacion.fecha_solicitud) }}
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-900">
-                  <div class="max-w-xs truncate">
-                    {{ formatearFechasJustificacion(justificacion.fechas_de_justificacion) }}
+                  <div class="max-w-xs">
+                    <div *ngIf="justificacion.fechas_de_justificacion.length === 1" class="font-medium">
+                      {{ formatearFechasJustificacion(justificacion.fechas_de_justificacion) }}
+                    </div>
+                    <div *ngIf="justificacion.fechas_de_justificacion.length > 1 && justificacion.fechas_de_justificacion.length <= 3" class="space-y-1">
+                      <div *ngFor="let fecha of justificacion.fechas_de_justificacion | slice:0:3" class="text-xs bg-gray-100 px-2 py-1 rounded">
+                        {{ formatearFechaCorta(fecha) }}
+                      </div>
+                    </div>
+                    <div *ngIf="justificacion.fechas_de_justificacion.length > 3" class="space-y-1">
+                      <div class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded font-medium">
+                        {{ formatearFechasJustificacion(justificacion.fechas_de_justificacion) }}
+                      </div>
+                      <div class="text-xs text-gray-500">
+                        Ver todas en detalles
+                      </div>
+                    </div>
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    (click)="toggleDetalles(justificacion.id_justificacion)"
-                    class="text-blue-600 hover:text-blue-900 flex items-center gap-1"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                            [attr.d]="justificacionExpandida === justificacion.id_justificacion ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'"></path>
-                    </svg>
-                    {{ justificacionExpandida === justificacion.id_justificacion ? 'Ocultar' : 'Ver' }} detalles
-                  </button>
+                  <div class="flex items-center gap-3">
+                    <button
+                      (click)="toggleDetalles(justificacion.id_justificacion)"
+                      class="text-blue-600 hover:text-blue-900 flex items-center gap-1"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              [attr.d]="justificacionExpandida === justificacion.id_justificacion ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'"></path>
+                      </svg>
+                      {{ justificacionExpandida === justificacion.id_justificacion ? 'Ocultar' : 'Ver' }} detalles
+                    </button>
+                    
+                    <button
+                      *ngIf="justificacion.estado === 'APROBADA'"
+                      (click)="eliminarJustificacion(justificacion)"
+                      [disabled]="eliminandoJustificacion === justificacion.id_justificacion"
+                      class="text-red-600 hover:text-red-900 disabled:text-gray-400 disabled:cursor-not-allowed flex items-center gap-1"
+                      title="Eliminar justificación"
+                    >
+                      <svg *ngIf="eliminandoJustificacion !== justificacion.id_justificacion" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                      <svg *ngIf="eliminandoJustificacion === justificacion.id_justificacion" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span *ngIf="eliminandoJustificacion !== justificacion.id_justificacion">Eliminar</span>
+                      <span *ngIf="eliminandoJustificacion === justificacion.id_justificacion">Eliminando...</span>
+                    </button>
+                  </div>
                 </td>
               </tr>
               
@@ -377,23 +412,54 @@
               <p class="text-xs text-gray-600">
                 <span class="font-medium">Fecha solicitud:</span> {{ formatearFechaCorta(justificacion.fecha_solicitud) }}
               </p>
-              <p class="text-xs text-gray-600">
-                <span class="font-medium">Fechas justificación:</span> 
-                {{ formatearFechasJustificacion(justificacion.fechas_de_justificacion) }}
-              </p>
+              <div class="text-xs text-gray-600">
+                <span class="font-medium">Fechas justificación:</span>
+                <div *ngIf="justificacion.fechas_de_justificacion.length === 1" class="mt-1">
+                  <span class="bg-gray-100 px-2 py-1 rounded text-gray-800">{{ formatearFechaCorta(justificacion.fechas_de_justificacion[0]) }}</span>
+                </div>
+                <div *ngIf="justificacion.fechas_de_justificacion.length > 1" class="mt-1 space-y-1">
+                  <div *ngFor="let fecha of justificacion.fechas_de_justificacion | slice:0:3" class="bg-gray-100 px-2 py-1 rounded text-gray-800 inline-block mr-1">
+                    {{ formatearFechaCorta(fecha) }}
+                  </div>
+                  <div *ngIf="justificacion.fechas_de_justificacion.length > 3" class="text-blue-600 text-xs">
+                    +{{ justificacion.fechas_de_justificacion.length - 3 }} más
+                  </div>
+                </div>
+              </div>
             </div>
             
-            <!-- Botón de detalles -->
-            <button
-              (click)="toggleDetalles(justificacion.id_justificacion)"
-              class="w-full flex items-center justify-center gap-2 py-2 text-sm text-blue-600 hover:text-blue-800 border border-blue-200 rounded-md hover:bg-blue-50 transition-colors"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      [attr.d]="justificacionExpandida === justificacion.id_justificacion ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'"></path>
-              </svg>
-              {{ justificacionExpandida === justificacion.id_justificacion ? 'Ocultar' : 'Ver' }} detalles
-            </button>
+            <!-- Botones de acción -->
+            <div class="flex gap-2">
+              <button
+                (click)="toggleDetalles(justificacion.id_justificacion)"
+                [class]="'flex items-center justify-center gap-2 py-2 text-sm text-blue-600 hover:text-blue-800 border border-blue-200 rounded-md hover:bg-blue-50 transition-colors ' + 
+                  (justificacion.estado === 'APROBADA' ? 'flex-1' : 'w-full')"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        [attr.d]="justificacionExpandida === justificacion.id_justificacion ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'"></path>
+                </svg>
+                {{ justificacionExpandida === justificacion.id_justificacion ? 'Ocultar' : 'Ver' }} detalles
+              </button>
+              
+              <button
+                *ngIf="justificacion.estado === 'APROBADA'"
+                (click)="eliminarJustificacion(justificacion)"
+                [disabled]="eliminandoJustificacion === justificacion.id_justificacion"
+                class="flex-1 flex items-center justify-center gap-2 py-2 text-sm text-red-600 hover:text-red-800 border border-red-200 rounded-md hover:bg-red-50 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed transition-colors"
+                title="Eliminar justificación"
+              >
+                <svg *ngIf="eliminandoJustificacion !== justificacion.id_justificacion" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                <svg *ngIf="eliminandoJustificacion === justificacion.id_justificacion" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span *ngIf="eliminandoJustificacion !== justificacion.id_justificacion">Eliminar</span>
+                <span *ngIf="eliminandoJustificacion === justificacion.id_justificacion">Eliminando...</span>
+              </button>
+            </div>
             
             <!-- Detalles expandidos en mobile -->
             <div *ngIf="justificacionExpandida === justificacion.id_justificacion" 

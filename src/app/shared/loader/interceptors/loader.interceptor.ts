@@ -10,13 +10,17 @@ export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
   // Verificar si la petición es para ausencias masivas, notificaciones o administración de personal
   const isAusenciasMasivasRequest = req.url.includes('/asistencia/ausencias-masivas/');
   const isNotificacionesRequest = req.url.includes('/notificaciones');
+  const isExcelRequest = req.url.includes('/alumnos/register-alumno-for-excel') || 
+                        req.url.includes('/alumnos/export-excel') ||
+                        req.url.includes('/turno');
   const isAdministracionPersonalRequest = req.url.includes('/administradores') || 
                                          req.url.includes('/directores') || 
                                          req.url.includes('/auxiliares') || 
-                                         req.url.includes('/alumnos') ||
+                                         (req.url.includes('/alumnos') && !isExcelRequest) ||
                                          req.url.includes('/usuarios');
   
   // Solo mostrar el loader si NO es una petición de ausencias masivas, notificaciones o administración de personal
+  // PERO SÍ mostrar para peticiones de Excel
   if (!isAusenciasMasivasRequest && !isNotificacionesRequest && !isAdministracionPersonalRequest) {
     loaderService.show();
   }
