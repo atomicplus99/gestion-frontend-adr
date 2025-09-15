@@ -1,14 +1,16 @@
 // components/registro-ausencias.component.ts
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AsistenciaService, RegistroAusenciaAlumno, ResponseAusenciaAlumno, EstudianteInfo } from './service/AusenciaService.service';
 import { CommonModule } from '@angular/common';
 import { AlertsService } from '../../../../shared/alerts.service';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   imports: [CommonModule, ReactiveFormsModule],
   selector: 'app-registro-ausencias',
   templateUrl: './create-ausencia-alumno.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RegistroAusenciasComponent implements OnInit {
 
@@ -41,14 +43,20 @@ export class RegistroAusenciasComponent implements OnInit {
       fecha: [''] // Campo opcional para fecha específica
     });
 
-    // Suscribirse a cambios en el campo código para búsqueda automática
-    this.personalForm.get('codigo')?.valueChanges.subscribe(codigo => {
-      if (codigo && codigo.length >= 8) {
-        this.buscarEstudiante(codigo);
-      } else if (codigo && codigo.length < 8) {
-        this.limpiarBusqueda();
-      }
-    });
+    // Suscribirse a cambios en el campo código para búsqueda automática con debounce
+    this.personalForm.get('codigo')?.valueChanges
+      .pipe(
+        debounceTime(300), // Debounce de 300ms para evitar búsquedas excesivas
+        distinctUntilChanged() // Solo ejecutar si el valor realmente cambió
+      )
+      .subscribe(codigo => {
+        if (codigo && codigo.length >= 8) {
+          this.buscarEstudiante(codigo);
+        } else if (codigo && codigo.length < 8) {
+          this.limpiarBusqueda();
+        }
+        this.cdr.markForCheck(); // Marcar para detección de cambios
+      });
   }
 
   ngOnInit(): void {

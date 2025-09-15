@@ -429,4 +429,13 @@ export class TableStudentComponent implements OnChanges, OnInit {
       return v.toString(16);
     });
   }
+
+  // Función trackBy para optimizar el rendimiento de los ngFor
+  trackByTurno(index: number, turno: TurnoShared): string {
+    return turno.id_turno;
+  }
+
+  trackByAlumno(index: number, alumno: AlumnoUpdateShared): string {
+    return alumno.codigo;
+  }
 }

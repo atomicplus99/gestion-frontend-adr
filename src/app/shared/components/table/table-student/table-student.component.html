@@ -649,7 +649,7 @@
                   [ngModel]="alumnoEditando.turno?.id_turno" (change)="onTurnoChange($event)" name="id_turno"
                   [disabled]="cargandoTurnos">
                   <option value="">Sin turno asignado</option>
-                  <option *ngFor="let turno of turnosDisponibles" [value]="turno.id_turno">
+                  <option *ngFor="let turno of turnosDisponibles; trackBy: trackByTurno" [value]="turno.id_turno">
                     {{ turno.turno }} - {{ turno.hora_inicio }} a {{ turno.hora_fin }}
                     <span *ngIf="turno.hora_limite"> (Límite: {{ turno.hora_limite }})</span>
                   </option>
