@@ -185,7 +185,7 @@ import { AlertsService } from '../../../../shared/alerts.service';
                 </div>
                 <div class="text-right">
                   <p class="text-sm font-medium text-gray-700">Fecha de actualización</p>
-                  <p class="text-sm text-gray-600">{{ formatearFecha(actualizacion.fechaActualizacion) }}</p>
+                  <p class="text-sm text-gray-600">{{ formatearFecha(actualizacion.fecha_actualizacion) }}</p>
                 </div>
               </div>
             </div>
@@ -211,10 +211,6 @@ import { AlertsService } from '../../../../shared/alerts.service';
                       <span class="text-xs text-gray-600">Nombre:</span>
                       <span class="text-xs text-gray-900">{{ actualizacion.alumno.nombre }} {{ actualizacion.alumno.apellido }}</span>
                     </div>
-                    <div class="flex justify-between">
-                      <span class="text-xs text-gray-600">Nivel:</span>
-                      <span class="text-xs text-gray-900">{{ actualizacion.alumno.nivel }} - {{ actualizacion.alumno.grado }}° {{ actualizacion.alumno.seccion }}</span>
-                    </div>
                   </div>
                 </div>
 
@@ -224,27 +220,12 @@ import { AlertsService } from '../../../../shared/alerts.service';
                     <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
-                    Asistencia
+                    Acción Realizada
                   </h4>
                   <div class="space-y-2">
                     <div class="flex justify-between">
-                      <span class="text-xs text-gray-600">Fecha:</span>
-                      <span class="text-xs text-gray-900">{{ formatearFecha(actualizacion.asistencia.fecha) }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span class="text-xs text-gray-600">Llegada:</span>
-                      <span class="text-xs text-gray-900">{{ actualizacion.asistencia.hora_de_llegada }}</span>
-                    </div>
-                    <div class="flex justify-between" *ngIf="actualizacion.asistencia.hora_salida">
-                      <span class="text-xs text-gray-600">Salida:</span>
-                      <span class="text-xs text-gray-900">{{ actualizacion.asistencia.hora_salida }}</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                      <span class="text-xs text-gray-600">Estado:</span>
-                      <span class="px-2 py-1 rounded text-xs font-semibold" 
-                            [ngClass]="obtenerColorEstado(actualizacion.asistencia.estado_asistencia)">
-                        {{ actualizacion.asistencia.estado_asistencia }}
-                      </span>
+                      <span class="text-xs text-gray-600">Tipo de Acción:</span>
+                      <span class="text-xs text-gray-900">{{ actualizacion.accion_amigable }}</span>
                     </div>
                   </div>
                 </div>
@@ -260,15 +241,12 @@ import { AlertsService } from '../../../../shared/alerts.service';
                   <div class="space-y-2">
                     <div class="flex justify-between">
                       <span class="text-xs text-gray-600">Nombre:</span>
-                      <span class="text-xs text-gray-900">{{ actualizacion.administrador.nombres }} {{ actualizacion.administrador.apellidos }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span class="text-xs text-gray-600">Email:</span>
-                      <span class="text-xs text-gray-900">{{ actualizacion.administrador.email }}</span>
+                      <span class="text-xs text-gray-900">{{ actualizacion.administrador.nombre }} {{ actualizacion.administrador.apellido }}</span>
                     </div>
                   </div>
                 </div>
               </div>
+
 
               <!-- Motivo de la actualización -->
               <div class="mt-4 bg-gray-50 rounded-lg p-4">
@@ -457,14 +435,14 @@ export class AuditAsistenciaComponent implements OnInit, OnDestroy {
 
       // Filtro por estado de asistencia
       if (this.filtroEstado && this.filtroEstado.trim() !== '') {
-        if (actualizacion.asistencia.estado_asistencia !== this.filtroEstado) {
+        if (actualizacion.accion_realizada !== this.filtroEstado) {
           return false;
         }
       }
 
       // Filtro por fecha desde (fecha de actualización)
       if (this.filtroFechaDesde && this.filtroFechaDesde.trim() !== '') {
-        const fechaActualizacion = new Date(actualizacion.fechaActualizacion);
+        const fechaActualizacion = new Date(actualizacion.fecha_actualizacion);
         const fechaDesde = new Date(this.filtroFechaDesde);
         fechaDesde.setHours(0, 0, 0, 0); // Inicio del día
         if (fechaActualizacion < fechaDesde) {
@@ -474,7 +452,7 @@ export class AuditAsistenciaComponent implements OnInit, OnDestroy {
 
       // Filtro por fecha hasta (fecha de actualización)
       if (this.filtroFechaHasta && this.filtroFechaHasta.trim() !== '') {
-        const fechaActualizacion = new Date(actualizacion.fechaActualizacion);
+        const fechaActualizacion = new Date(actualizacion.fecha_actualizacion);
         const fechaHasta = new Date(this.filtroFechaHasta);
         fechaHasta.setHours(23, 59, 59, 999); // Final del día
         if (fechaActualizacion > fechaHasta) {

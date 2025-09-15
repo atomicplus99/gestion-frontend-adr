@@ -38,13 +38,23 @@ export interface AdministradorAudit {
 
 export interface ActualizacionAsistencia {
   id: string;
-  asistencia: AsistenciaAudit;
-  alumno: AlumnoAudit;
-  auxiliar: any;
-  administrador: AdministradorAudit;
-  director: any;
+  id_asistencia: string;
+  id_alumno: string;
+  alumno: {
+    id_alumno: string;
+    nombre: string;
+    apellido: string;
+    codigo: string;
+  };
+  administrador: {
+    id_administrador: string;
+    nombre: string;
+    apellido: string;
+  };
   motivo: string;
-  fechaActualizacion: string;
+  accion_realizada: string;
+  accion_amigable: string;
+  fecha_actualizacion: string;
 }
 
 export interface AuditAsistenciaResponse {
@@ -73,15 +83,27 @@ export class AuditAsistenciaService {
    * Formatea la fecha para mostrar en la interfaz
    */
   formatearFecha(fecha: string): string {
-    const date = new Date(fecha);
-    return date.toLocaleDateString('es-PE', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
+    if (!fecha) return '-';
+    
+    try {
+      const date = new Date(fecha);
+      if (isNaN(date.getTime())) {
+        console.log('Fecha inválida:', fecha);
+        return 'Fecha inválida';
+      }
+      
+      return date.toLocaleDateString('es-PE', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formateando fecha:', fecha, error);
+      return 'Error en fecha';
+    }
   }
 
   /**
