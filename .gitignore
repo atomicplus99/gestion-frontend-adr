@@ -41,3 +41,7 @@ testem.log
 .DS_Store
 Thumbs.db
 /uploads
+
+# Environment files (contain sensitive data)
+src/environments/environment.ts
+src/environments/environment.prod.ts
